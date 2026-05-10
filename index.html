@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM Teams CC Portal — Summer 2026 Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C8102E; --red-dark: #9B0C22; --red-glow: rgba(200,16,46,0.3);
+    --black: #0A0A0B; --surface: #111114; --surface-2: #1A1A1F; --surface-3: #222228;
+    --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.15);
+    --text: #F0F0F2; --text-muted: #888896; --text-dim: #555560;
+    --gold: #F0B429; --green: #22C55E; --blue: #3B82F6;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Barlow', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(90deg,transparent,transparent 120px,rgba(255,255,255,0.015) 120px,rgba(255,255,255,0.015) 121px), repeating-linear-gradient(0deg,transparent,transparent 120px,rgba(255,255,255,0.015) 120px,rgba(255,255,255,0.015) 121px);
+    pointer-events: none; z-index: 0;
+  }
+  body::after { content: ''; position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(ellipse,rgba(200,16,46,0.10) 0%,transparent 70%); pointer-events: none; z-index: 0; }
+  .wrap { position: relative; z-index: 1; }
+
+  /* HEADER */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100; background: rgba(10,10,11,0.90); }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-badge { width: 42px; height: 42px; background: var(--red); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 17px; color: white; flex-shrink: 0; box-shadow: 0 0 20px var(--red-glow); }
+  .logo-text { display: flex; flex-direction: column; line-height: 1; }
+  .logo-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .gp-badge { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); border: 1px solid var(--border-bright); padding: 5px 12px; border-radius: 100px; }
+  .reg-open-badge { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 14px; border-radius: 100px; animation: pulse-badge 2.5s ease-in-out infinite; }
+  @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* HERO */
+  .hero { padding: 80px 40px 60px; max-width: 860px; margin: 0 auto; text-align: center; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 24px; }
+  .hero-eyebrow span { display: inline-block; width: 24px; height: 1px; background: var(--text-dim); }
+  .hero h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: clamp(44px, 9vw, 84px); line-height: 0.92; letter-spacing: -1px; text-transform: uppercase; margin-bottom: 28px; }
+  .hero h1 .l1 { display: block; color: var(--text); }
+  .hero h1 .l2 { display: block; color: var(--red); text-shadow: 0 0 60px var(--red-glow); }
+  .hero h1 .l3 { display: block; color: var(--text-muted); font-weight: 700; font-size: 80%; }
+  .hero-desc { font-size: 17px; line-height: 1.7; color: var(--text-muted); max-width: 560px; margin: 0 auto 40px; font-weight: 300; }
+  .hero-desc strong { color: var(--text); font-weight: 500; }
+  .cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+  .btn-primary { background: var(--red); color: white; border: none; padding: 15px 32px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 24px var(--red-glow); text-decoration: none; display: inline-block; }
+  .btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border-bright); padding: 15px 32px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+  .btn-secondary:hover { background: var(--surface-2); transform: translateY(-2px); }
+  .stat-bar { display: flex; justify-content: center; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; max-width: 680px; margin: 0 auto 80px; background: var(--surface); }
+  .stat-item { flex: 1; padding: 24px 16px; text-align: center; border-right: 1px solid var(--border); }
+  .stat-item:last-child { border-right: none; }
+  .stat-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: var(--red); line-height: 1; margin-bottom: 5px; }
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+
+  /* SECTIONS */
+  .section { max-width: 1080px; margin: 0 auto; padding: 0 40px 80px; }
+  .section-label { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .section-label h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 30px; text-transform: uppercase; white-space: nowrap; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .section-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 32px; font-weight: 300; line-height: 1.6; margin-top: -24px; }
+  .section-sub strong { color: var(--text); font-weight: 500; }
+
+  /* FREE BANNER */
+  .free-banner { background: linear-gradient(135deg,rgba(200,16,46,0.12),rgba(240,180,41,0.06)); border: 1px solid rgba(200,16,46,0.22); border-radius: 12px; padding: 20px 28px; display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .free-banner-icon { font-size: 28px; flex-shrink: 0; }
+  .free-banner-text { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+  .free-banner-text strong { color: var(--text); font-size: 17px; font-weight: 600; display: block; margin-bottom: 2px; }
+
+  /* WEEKS */
+  .weeks-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  @media (max-width:860px) { .weeks-grid { grid-template-columns: 1fr; } }
+  .week-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color 0.2s, transform 0.2s; display: flex; flex-direction: column; }
+  .week-card:hover { border-color: var(--border-bright); transform: translateY(-4px); }
+  .week-header { padding: 24px 24px 18px; border-bottom: 1px solid var(--border); position: relative; }
+  .week-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .week-number { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .week-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase; color: var(--text); margin-bottom: 4px; }
+  .week-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 300; }
+  .week-body { padding: 20px 24px 24px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .week-detail { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
+  .week-detail-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .week-detail-text { color: var(--text-muted); line-height: 1.5; }
+  .week-detail-text strong { color: var(--text); font-weight: 500; }
+  .week-bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .week-bullets li { font-size: 13px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+  .week-bullets li::before { content: '→'; color: var(--red); flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+  .week-footer { padding: 0 24px 24px; }
+  .week-cta { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; }
+  .cta-red { background: var(--red); color: white; box-shadow: 0 4px 16px var(--red-glow); }
+  .cta-red:hover { background: var(--red-dark); }
+  .cta-gold { background: rgba(240,180,41,0.15); color: var(--gold); border: 1px solid rgba(240,180,41,0.3); }
+  .cta-gold:hover { background: rgba(240,180,41,0.25); }
+  .cta-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .cta-green:hover { background: rgba(34,197,94,0.25); }
+
+  /* TRYOUT DAY SCHEDULE */
+  .tryout-schedule { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .tryout-day { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: var(--surface-2); border-radius: 8px; border-left: 3px solid var(--red); }
+  .tryout-day-date { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; color: var(--red); white-space: nowrap; flex-shrink: 0; min-width: 52px; }
+  .tryout-day-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+  /* PORTAL FEATURES */
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 2px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .feature-card { background: var(--surface); padding: 32px 28px; transition: background 0.2s; position: relative; overflow: hidden; }
+  .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--red); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .feature-card:hover { background: var(--surface-2); }
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; background: var(--surface-3); }
+  .feature-card h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .feature-card p { font-size: 13px; line-height: 1.65; color: var(--text-muted); font-weight: 300; }
+  .feature-tag { display: inline-block; margin-top: 14px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; }
+  .tag-red { background: rgba(200,16,46,0.12); color: var(--red); border: 1px solid rgba(200,16,46,0.25); }
+  .tag-gold { background: rgba(240,180,41,0.10); color: var(--gold); border: 1px solid rgba(240,180,41,0.25); }
+  .tag-green { background: rgba(34,197,94,0.10); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+
+  /* NOTIFY */
+  .notify-section { max-width: 580px; margin: 0 auto; padding: 0 40px 100px; text-align: center; }
+  .notify-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 36px; position: relative; overflow: hidden; }
+  .notify-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg,var(--red),transparent); }
+  .notify-card h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; text-transform: uppercase; margin-bottom: 10px; }
+  .notify-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; font-weight: 300; line-height: 1.6; }
+  .notify-form { display: flex; gap: 10px; }
+  .notify-form input { flex: 1; background: var(--surface-3); border: 1px solid var(--border-bright); border-radius: 6px; padding: 13px 16px; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .notify-form input::placeholder { color: var(--text-dim); }
+  .notify-form input:focus { border-color: var(--red); }
+  .notify-form button { background: var(--red); color: white; border: none; padding: 13px 22px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .notify-form button:hover { background: var(--red-dark); }
+  .notify-success { display: none; color: var(--green); font-weight: 500; font-size: 14px; margin-top: 14px; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border); padding: 28px 40px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .footer-left { font-size: 13px; color: var(--text-dim); }
+  .footer-left strong { color: var(--text-muted); font-weight: 500; }
+  .footer-right { display: flex; gap: 20px; }
+  .footer-link { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .footer-link:hover { color: var(--text-muted); }
+
+  /* ANIMATIONS */
+  .fade-up { opacity: 0; transform: translateY(24px); animation: fadeUp 0.7s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .d1{animation-delay:.1s} .d2{animation-delay:.2s} .d3{animation-delay:.35s} .d4{animation-delay:.5s} .d5{animation-delay:.65s}
+
+  /* RESPONSIVE */
+  @media (max-width:600px) {
+    header { padding: 14px 20px; }
+    .gp-badge { display: none; }
+    .hero { padding: 50px 20px 40px; }
+    .stat-bar { flex-direction: column; }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+    .section, .notify-section { padding-left: 20px; padding-right: 20px; }
+    .notify-form { flex-direction: column; }
+    footer { flex-direction: column; text-align: center; }
+    .free-banner { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="logo-badge">ST</div>
+      <div class="logo-text">
+        <div class="logo-title">STEAM Teams — CC Portal</div>
+        <div class="logo-sub">Chambers County · Inspire Academy</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="gp-badge">Greenpower USA</div>
+      <div class="reg-open-badge">Registration Open</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-eyebrow fade-up"><span></span> Greenpower USA Summer Academy 2026 <span></span></div>
+    <h1 class="fade-up d1">
+      <span class="l1">Where Will Your</span>
+      <span class="l2">Adventures</span>
+      <span class="l3">Take You?</span>
+    </h1>
+    <p class="hero-desc fade-up d2">
+      Three weeks of <strong>racing, making, and competing</strong> at Inspire Academy in Lafayette, AL. Open to students in Grades 4–10. <strong>Completely free.</strong>
+    </p>
+    <div class="cta-group fade-up d3">
+      <a href="#register" class="btn-primary">Register Now — It's Free</a>
+      <a href="#portal" class="btn-secondary">About the Portal</a>
+    </div>
+    <div class="stat-bar fade-up d4">
+      <div class="stat-item"><div class="stat-num">3</div><div class="stat-label">Weeks of Camp</div></div>
+      <div class="stat-item"><div class="stat-num">4–10</div><div class="stat-label">Grade Levels</div></div>
+      <div class="stat-item"><div class="stat-num">FREE</div><div class="stat-label">No Cost to Attend</div></div>
+      <div class="stat-item"><div class="stat-num">8AM</div><div class="stat-label">Daily · Ends 2PM</div></div>
+    </div>
+  </section>
+
+  <section class="section" id="register">
+    <div class="section-label fade-up"><h2>Summer 2026 Schedule</h2></div>
+    <p class="section-sub">All sessions held at <strong>Inspire Academy, Lafayette, AL</strong> · 8:00 AM – 2:00 PM Central · <strong>No cost to attend</strong></p>
+
+    <div class="free-banner fade-up">
+      <div class="free-banner-icon">🏁</div>
+      <div class="free-banner-text">
+        <strong>All three weeks are completely free</strong>
+        Register for one week, two, or all three. Current team members are prioritized — then open to all qualifying grades until spots are filled.
+      </div>
+    </div>
+
+    <div class="weeks-grid">
+      <div class="week-card fade-up d1">
+        <div class="week-header">
+          <div class="week-accent" style="background:var(--red);"></div>
+          <div class="week-number" style="color:var(--red);">Week 1 · Learn to Race</div>
+          <div class="week-title">Race Team Training Camp</div>
+          <div class="week-subtitle">May 26–29, 2026 · Mon–Thu</div>
+        </div>
+        <div class="week-body">
+          <div class="week-detail">
+            <div class="week-detail-icon">🎓</div>
+            <div class="week-detail-text"><strong>Open to Grades 4–8</strong></div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">📍</div>
+            <div class="week-detail-text">Inspire Academy · Lafayette, AL</div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">🏎️</div>
+            <div class="week-detail-text">What you'll learn:</div>
+          </div>
+          <ul class="week-bullets">
+            <li>Build & maintain Greenpower Goblin, F24 & RC race cars</li>
+            <li>Problem solving & teamwork focused training</li>
+            <li>Hands-on racing fundamentals from day one</li>
+          </ul>
+        </div>
+        <div class="week-footer">
+          <a href="#notify" class="week-cta cta-red" onclick="focusNotify(event)">Register for Week 1</a>
+        </div>
+      </div>
+
+      <div class="week-card fade-up d2">
+        <div class="week-header">
+          <div class="week-accent" style="background:var(--gold);"></div>
+          <div class="week-number" style="color:var(--gold);">Week 2 · Learn to Compete</div>
+          <div class="week-title">Makerspace & Production Camp</div>
+          <div class="week-subtitle">June 1–4, 2026 · Mon–Thu</div>
+        </div>
+        <div class="week-body">
+          <div class="week-detail">
+            <div class="week-detail-icon">🎓</div>
+            <div class="week-detail-text"><strong>Open to Grades 4–8</strong></div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">📍</div>
+            <div class="week-detail-text">Inspire Academy · Lafayette, AL</div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">🖨️</div>
+            <div class="week-detail-text">What you'll learn:</div>
+          </div>
+          <ul class="week-bullets">
+            <li>3D Printing · Digital Art · Laser Engraving</li>
+            <li>Merchandise & media production basics</li>
+            <li>Presentation & competition skills</li>
+            <li>Direct preparation for Team Tryouts (Week 3)</li>
+          </ul>
+        </div>
+        <div class="week-footer">
+          <a href="#notify" class="week-cta cta-gold" onclick="focusNotify(event)">Register for Week 2</a>
+        </div>
+      </div>
+
+      <div class="week-card fade-up d3">
+        <div class="week-header">
+          <div class="week-accent" style="background:var(--green);"></div>
+          <div class="week-number" style="color:var(--green);">Week 3 · Tryouts & Competition</div>
+          <div class="week-title">Team Tryouts & Pre-Season</div>
+          <div class="week-subtitle">July 22–24, 2026 · Tue–Thu</div>
+        </div>
+        <div class="week-body">
+          <div class="week-detail">
+            <div class="week-detail-icon">🎓</div>
+            <div class="week-detail-text"><strong>Open to Grades 5–10</strong> · New & returning students welcome</div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">📍</div>
+            <div class="week-detail-text">Inspire Academy · Lafayette, AL</div>
+          </div>
+          <div class="week-detail">
+            <div class="week-detail-icon">🗓️</div>
+            <div class="week-detail-text">Three-day schedule:</div>
+          </div>
+          <div class="tryout-schedule">
+            <div class="tryout-day">
+              <div class="tryout-day-date">Jul 22</div>
+              <div class="tryout-day-desc">Interviews & Tryouts — All registered students</div>
+            </div>
+            <div class="tryout-day">
+              <div class="tryout-day-date">Jul 23</div>
+              <div class="tryout-day-desc">Interviews & Tryouts — Continued</div>
+            </div>
+            <div class="tryout-day">
+              <div class="tryout-day-date">Jul 24</div>
+              <div class="tryout-day-desc">Simulated Race · Team Announcement · Cookout 🎉</div>
+            </div>
+          </div>
+        </div>
+        <div class="week-footer">
+          <a href="#notify" class="week-cta cta-green" onclick="focusNotify(event)">Register for Tryouts</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="portal">
+    <div class="section-label fade-up"><h2>Introducing the CC Portal</h2></div>
+    <p class="section-sub">Starting this summer, <strong>STEAM Teams CC is launching a unified family portal.</strong> Registering for camp creates your family account — so you're set up and ready when the full portal goes live before the season starts.</p>
+    <div class="features-grid">
+      <div class="feature-card fade-up d1">
+        <div class="feature-icon">💳</div>
+        <h3>Dues Tracking</h3>
+        <p>See your balance, payment history, and volunteer credits all in one place. No more guessing what you owe or what's been applied.</p>
+        <span class="feature-tag tag-red">Parent Facing</span>
+      </div>
+      <div class="feature-card fade-up d2">
+        <div class="feature-icon">🙋</div>
+        <h3>Volunteer Hours</h3>
+        <p>Log practice sessions, race days, and parent meetings from your phone. Credits apply automatically to your balance once approved.</p>
+        <span class="feature-tag tag-red">Parent Facing</span>
+      </div>
+      <div class="feature-card fade-up d3">
+        <div class="feature-icon">🛒</div>
+        <h3>Merchandise Store</h3>
+        <p>Order team gear and track fulfillment — all connected to your family account in one place.</p>
+        <span class="feature-tag tag-gold">All Access</span>
+      </div>
+      <div class="feature-card fade-up d1">
+        <div class="feature-icon">📋</div>
+        <h3>Event Registration</h3>
+        <p>Sign up for camps, tryouts, and race events. Your registration history lives in your account permanently — no re-entering info every season.</p>
+        <span class="feature-tag tag-green">Now Available</span>
+      </div>
+      <div class="feature-card fade-up d2">
+        <div class="feature-icon">✅</div>
+        <h3>Compliance Status</h3>
+        <p>See whether your child's waiver and medical form have been received. No more wondering if your paperwork made it in.</p>
+        <span class="feature-tag tag-red">Parent Facing</span>
+      </div>
+      <div class="feature-card fade-up d3">
+        <div class="feature-icon">👨‍👩‍👧‍👦</div>
+        <h3>Multi-Student Families</h3>
+        <p>One family login covers all your children in the program. Every student's records, dues, and credits in one dashboard.</p>
+        <span class="feature-tag tag-gold">All Families</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="notify-section" id="notify">
+    <div class="notify-card fade-up">
+      <h3>Get Your Registration Link</h3>
+      <div style="width:48px;height:3px;background:var(--red);margin:12px auto 20px;border-radius:2px;"></div>
+      <p>Enter your email and we'll send you a direct link to register for camp and create your family portal account the moment it goes live.</p>
+      <div class="notify-form">
+        <input type="email" id="notify-email" placeholder="your@email.com" />
+        <button onclick="handleNotify()">Send Me the Link</button>
+      </div>
+      <div class="notify-success" id="notify-success">✓ You're on the list! Watch your inbox — we'll be in touch soon.</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-left">
+      <strong>STEAM Teams — Chambers County</strong> · Inspire Academy · Lafayette, AL<br>
+      A Greenpower USA & Ten80 Education program · Founded 2013 · Primary Sponsor: KIA
+    </div>
+    <div class="footer-right">
+      <a href="https://www.facebook.com/SteamTeamsCC" class="footer-link" target="_blank">Facebook</a>
+      <a href="mailto:steam.teams@chambersk12.org" class="footer-link">Contact Us</a>
+    </div>
+  </footer>
+
+</div>
+<script>
+  function focusNotify(e) {
+    e.preventDefault();
+    document.getElementById('notify').scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => document.getElementById('notify-email').focus(), 600);
+  }
+
+  function handleNotify() {
+    const email = document.getElementById('notify-email').value.trim();
+    if (!email || !email.includes('@')) {
+      document.getElementById('notify-email').style.borderColor = '#C8102E';
+      setTimeout(() => document.getElementById('notify-email').style.borderColor = '', 2000);
+      return;
+    }
+    document.querySelector('.notify-form').style.display = 'none';
+    document.getElementById('notify-success').style.display = 'block';
+    // TODO: POST to Supabase notify_list table on deployment
+  }
+
+  document.getElementById('notify-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleNotify(); });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.fade-up').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top > window.innerHeight) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(24px)';
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      observer.observe(el);
+    }
+  });
+</script>
+</body>
+</html>
