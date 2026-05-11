@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — STEAM Teams CC Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #b2292e; --red-dark: #8f1f23; --red-light: #f5e8e8;
+    --blue: #1c355e; --blue-dark: #142646; --blue-light: #e8ecf3;
+    --black: #020202; --gray: #c8c8c8; --gray-light: #f0f0f0;
+    --white: #ffffff; --text: #1a1a1a; --text-muted: #555555;
+    --border: #e0e0e0; --surface: #f8f8f8;
+    --green: #22C55E;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Roboto', sans-serif; background: var(--gray-light); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--blue); padding: 0 40px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-title { font-family: 'Roboto Slab', serif; font-weight: 800; font-size: 16px; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+  .logo-title em { color: var(--red); font-style: normal; }
+  .logo-sub { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase; }
+  .back-link { font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s; }
+  .back-link:hover { color: white; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--blue-dark); padding: 16px 40px; }
+  .progress-inner { max-width: 680px; margin: 0 auto; }
+  .progress-steps { display: flex; align-items: center; gap: 0; }
+  .step { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all 0.3s; }
+  .step-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap; }
+  .step-line { flex: 1; height: 2px; margin: 0 8px; transition: background 0.3s; }
+  .step.active .step-num { background: var(--red); color: white; }
+  .step.active .step-label { color: white; }
+  .step.complete .step-num { background: var(--green); color: white; }
+  .step.complete .step-label { color: rgba(255,255,255,0.7); }
+  .step.inactive .step-num { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); }
+  .step.inactive .step-label { color: rgba(255,255,255,0.35); }
+  .step-line.complete { background: var(--green); }
+  .step-line.inactive { background: rgba(255,255,255,0.15); }
+
+  /* MAIN */
+  main { max-width: 680px; margin: 40px auto; padding: 0 20px 80px; }
+
+  .card { background: white; border-radius: 6px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); overflow: hidden; }
+
+  .card-header { background: var(--blue); padding: 24px 32px; }
+  .card-header h2 { font-family: 'Roboto Slab', serif; font-weight: 800; font-size: 22px; color: white; text-transform: uppercase; margin-bottom: 4px; }
+  .card-header p { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 300; }
+  .card-header-red { background: var(--red); }
+
+  .card-body { padding: 32px; }
+
+  /* FORM ELEMENTS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-grid.single { grid-template-columns: 1fr; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--blue); }
+  label .required { color: var(--red); margin-left: 2px; }
+  label .optional { color: var(--gray); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; margin-left: 4px; }
+
+  input[type="text"], input[type="email"], input[type="password"], input[type="tel"], select {
+    padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 4px;
+    font-family: 'Roboto', sans-serif; font-size: 15px; color: var(--text);
+    background: white; outline: none; transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--blue); }
+  input.error, select.error { border-color: var(--red); }
+  input::placeholder { color: #bbb; }
+
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+
+  .error-msg { font-size: 12px; color: var(--red); display: none; }
+  .error-msg.show { display: block; }
+
+  /* SECTION DIVIDER */
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 20px; }
+  .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .section-divider-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray); white-space: nowrap; }
+
+  /* CHECKBOX */
+  .checkbox-group { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--surface); border-radius: 4px; border: 1.5px solid var(--border); cursor: pointer; }
+  .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; cursor: pointer; accent-color: var(--blue); }
+  .checkbox-label { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .checkbox-label strong { color: var(--text); font-weight: 600; }
+
+  /* PROGRAM BADGE */
+  .program-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 4px; background: var(--blue-light); border: 1.5px solid var(--blue); margin-top: 4px; }
+  .program-badge-text { font-size: 14px; font-weight: 600; color: var(--blue); }
+  .program-badge-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* INTENT OPTIONS */
+  .intent-options { display: flex; flex-direction: column; gap: 10px; }
+  .intent-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+  .intent-option:hover { border-color: var(--blue); background: var(--blue-light); }
+  .intent-option.selected { border-color: var(--blue); background: var(--blue-light); }
+  .intent-option input[type="radio"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--blue); }
+  .intent-option-text strong { font-size: 14px; color: var(--blue); font-weight: 600; display: block; margin-bottom: 2px; }
+  .intent-option-text span { font-size: 12px; color: var(--text-muted); }
+
+  /* BUTTONS */
+  .btn-group { display: flex; gap: 12px; margin-top: 28px; }
+  .btn-primary { background: var(--red); color: white; border: none; padding: 14px 32px; border-radius: 4px; font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; flex: 1; box-shadow: 0 3px 12px rgba(178,41,46,0.25); }
+  .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--gray); box-shadow: none; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); padding: 14px 24px; border-radius: 4px; font-family: 'Roboto Slab', serif; font-weight: 600; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { background: var(--blue-light); }
+
+  /* CONFIRMATION SCREEN */
+  .confirm-code { background: var(--blue); border-radius: 6px; padding: 28px; text-align: center; margin-bottom: 24px; }
+  .confirm-code-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
+  .confirm-code-value { font-family: 'Roboto Slab', serif; font-weight: 900; font-size: 42px; color: white; letter-spacing: 4px; margin-bottom: 12px; }
+  .confirm-code-copy { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 20px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .confirm-code-copy:hover { background: rgba(255,255,255,0.25); }
+  .confirm-copied { display: none; color: var(--green); font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+  .timeline-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .timeline-item:last-child { border-bottom: none; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex-shrink: 0; margin-top: 5px; }
+  .timeline-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  .timeline-text strong { color: var(--text); font-weight: 600; display: block; }
+
+  .status-pending { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(240,180,41,0.1); border: 1px solid rgba(240,180,41,0.3); border-radius: 100px; font-size: 12px; font-weight: 700; color: #d4a017; text-transform: uppercase; letter-spacing: 1px; }
+
+  .add-student-btn { width: 100%; padding: 14px; border: 2px dashed var(--border); border-radius: 4px; background: transparent; color: var(--blue); font-family: 'Roboto Slab', serif; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; margin-top: 16px; }
+  .add-student-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+
+  /* LOADING */
+  .btn-loading { position: relative; color: transparent !important; }
+  .btn-loading::after { content: ''; position: absolute; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* FOOTER */
+  .form-footer { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-muted); }
+  .form-footer a { color: var(--blue); text-decoration: none; font-weight: 500; }
+
+  @media (max-width: 500px) {
+    header { padding: 0 20px; }
+    .card-body { padding: 20px; }
+    .progress-wrap { padding: 12px 20px; }
+    .step-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <div>
+      <div class="logo-title"><em>STEAM</em> Teams</div>
+      <div class="logo-sub">CC Portal</div>
+    </div>
+  </a>
+  <a href="/" class="back-link">← Back to Home</a>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-steps" id="progress-steps">
+      <div class="step active" id="step-1">
+        <div class="step-num">1</div>
+        <div class="step-label">Family Info</div>
+      </div>
+      <div class="step-line inactive" id="line-1"></div>
+      <div class="step inactive" id="step-2">
+        <div class="step-num">2</div>
+        <div class="step-label">Add Student</div>
+      </div>
+      <div class="step-line inactive" id="line-2"></div>
+      <div class="step inactive" id="step-3">
+        <div class="step-num">3</div>
+        <div class="step-label">Confirmation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- SCREEN 1: FAMILY INFO -->
+  <div class="screen active" id="screen-1">
+    <div class="card">
+      <div class="card-header">
+        <h2>Create Your Family Account</h2>
+        <p>One account covers all your children in the program</p>
+      </div>
+      <div class="card-body">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Parent / Guardian 1 <span class="required">*</span></label>
+            <input type="text" id="parent1" placeholder="Full name" />
+            <span class="error-msg" id="err-parent1">Please enter at least one parent name</span>
+          </div>
+          <div class="form-group">
+            <label>Parent / Guardian 2 <span class="optional">(optional)</span></label>
+            <input type="text" id="parent2" placeholder="Full name" />
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <div class="section-divider-line"></div>
+          <div class="section-divider-label">Login Credentials</div>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Email Address <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="your@email.com" />
+            <span class="error-msg" id="err-email">Please enter a valid email address</span>
+          </div>
+          <div class="form-group">
+            <label>Password <span class="required">*</span></label>
+            <input type="password" id="password" placeholder="Minimum 8 characters" />
+            <span class="error-msg" id="err-password">Password must be at least 8 characters</span>
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <div class="section-divider-line"></div>
+          <div class="section-divider-label">Emergency Contacts</div>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Emergency Phone 1 <span class="required">*</span></label>
+            <input type="tel" id="phone1" placeholder="(555) 555-5555" />
+            <span class="error-msg" id="err-phone1">Please enter an emergency contact number</span>
+          </div>
+          <div class="form-group">
+            <label>Emergency Phone 2 <span class="optional">(optional)</span></label>
+            <input type="tel" id="phone2" placeholder="(555) 555-5555" />
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <div class="section-divider-line"></div>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="checkbox-group" onclick="toggleCheck('notify-opt')">
+          <input type="checkbox" id="notify-opt" checked />
+          <div class="checkbox-label">
+            <strong>Program communications</strong>
+            I agree to receive updates about STEAM Teams events, camp registration, and program news.
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-primary" onclick="submitScreen1()">Continue to Add Student →</button>
+        </div>
+
+        <div class="form-footer">
+          Already have an account? <a href="/dashboard">Log in here</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: ADD STUDENT -->
+  <div class="screen" id="screen-2">
+    <div class="card">
+      <div class="card-header card-header-red">
+        <h2>Add Your Student</h2>
+        <p>You can add more students after completing registration</p>
+      </div>
+      <div class="card-body">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First Name <span class="required">*</span></label>
+            <input type="text" id="s-first" placeholder="First name" />
+            <span class="error-msg" id="err-sfirst">Required</span>
+          </div>
+          <div class="form-group">
+            <label>Last Name <span class="required">*</span></label>
+            <input type="text" id="s-last" placeholder="Last name" />
+            <span class="error-msg" id="err-slast">Required</span>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:20px;">
+          <div class="form-group">
+            <label>Current Grade <span class="required">*</span></label>
+            <select id="s-grade" onchange="updateProgram()">
+              <option value="">Select grade...</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+              <option value="7">Grade 7</option>
+              <option value="8">Grade 8</option>
+              <option value="9">Grade 9</option>
+              <option value="10">Grade 10</option>
+              <option value="11">Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+            <span class="error-msg" id="err-sgrade">Required</span>
+          </div>
+          <div class="form-group">
+            <label>School <span class="required">*</span></label>
+            <select id="s-school">
+              <option value="">Select school...</option>
+              <option value="Fairfax Elementary">Fairfax Elementary</option>
+              <option value="Eastside Elementary">Eastside Elementary</option>
+              <option value="JP Powell Middle School">JP Powell Middle School</option>
+              <option value="WF Burns Middle School">WF Burns Middle School</option>
+              <option value="Lafayette High School">Lafayette High School</option>
+              <option value="Valley High School">Valley High School</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="error-msg" id="err-sschool">Required</span>
+          </div>
+        </div>
+
+        <div id="program-display" style="margin-top:16px; display:none;">
+          <label>Program Assignment</label>
+          <div class="program-badge" id="program-badge">
+            <div>
+              <div class="program-badge-text" id="program-name"></div>
+              <div class="program-badge-sub" id="program-sub"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:20px;">
+          <div class="form-group">
+            <label>Gender <span class="required">*</span></label>
+            <select id="s-gender">
+              <option value="">Select...</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+            <span class="error-msg" id="err-sgender">Required</span>
+          </div>
+          <div class="form-group">
+            <label>Shirt Size <span class="required">*</span></label>
+            <select id="s-shirt">
+              <option value="">Select size...</option>
+              <optgroup label="Youth">
+                <option value="YS">Youth Small (YS)</option>
+                <option value="YM">Youth Medium (YM)</option>
+                <option value="YL">Youth Large (YL)</option>
+                <option value="YXL">Youth XL (YXL)</option>
+              </optgroup>
+              <optgroup label="Adult">
+                <option value="AS">Adult Small (AS)</option>
+                <option value="AM">Adult Medium (AM)</option>
+                <option value="AL">Adult Large (AL)</option>
+                <option value="AXL">Adult XL (AXL)</option>
+                <option value="A2XL">Adult 2XL (A2XL)</option>
+                <option value="A3XL">Adult 3XL (A3XL)</option>
+              </optgroup>
+            </select>
+            <span class="error-msg" id="err-sshirt">Required</span>
+          </div>
+        </div>
+
+        <div class="section-divider" style="margin-top:24px;">
+          <div class="section-divider-line"></div>
+          <div class="section-divider-label">Participation Intent</div>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="intent-options" id="intent-options">
+          <label class="intent-option" id="intent-camp" onclick="selectIntent('camp_only')">
+            <input type="radio" name="intent" value="camp_only" />
+            <div class="intent-option-text">
+              <strong>Camp Only</strong>
+              <span>I'm interested in attending summer camp but not necessarily joining the team</span>
+            </div>
+          </label>
+          <label class="intent-option" id="intent-potential" onclick="selectIntent('camp_and_potential')">
+            <input type="radio" name="intent" value="camp_and_potential" />
+            <div class="intent-option-text">
+              <strong>Camp + Potential Team Member</strong>
+              <span>I'd like to attend camp and try out for the team</span>
+            </div>
+          </label>
+          <label class="intent-option" id="intent-full" onclick="selectIntent('full_participation')">
+            <input type="radio" name="intent" value="full_participation" />
+            <div class="intent-option-text">
+              <strong>Full Participation</strong>
+              <span>I'm committed to joining the team and participating in the full season</span>
+            </div>
+          </label>
+        </div>
+        <span class="error-msg" id="err-sintent" style="margin-top:6px;">Please select a participation level</span>
+
+        <div class="section-divider" style="margin-top:24px;">
+          <div class="section-divider-line"></div>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="checkbox-group" onclick="toggleCheck('policy-agree')">
+          <input type="checkbox" id="policy-agree" />
+          <div class="checkbox-label">
+            <strong>Program Policy Agreement</strong>
+            I confirm I have permission to enroll this student and agree to the STEAM Teams program policies and code of conduct.
+          </div>
+        </div>
+        <span class="error-msg" id="err-policy" style="margin-top:6px;">You must agree to the program policies to continue</span>
+
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="goBack()">← Back</button>
+          <button class="btn-primary" id="submit-btn" onclick="submitRegistration()">Complete Registration →</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: CONFIRMATION -->
+  <div class="screen" id="screen-3">
+    <div class="card">
+      <div class="card-header" style="background: linear-gradient(135deg, var(--blue), var(--blue-dark));">
+        <h2>You're Registered! 🎉</h2>
+        <p>Your family account has been created successfully</p>
+      </div>
+      <div class="card-body">
+
+        <div class="confirm-code">
+          <div class="confirm-code-label">Your Family Code</div>
+          <div class="confirm-code-value" id="display-family-code">CC-0000</div>
+          <button class="confirm-code-copy" onclick="copyCode()">Copy Code</button>
+          <div class="confirm-copied" id="copy-confirm">✓ Copied to clipboard!</div>
+          <div style="font-size:13px; color:rgba(255,255,255,0.55); margin-top:14px; line-height:1.5;">
+            Save this code — you'll use it to quickly check your dues balance, volunteer hours, and registration status without logging in.
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div style="font-family:'Roboto Slab',serif; font-weight:700; font-size:15px; color:var(--blue); text-transform:uppercase; letter-spacing:0.5px;">Registration Status</div>
+            <div class="status-pending">⏳ Pending Review</div>
+          </div>
+          <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">Your registration has been submitted and is under review. Our coordinators personally review every registration to make sure we have everything we need.</p>
+        </div>
+
+        <div style="font-family:'Roboto Slab',serif; font-weight:700; font-size:13px; color:var(--blue); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">What Happens Next</div>
+
+        <div id="timeline-items">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="background:var(--surface); border-radius:4px; padding:16px; margin-top:20px; border-left:4px solid var(--blue);">
+          <div style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+            <strong style="color:var(--text);">Questions about your registration?</strong><br/>
+            Reach out directly to your coordinator. We're here to help.
+          </div>
+        </div>
+
+        <button class="add-student-btn" onclick="addAnotherStudent()">+ Add Another Student to This Account</button>
+
+        <div class="btn-group" style="margin-top:16px;">
+          <button class="btn-primary" onclick="window.location.href='/'">Return to Portal Home</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  var SUPABASE_URL = 'https://avbogkupsoeraivbyypu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f';
+
+  var familyId = null;
+  var familyCode = null;
+  var selectedIntent = null;
+  var currentScreen = 1;
+
+  // ── UTILITY ──
+  function toggleCheck(id) {
+    var cb = document.getElementById(id);
+    cb.checked = !cb.checked;
+  }
+
+  function selectIntent(val) {
+    selectedIntent = val;
+    document.querySelectorAll('.intent-option').forEach(function(el) {
+      el.classList.remove('selected');
+    });
+    var map = { camp_only: 'intent-camp', camp_and_potential: 'intent-potential', full_participation: 'intent-full' };
+    document.getElementById(map[val]).classList.add('selected');
+    document.getElementById('err-sintent').classList.remove('show');
+  }
+
+  function updateProgram() {
+    var grade = parseInt(document.getElementById('s-grade').value);
+    var display = document.getElementById('program-display');
+    var name = document.getElementById('program-name');
+    var sub = document.getElementById('program-sub');
+    if (!grade) { display.style.display = 'none'; return; }
+    display.style.display = 'block';
+    if (grade <= 5) {
+      name.textContent = 'Goblin Program';
+      sub.textContent = 'Grades 4–5 · Piedmont Motorsports';
+    } else if (grade <= 8) {
+      name.textContent = 'MS Greenpower';
+      sub.textContent = 'Grades 6–8 · Renegade Racing';
+    } else {
+      name.textContent = 'HS Greenpower';
+      sub.textContent = 'Grades 9–12 · Renegade Racing';
+    }
+  }
+
+  function getProgram(grade) {
+    if (grade <= 5) return 'goblin';
+    if (grade <= 8) return 'ms_greenpower';
+    return 'hs_greenpower';
+  }
+
+  function setError(id, show) {
+    var el = document.getElementById(id);
+    if (el) { show ? el.classList.add('show') : el.classList.remove('show'); }
+  }
+
+  function setFieldError(id, show) {
+    var el = document.getElementById(id);
+    if (el) { show ? el.classList.add('error') : el.classList.remove('error'); }
+  }
+
+  function goBack() {
+    showScreen(1);
+  }
+
+  function showScreen(n) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('screen-' + n).classList.add('active');
+    currentScreen = n;
+    updateProgress(n);
+    window.scrollTo(0, 0);
+  }
+
+  function updateProgress(n) {
+    for (var i = 1; i <= 3; i++) {
+      var step = document.getElementById('step-' + i);
+      step.className = 'step ' + (i < n ? 'complete' : i === n ? 'active' : 'inactive');
+    }
+    for (var j = 1; j <= 2; j++) {
+      var line = document.getElementById('line-' + j);
+      line.className = 'step-line ' + (j < n ? 'complete' : 'inactive');
+    }
+  }
+
+  // ── SCREEN 1 VALIDATION ──
+  function submitScreen1() {
+    var valid = true;
+    var parent1 = document.getElementById('parent1').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    var phone1 = document.getElementById('phone1').value.trim();
+
+    if (!parent1) { setError('err-parent1', true); setFieldError('parent1', true); valid = false; }
+    else { setError('err-parent1', false); setFieldError('parent1', false); }
+
+    if (!email || email.indexOf('@') === -1) { setError('err-email', true); setFieldError('email', true); valid = false; }
+    else { setError('err-email', false); setFieldError('email', false); }
+
+    if (!password || password.length < 8) { setError('err-password', true); setFieldError('password', true); valid = false; }
+    else { setError('err-password', false); setFieldError('password', false); }
+
+    if (!phone1) { setError('err-phone1', true); setFieldError('phone1', true); valid = false; }
+    else { setError('err-phone1', false); setFieldError('phone1', false); }
+
+    if (valid) showScreen(2);
+  }
+
+  // ── SCREEN 2 SUBMIT ──
+  function submitRegistration() {
+    var valid = true;
+    var first = document.getElementById('s-first').value.trim();
+    var last = document.getElementById('s-last').value.trim();
+    var grade = document.getElementById('s-grade').value;
+    var school = document.getElementById('s-school').value;
+    var gender = document.getElementById('s-gender').value;
+    var shirt = document.getElementById('s-shirt').value;
+    var policy = document.getElementById('policy-agree').checked;
+
+    if (!first) { setError('err-sfirst', true); setFieldError('s-first', true); valid = false; } else { setError('err-sfirst', false); setFieldError('s-first', false); }
+    if (!last) { setError('err-slast', true); setFieldError('s-last', true); valid = false; } else { setError('err-slast', false); setFieldError('s-last', false); }
+    if (!grade) { setError('err-sgrade', true); setFieldError('s-grade', true); valid = false; } else { setError('err-sgrade', false); setFieldError('s-grade', false); }
+    if (!school) { setError('err-sschool', true); setFieldError('s-school', true); valid = false; } else { setError('err-sschool', false); setFieldError('s-school', false); }
+    if (!gender) { setError('err-sgender', true); setFieldError('s-gender', true); valid = false; } else { setError('err-sgender', false); setFieldError('s-gender', false); }
+    if (!shirt) { setError('err-sshirt', true); setFieldError('s-shirt', true); valid = false; } else { setError('err-sshirt', false); setFieldError('s-shirt', false); }
+    if (!selectedIntent) { setError('err-sintent', true); valid = false; } else { setError('err-sintent', false); }
+    if (!policy) { setError('err-policy', true); valid = false; } else { setError('err-policy', false); }
+
+    if (!valid) return;
+
+    var btn = document.getElementById('submit-btn');
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+
+    // Step 1: Create auth user
+    fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(authData) {
+      if (authData.error) throw new Error(authData.error.message || authData.msg);
+
+      // Step 2: Create family record
+      return fetch(SUPABASE_URL + '/rest/v1/families', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + (authData.access_token || SUPABASE_KEY),
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          parent_1_name: document.getElementById('parent1').value.trim(),
+          parent_2_name: document.getElementById('parent2').value.trim() || null,
+          email: document.getElementById('email').value.trim(),
+          emergency_phone_1: document.getElementById('phone1').value.trim(),
+          emergency_phone_2: document.getElementById('phone2').value.trim() || null,
+          notify_opt_in: document.getElementById('notify-opt').checked,
+          code_active: true
+        })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(familyData) {
+      var family = Array.isArray(familyData) ? familyData[0] : familyData;
+      if (!family || !family.id) throw new Error('Family creation failed');
+      familyId = family.id;
+      familyCode = family.family_code;
+
+      // Step 3: Create student record
+      return fetch(SUPABASE_URL + '/rest/v1/students', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          family_id: familyId,
+          first_name: first,
+          last_name: last,
+          grade: parseInt(grade),
+          gender: gender,
+          home_school: school,
+          program: getProgram(parseInt(grade)),
+          shirt_size: shirt,
+          pipeline_status: selectedIntent === 'full_participation' ? 'priority' : 'interested',
+          season_status: 'pending',
+          registration_status: 'pending',
+          is_first_year: true,
+          gc_joined: false,
+          remind_joined: false,
+          season_verified: false,
+          dietary_flag: false,
+          alert_flag: 'none'
+        })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(studentData) {
+      // Step 4: Create camp registration
+      var eventName = selectedIntent === 'full_participation' ? 'Tryouts July 2026' : 'Summer Camp 2026';
+      return fetch(SUPABASE_URL + '/rest/v1/registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          student_id: Array.isArray(studentData) ? studentData[0].id : studentData.id,
+          family_id: familyId,
+          event_type: selectedIntent === 'full_participation' ? 'tryout' : 'summer_camp',
+          event_name: eventName,
+          program_preference: getProgram(parseInt(grade)),
+          is_current_member: false,
+          priority_status: selectedIntent === 'full_participation' ? 'team_member' : 'new',
+          registration_status: 'pending',
+          photo_release_agreed: true,
+          policy_agreed: true
+        })
+      });
+    })
+    .then(function() {
+      showConfirmation();
+    })
+    .catch(function(err) {
+      console.error('Registration error:', err);
+      btn.classList.remove('btn-loading');
+      btn.disabled = false;
+      alert('There was an issue completing your registration: ' + err.message + '\n\nPlease try again or contact your coordinator.');
+    });
+  }
+
+  function showConfirmation() {
+    document.getElementById('display-family-code').textContent = familyCode || 'CC-0000';
+
+    // Build timeline
+    var timeline = document.getElementById('timeline-items');
+    var items = [
+      { strong: 'Registration received', text: 'Your information is in our system and pending coordinator review.' },
+      { strong: 'Update by May 19', text: 'Week 1 Camp (May 26) — you will receive a status update no later than this date.' },
+      { strong: 'Update by May 25', text: 'Week 2 Camp (June 1) — you will receive a status update no later than this date.' },
+      { strong: 'Update by July 15', text: 'Tryouts (July 22) — you will receive a status update no later than this date.' },
+    ];
+    timeline.innerHTML = items.map(function(item) {
+      return '<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text"><strong>' + item.strong + '</strong>' + item.text + '</div></div>';
+    }).join('');
+
+    showScreen(3);
+  }
+
+  function copyCode() {
+    var code = document.getElementById('display-family-code').textContent;
+    navigator.clipboard.writeText(code).then(function() {
+      document.getElementById('copy-confirm').style.display = 'block';
+      setTimeout(function() { document.getElementById('copy-confirm').style.display = 'none'; }, 2000);
+    });
+  }
+
+  function addAnotherStudent() {
+    // Reset student form fields
+    document.getElementById('s-first').value = '';
+    document.getElementById('s-last').value = '';
+    document.getElementById('s-grade').value = '';
+    document.getElementById('s-school').value = '';
+    document.getElementById('s-gender').value = '';
+    document.getElementById('s-shirt').value = '';
+    document.getElementById('policy-agree').checked = false;
+    document.getElementById('program-display').style.display = 'none';
+    selectedIntent = null;
+    document.querySelectorAll('.intent-option').forEach(function(el) { el.classList.remove('selected'); });
+    showScreen(2);
+  }
+</script>
+</body>
+</html>
