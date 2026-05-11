@@ -724,13 +724,30 @@
     setTimeout(() => document.getElementById('notify-email').focus(), 600);
   }
 
-  function handleNotify() {
-    const email = document.getElementById('notify-email').value.trim();
-    if (!email || !email.includes('@')) {
-      document.getElementById('notify-email').style.borderColor = '#b2292e';
-      setTimeout(() => document.getElementById('notify-email').style.borderColor = '', 2000);
-      return;
-    }
+function handleNotify() {
+  const email = document.getElementById('notify-email').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('notify-email').style.borderColor = '#b2292e';
+    setTimeout(() => document.getElementById('notify-email').style.borderColor = '', 2000);
+    return;
+  }
+
+  const SUPABASE_URL = 'https://xxxxxxxxxxxxxxxxxx.supabase.co';
+  const SUPABASE_KEY = 'eyJxxxxxxxxxx';
+
+  fetch(SUPABASE_URL + '/rest/v1/notify_list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    },
+    body: JSON.stringify({ email: email })
+  }).catch(function(err) { console.error('Notify error:', err); });
+
+  document.querySelector('.notify-form').style.display = 'none';
+  document.getElementById('notify-success').style.display = 'block';
+}
     document.querySelector('.notify-form').style.display = 'none';
     document.getElementById('notify-success').style.display = 'block';
 const SUPABASE_URL = https://avbogkupsoeraivbyypu.supabase.co;
