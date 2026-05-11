@@ -254,7 +254,7 @@
           <div class="section-divider-line"></div>
         </div>
 
-        <div class="checkbox-group" onclick="toggleCheck('notify-opt')">
+        <div class="checkbox-group" onclick="toggleCheck(event, 'notify-opt')">
           <input type="checkbox" id="notify-opt" checked />
           <div class="checkbox-label">
             <strong>Program communications</strong>
@@ -410,7 +410,7 @@
           <div class="section-divider-line"></div>
         </div>
 
-        <div class="checkbox-group" onclick="toggleCheck('policy-agree')">
+        <div class="checkbox-group" onclick="toggleCheck(event, 'policy-agree')">
           <input type="checkbox" id="policy-agree" />
           <div class="checkbox-label">
             <strong>Program Policy Agreement</strong>
@@ -490,7 +490,8 @@
   var currentScreen = 1;
 
   // ── UTILITY ──
-  function toggleCheck(id) {
+function toggleCheck(e, id) {
+    if (e.target.type === 'checkbox') return;
     var cb = document.getElementById(id);
     cb.checked = !cb.checked;
   }
