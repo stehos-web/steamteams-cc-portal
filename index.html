@@ -699,7 +699,7 @@
       <p>Enter your email and we'll send you a direct link to register for camp and set up your family portal account the moment it goes live.</p>
       <div class="notify-form">
         <input type="email" id="notify-email" placeholder="your@email.com" />
-        <button onclick="handleNotify()">Send Me the Link</button>
+        <button id="notify-btn">Send Me the Link</button>
       </div>
       <div class="notify-success" id="notify-success">✓ You're on the list! Watch your inbox — we'll be in touch soon.</div>
     </div>
@@ -785,6 +785,7 @@ fetch(`${SUPABASE_URL}/rest/v1/notify_list`, {
       observer.observe(el);
     }
   });
+document.getElementById('notify-btn').addEventListener('click', handleNotify);
 </script>
 </body>
 </html>
