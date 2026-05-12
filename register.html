@@ -320,7 +320,7 @@
         <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" id="confirm-msg"></p>
         <div id="tl-items"></div>
         <div style="background:var(--surface);border-radius:4px;padding:14px;margin-top:14px;border-left:4px solid var(--blue);font-size:13px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">Questions?</strong> Reach out to your coordinator &mdash; we're here to help.</div>
-        <button class="add-more-btn" onclick="regAnother()">+ Register Another Student</button>
+        <div id="confirm-actions"></div>
         <div class="bg" style="margin-top:12px;"><button class="bp" onclick="window.location.href='/'">Return to Portal Home</button></div>
       </div>
     </div>
@@ -662,12 +662,39 @@ function showConfirm(mode,deadlineLabel){
     document.getElementById('confirm-msg').textContent="A coordinator will be in touch within 5 business days to schedule an interview and discuss next steps. There's no commitment required at this stage.";
     document.getElementById('tl-items').innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Request received</strong>Your student\'s tryout request is in our system.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Coordinator contact within 5 business days</strong>A coordinator will reach out to schedule an interview.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Interview &amp; tryout</strong>Your student will have a chance to meet the team and try out in person.</div></div>';
   }
+  renderConfirmActions(mode);
   go('confirm');
 }
 
 function copyCode(){
   var c=document.getElementById('show-code').textContent;
   navigator.clipboard.writeText(c).then(function(){var el=document.getElementById('cc-copied');el.style.display='block';setTimeout(function(){el.style.display='none';},2000);});
+}
+
+function renderConfirmActions(mode){
+  var el=document.getElementById('confirm-actions');
+  // Only show "register same student for another event" in summer window mode
+  // In off-season there's only one thing to submit, so just show add student
+  var eventBtn='';
+  if(mode==='summer'&&selStuName){
+    eventBtn='<button class="add-more-btn" onclick="regAnotherEvent()" style="margin-top:14px;">+ Register '+selStuName+' for Another Event</button>';
+  }
+  var stuLabel=isReturn?'+ Register a Different Student':'+ Add Another Student';
+  el.innerHTML=eventBtn+'<button class="add-more-btn" onclick="regAnother()" style="margin-top:8px;">'+stuLabel+'</button>';
+}
+
+function regAnotherEvent(){
+  // Keep selStuId, selStuName, selGrade — just reset the event selection and go back to event screen
+  selEv=null;selEvData=null;
+  document.querySelectorAll('.ev-opt').forEach(function(el){
+    el.classList.remove('sel');el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';
+    var radio=el.querySelector('input[type=radio]');if(radio){radio.disabled=false;radio.checked=false;}
+    var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();
+  });
+  document.getElementById('con-note').style.display='none';
+  document.getElementById('ev-sub').textContent='Registering: '+selStuName;
+  filterEventsByGrade(selGrade);
+  go('event');
 }
 
 function regAnother(){
