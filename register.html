@@ -7,155 +7,149 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --red: #b2292e; --red-dark: #8f1f23; --red-light: #f5e8e8;
-    --blue: #1c355e; --blue-dark: #142646; --blue-light: #e8ecf3;
-    --black: #020202; --gray: #c8c8c8; --gray-light: #f0f0f0;
-    --white: #ffffff; --text: #1a1a1a; --text-muted: #555555;
-    --border: #e0e0e0; --surface: #f8f8f8; --green: #22C55E;
-    --green-light: #f0fdf4; --gold: #d4a017;
+    --red:#b2292e;--red-dark:#8f1f23;--red-light:#f5e8e8;
+    --blue:#1c355e;--blue-dark:#142646;--blue-light:#e8ecf3;
+    --black:#020202;--gray:#c8c8c8;--gray-light:#f0f0f0;
+    --white:#ffffff;--text:#1a1a1a;--text-muted:#555555;
+    --border:#e0e0e0;--surface:#f8f8f8;--green:#22C55E;
+    --green-light:#f0fdf4;--gold:#d4a017;
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { font-family: 'Roboto', sans-serif; background: var(--gray-light); color: var(--text); min-height: 100vh; }
-
-  header { background: var(--blue); padding: 0 40px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; }
-  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-  .logo-title { font-family: 'Roboto Slab', serif; font-weight: 800; font-size: 16px; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
-  .logo-title em { color: var(--red); font-style: normal; }
-  .logo-sub { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase; }
-  .back-link { font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; }
-  .back-link:hover { color: white; }
-
-  .progress-wrap { background: var(--blue-dark); padding: 14px 40px; }
-  .progress-inner { max-width: 680px; margin: 0 auto; }
-  .progress-steps { display: flex; align-items: center; }
-  .prog-step { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .prog-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; transition: all 0.3s; }
-  .prog-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap; }
-  .prog-line { flex: 1; height: 2px; margin: 0 6px; transition: background 0.3s; }
-  .prog-step.active .prog-num { background: var(--red); color: white; }
-  .prog-step.active .prog-label { color: white; }
-  .prog-step.done .prog-num { background: var(--green); color: white; }
-  .prog-step.done .prog-label { color: rgba(255,255,255,0.6); }
-  .prog-step.off .prog-num { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); }
-  .prog-step.off .prog-label { color: rgba(255,255,255,0.3); }
-  .prog-line.done { background: var(--green); }
-  .prog-line.off { background: rgba(255,255,255,0.12); }
-
-  main { max-width: 680px; margin: 36px auto; padding: 0 20px 80px; }
-  .card { background: white; border-radius: 6px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 16px; }
-  .ch { padding: 24px 32px; }
-  .ch h2 { font-family: 'Roboto Slab', serif; font-weight: 800; font-size: 21px; color: white; text-transform: uppercase; margin-bottom: 4px; }
-  .ch p { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 300; }
-  .ch-blue { background: var(--blue); }
-  .ch-red { background: var(--red); }
-  .ch-dark { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); }
-  .cb { padding: 28px 32px; }
-
-  .fork-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media(max-width:500px){ .fork-grid { grid-template-columns: 1fr; } }
-  .fork-opt { border: 2px solid var(--border); border-radius: 6px; padding: 24px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; }
-  .fork-opt:hover { border-color: var(--blue); background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(28,53,94,0.12); }
-  .fork-icon { font-size: 32px; margin-bottom: 10px; }
-  .fork-opt h3 { font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 15px; color: var(--blue); text-transform: uppercase; margin-bottom: 6px; }
-  .fork-opt p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-
-  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0; }
-  .fg.one { grid-template-columns: 1fr; }
-  @media(max-width:500px){ .fg { grid-template-columns: 1fr; } }
-  .fgr { display: flex; flex-direction: column; gap: 5px; }
-  .fgr.span2 { grid-column: 1/-1; }
-  label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--blue); }
-  .req { color: var(--red); margin-left: 2px; }
-  .opt { color: var(--gray); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; margin-left: 4px; }
-  input[type=text], input[type=email], input[type=password], input[type=tel], select, textarea {
-    padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 4px;
-    font-family: 'Roboto', sans-serif; font-size: 14px; color: var(--text);
-    background: white; outline: none; transition: border-color 0.2s; width: 100%;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
-  input.err, select.err, textarea.err { border-color: var(--red); }
-  input::placeholder, textarea::placeholder { color: #bbb; }
-  textarea { resize: vertical; min-height: 80px; }
-  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 34px; cursor: pointer; }
-  .em { font-size: 11px; color: var(--red); display: none; margin-top: 2px; }
-  .em.show { display: block; }
-
-  .sdiv { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; }
-  .sdiv-line { flex: 1; height: 1px; background: var(--border); }
-  .sdiv-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray); white-space: nowrap; }
-
-  .cbx { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--surface); border-radius: 4px; border: 1.5px solid var(--border); cursor: pointer; margin-bottom: 10px; }
-  .cbx input[type=checkbox] { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; cursor: pointer; accent-color: var(--blue); }
-  .cbx-label { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-  .cbx-label strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
-
-  .prog-badge { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 4px; background: var(--blue-light); border: 1.5px solid var(--blue); margin-top: 4px; }
-  .prog-badge-text { font-size: 14px; font-weight: 600; color: var(--blue); }
-  .prog-badge-sub { font-size: 12px; color: var(--text-muted); }
-
-  .ev-opts { display: flex; flex-direction: column; gap: 10px; }
-  .ev-opt { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
-  .ev-opt:hover { border-color: var(--blue); background: var(--blue-light); }
-  .ev-opt.sel { border-color: var(--blue); background: var(--blue-light); }
-  .ev-opt input[type=radio] { margin-top: 3px; flex-shrink: 0; accent-color: var(--blue); }
-  .ev-bar { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 40px; }
-  .ev-text strong { font-size: 14px; color: var(--blue); font-weight: 700; display: block; margin-bottom: 3px; }
-  .ev-text span { font-size: 12px; color: var(--text-muted); }
-  .ev-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; margin-left: 6px; vertical-align: middle; }
-  .b-red { background: var(--red-light); color: var(--red); }
-  .b-blue { background: var(--blue-light); color: var(--blue); }
-  .b-green { background: var(--green-light); color: #16a34a; }
-  .b-gold { background: #fef9e7; color: var(--gold); }
-
-  .int-opts { display: flex; flex-direction: column; gap: 8px; }
-  .int-opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
-  .int-opt:hover { border-color: var(--blue); background: var(--blue-light); }
-  .int-opt.sel { border-color: var(--blue); background: var(--blue-light); }
-  .int-opt input[type=radio] { margin-top: 3px; flex-shrink: 0; accent-color: var(--blue); }
-  .int-opt-text strong { font-size: 13px; color: var(--blue); font-weight: 600; display: block; margin-bottom: 2px; }
-  .int-opt-text span { font-size: 12px; color: var(--text-muted); }
-
-  .stu-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-  .stu-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
-  .stu-card:hover { border-color: var(--blue); background: var(--blue-light); }
-  .stu-card.sel { border-color: var(--blue); background: var(--blue-light); }
-  .stu-info strong { font-size: 14px; color: var(--blue); font-weight: 600; display: block; }
-  .stu-info span { font-size: 12px; color: var(--text-muted); }
-  .stu-chk { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 12px; }
-  .stu-card.sel .stu-chk { background: var(--blue); border-color: var(--blue); color: white; }
-
-  .bg { display: flex; gap: 12px; margin-top: 22px; }
-  .bp { background: var(--red); color: white; border: none; padding: 13px 24px; border-radius: 4px; font-family: 'Roboto Slab', serif; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; flex: 1; box-shadow: 0 3px 12px rgba(178,41,46,0.2); }
-  .bp:hover { background: var(--red-dark); transform: translateY(-1px); }
-  .bp:disabled { background: var(--gray); box-shadow: none; cursor: not-allowed; transform: none; }
-  .bs { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); padding: 13px 18px; border-radius: 4px; font-family: 'Roboto Slab', serif; font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-  .bs:hover { background: var(--blue-light); }
-  .btn-spin { position: relative; color: transparent !important; }
-  .btn-spin::after { content: ''; position: absolute; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; top: 50%; left: 50%; transform: translate(-50%,-50%); }
-  @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-
-  .cc-wrap { background: var(--blue); border-radius: 6px; padding: 24px; text-align: center; margin-bottom: 20px; }
-  .cc-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
-  .cc-val { font-family: 'Roboto Slab', serif; font-weight: 900; font-size: 38px; color: white; letter-spacing: 4px; margin-bottom: 10px; }
-  .cc-copy { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 7px 18px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-  .cc-copy:hover { background: rgba(255,255,255,0.25); }
-  .cc-copied { display: none; color: var(--green); font-size: 12px; font-weight: 600; margin-top: 6px; }
-  .tl-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .tl-item:last-child { border-bottom: none; }
-  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; margin-top: 5px; }
-  .tl-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-  .tl-text strong { color: var(--text); font-weight: 600; display: block; }
-  .pend-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(240,180,41,0.1); border: 1px solid rgba(240,180,41,0.3); border-radius: 100px; font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-  .add-more-btn { width: 100%; padding: 13px; border: 2px dashed var(--border); border-radius: 4px; background: transparent; color: var(--blue); font-family: 'Roboto Slab', serif; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; margin-top: 14px; }
-  .add-more-btn:hover { border-color: var(--blue); background: var(--blue-light); }
-  .alert-err { padding: 12px 16px; border-radius: 4px; font-size: 13px; margin-bottom: 14px; line-height: 1.5; background: var(--red-light); border-left: 4px solid var(--red); color: #7f1d1d; display: none; }
-
-  .screen { display: none; }
-  .screen.active { display: block; }
-  .form-foot { text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-muted); }
-  .form-foot a { color: var(--blue); text-decoration: none; font-weight: 500; }
-  @media(max-width:500px){ header { padding: 0 20px; } .cb { padding: 20px; } .progress-wrap { padding: 10px 20px; } .prog-label { display: none; } }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Roboto',sans-serif;background:var(--gray-light);color:var(--text);min-height:100vh;}
+  header{background:var(--blue);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.2);position:sticky;top:0;z-index:100;}
+  .logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .logo-title{font-family:'Roboto Slab',serif;font-weight:800;font-size:16px;color:white;text-transform:uppercase;letter-spacing:0.5px;}
+  .logo-title em{color:var(--red);font-style:normal;}
+  .logo-sub{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1.5px;text-transform:uppercase;}
+  .back-link{font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;}
+  .back-link:hover{color:white;}
+  .progress-wrap{background:var(--blue-dark);padding:14px 40px;}
+  .progress-inner{max-width:680px;margin:0 auto;}
+  .progress-steps{display:flex;align-items:center;}
+  .prog-step{display:flex;align-items:center;gap:8px;flex:1;}
+  .prog-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.3s;}
+  .prog-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:color 0.3s;white-space:nowrap;}
+  .prog-line{flex:1;height:2px;margin:0 6px;transition:background 0.3s;}
+  .prog-step.active .prog-num{background:var(--red);color:white;}
+  .prog-step.active .prog-label{color:white;}
+  .prog-step.done .prog-num{background:var(--green);color:white;}
+  .prog-step.done .prog-label{color:rgba(255,255,255,0.6);}
+  .prog-step.off .prog-num{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);}
+  .prog-step.off .prog-label{color:rgba(255,255,255,0.3);}
+  .prog-line.done{background:var(--green);}
+  .prog-line.off{background:rgba(255,255,255,0.12);}
+  .prog-step.hidden{display:none;}
+  .prog-line.hidden{display:none;}
+  main{max-width:680px;margin:36px auto;padding:0 20px 80px;}
+  .card{background:white;border-radius:6px;box-shadow:0 2px 16px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:16px;}
+  .ch{padding:24px 32px;}
+  .ch h2{font-family:'Roboto Slab',serif;font-weight:800;font-size:21px;color:white;text-transform:uppercase;margin-bottom:4px;}
+  .ch p{font-size:13px;color:rgba(255,255,255,0.6);font-weight:300;}
+  .ch-blue{background:var(--blue);}
+  .ch-red{background:var(--red);}
+  .ch-dark{background:linear-gradient(135deg,var(--blue),var(--blue-dark));}
+  .cb{padding:28px 32px;}
+  .fork-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:500px){.fork-grid{grid-template-columns:1fr;}}
+  .fork-opt{border:2px solid var(--border);border-radius:6px;padding:24px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:white;}
+  .fork-opt:hover{border-color:var(--blue);background:var(--blue-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(28,53,94,0.12);}
+  .fork-icon{font-size:32px;margin-bottom:10px;}
+  .fork-opt h3{font-family:'Roboto Slab',serif;font-weight:700;font-size:15px;color:var(--blue);text-transform:uppercase;margin-bottom:6px;}
+  .fork-opt p{font-size:12px;color:var(--text-muted);line-height:1.5;}
+  .fork-loading{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;}
+  .fork-loading-spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;}
+  .fg.one{grid-template-columns:1fr;}
+  @media(max-width:500px){.fg{grid-template-columns:1fr;}}
+  .fgr{display:flex;flex-direction:column;gap:5px;}
+  label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);}
+  .req{color:var(--red);margin-left:2px;}
+  .opt{color:var(--gray);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;margin-left:4px;}
+  input[type=text],input[type=email],input[type=password],input[type=tel],select,textarea{padding:11px 13px;border:1.5px solid var(--border);border-radius:4px;font-family:'Roboto',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;transition:border-color 0.2s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+  input.err,select.err,textarea.err{border-color:var(--red);}
+  input::placeholder,textarea::placeholder{color:#bbb;}
+  textarea{resize:vertical;min-height:80px;}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer;}
+  .em{font-size:11px;color:var(--red);display:none;margin-top:2px;}
+  .em.show{display:block;}
+  .sdiv{display:flex;align-items:center;gap:10px;margin:18px 0 14px;}
+  .sdiv-line{flex:1;height:1px;background:var(--border);}
+  .sdiv-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);white-space:nowrap;}
+  .cbx{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface);border-radius:4px;border:1.5px solid var(--border);cursor:pointer;margin-bottom:10px;}
+  .cbx input[type=checkbox]{width:17px;height:17px;flex-shrink:0;margin-top:1px;cursor:pointer;accent-color:var(--blue);}
+  .cbx-label{font-size:13px;color:var(--text-muted);line-height:1.5;}
+  .cbx-label strong{color:var(--text);font-weight:600;display:block;margin-bottom:2px;}
+  .prog-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:4px;background:var(--blue-light);border:1.5px solid var(--blue);margin-top:4px;}
+  .prog-badge-text{font-size:14px;font-weight:600;color:var(--blue);}
+  .prog-badge-sub{font-size:12px;color:var(--text-muted);}
+  .prog-opts{display:flex;flex-direction:column;gap:8px;}
+  .prog-opt{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .prog-opt:hover{border-color:var(--blue);background:var(--blue-light);}
+  .prog-opt.sel{border-color:var(--blue);background:var(--blue-light);}
+  .prog-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
+  .prog-opt-text strong{font-size:14px;color:var(--blue);font-weight:700;display:block;margin-bottom:3px;}
+  .prog-opt-text span{font-size:12px;color:var(--text-muted);}
+  .info-banner{padding:14px 16px;background:var(--blue-light);border-left:4px solid var(--blue);border-radius:4px;margin-bottom:18px;font-size:13px;color:var(--blue);line-height:1.6;}
+  .info-banner strong{font-weight:700;display:block;margin-bottom:4px;color:var(--blue);}
+  .ev-opts{display:flex;flex-direction:column;gap:10px;}
+  .ev-opt{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .ev-opt:hover{border-color:var(--blue);background:var(--blue-light);}
+  .ev-opt.sel{border-color:var(--blue);background:var(--blue-light);}
+  .ev-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
+  .ev-bar{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:40px;}
+  .ev-text strong{font-size:14px;color:var(--blue);font-weight:700;display:block;margin-bottom:3px;}
+  .ev-text span{font-size:12px;color:var(--text-muted);}
+  .ev-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:100px;margin-left:6px;vertical-align:middle;}
+  .b-red{background:var(--red-light);color:var(--red);}
+  .b-blue{background:var(--blue-light);color:var(--blue);}
+  .b-green{background:var(--green-light);color:#16a34a;}
+  .b-gold{background:#fef9e7;color:var(--gold);}
+  .int-opts{display:flex;flex-direction:column;gap:8px;}
+  .int-opt{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .int-opt:hover{border-color:var(--blue);background:var(--blue-light);}
+  .int-opt.sel{border-color:var(--blue);background:var(--blue-light);}
+  .int-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
+  .int-opt-text strong{font-size:13px;color:var(--blue);font-weight:600;display:block;margin-bottom:2px;}
+  .int-opt-text span{font-size:12px;color:var(--text-muted);}
+  .stu-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+  .stu-card{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .stu-card:hover{border-color:var(--blue);background:var(--blue-light);}
+  .stu-card.sel{border-color:var(--blue);background:var(--blue-light);}
+  .stu-info strong{font-size:14px;color:var(--blue);font-weight:600;display:block;}
+  .stu-info span{font-size:12px;color:var(--text-muted);}
+  .stu-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:12px;}
+  .stu-card.sel .stu-chk{background:var(--blue);border-color:var(--blue);color:white;}
+  .bg{display:flex;gap:12px;margin-top:22px;}
+  .bp{background:var(--red);color:white;border:none;padding:13px 24px;border-radius:4px;font-family:'Roboto Slab',serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;flex:1;box-shadow:0 3px 12px rgba(178,41,46,0.2);}
+  .bp:hover{background:var(--red-dark);transform:translateY(-1px);}
+  .bp:disabled{background:var(--gray);box-shadow:none;cursor:not-allowed;transform:none;}
+  .bs{background:transparent;color:var(--blue);border:1.5px solid var(--blue);padding:13px 18px;border-radius:4px;font-family:'Roboto Slab',serif;font-weight:600;font-size:13px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .bs:hover{background:var(--blue-light);}
+  .btn-spin{position:relative;color:transparent!important;}
+  .btn-spin::after{content:'';position:absolute;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;top:50%;left:50%;transform:translate(-50%,-50%);}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+  .cc-wrap{background:var(--blue);border-radius:6px;padding:24px;text-align:center;margin-bottom:20px;}
+  .cc-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;}
+  .cc-val{font-family:'Roboto Slab',serif;font-weight:900;font-size:38px;color:white;letter-spacing:4px;margin-bottom:10px;}
+  .cc-copy{background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);padding:7px 18px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.2s;}
+  .cc-copy:hover{background:rgba(255,255,255,0.25);}
+  .cc-copied{display:none;color:var(--green);font-size:12px;font-weight:600;margin-top:6px;}
+  .tl-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .tl-item:last-child{border-bottom:none;}
+  .tl-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px;}
+  .tl-text{font-size:13px;color:var(--text-muted);line-height:1.5;}
+  .tl-text strong{color:var(--text);font-weight:600;display:block;}
+  .pend-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:100px;font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+  .add-more-btn{width:100%;padding:13px;border:2px dashed var(--border);border-radius:4px;background:transparent;color:var(--blue);font-family:'Roboto Slab',serif;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;margin-top:14px;}
+  .add-more-btn:hover{border-color:var(--blue);background:var(--blue-light);}
+  .alert-err{padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:14px;line-height:1.5;background:var(--red-light);border-left:4px solid var(--red);color:#7f1d1d;display:none;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .form-foot{text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted);}
+  .form-foot a{color:var(--blue);text-decoration:none;font-weight:500;}
+  @media(max-width:500px){header{padding:0 20px;}.cb{padding:20px;}.progress-wrap{padding:10px 20px;}.prog-label{display:none;}}
 </style>
 </head>
 <body>
@@ -164,7 +158,7 @@
   <a href="/" class="logo">
     <div><div class="logo-title"><em>STEAM</em> Teams</div><div class="logo-sub">CC Portal</div></div>
   </a>
-  <a href="/" class="back-link">← Back to Home</a>
+  <a href="/" class="back-link">&#8592; Back to Home</a>
 </header>
 
 <div class="progress-wrap">
@@ -174,7 +168,7 @@
       <div class="prog-line off" id="pl1"></div>
       <div class="prog-step off" id="ps2"><div class="prog-num">2</div><div class="prog-label">Student</div></div>
       <div class="prog-line off" id="pl2"></div>
-      <div class="prog-step off" id="ps3"><div class="prog-num">3</div><div class="prog-label">Event</div></div>
+      <div class="prog-step off" id="ps3"><div class="prog-num">3</div><div class="prog-label" id="ps3-label">Event</div></div>
       <div class="prog-line off" id="pl3"></div>
       <div class="prog-step off" id="ps4"><div class="prog-num">4</div><div class="prog-label">Confirm</div></div>
     </div>
@@ -186,21 +180,9 @@
   <!-- FORK -->
   <div class="screen active" id="s-fork">
     <div class="card">
-      <div class="ch ch-blue"><h2>Summer 2026 Registration</h2><p>Greenpower USA Summer Academy · Inspire Academy · Lafayette, AL</p></div>
-      <div class="cb">
-        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">Does your family already have an account with STEAM Teams CC?</p>
-        <div class="fork-grid">
-          <div class="fork-opt" onclick="go('new-account')">
-            <div class="fork-icon">👨‍👩‍👧‍👦</div>
-            <h3>New Family</h3>
-            <p>First time with us — create your family account</p>
-          </div>
-          <div class="fork-opt" onclick="go('login')">
-            <div class="fork-icon">🔑</div>
-            <h3>Returning Family</h3>
-            <p>Already have an account — log in to register</p>
-          </div>
-        </div>
+      <div class="ch ch-blue"><h2 id="fork-title">Registration</h2><p id="fork-sub">STEAM Teams CC &middot; Inspire Academy &middot; Lafayette, AL</p></div>
+      <div class="cb" id="fork-body">
+        <div class="fork-loading"><div class="fork-loading-spin"></div>Loading registration info&hellip;</div>
       </div>
     </div>
   </div>
@@ -227,8 +209,8 @@
         <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>
         <div class="cbx" onclick="chk(event,'opt-in')"><input type="checkbox" id="opt-in" checked/><div class="cbx-label"><strong>Program communications</strong>I agree to receive updates about STEAM Teams events and program news.</div></div>
         <div class="bg">
-          <button class="bs" onclick="go('fork')">← Back</button>
-          <button class="bp" onclick="validateAccount()">Continue →</button>
+          <button class="bs" onclick="go('fork')">&#8592; Back</button>
+          <button class="bp" onclick="validateAccount()">Continue &#8594;</button>
         </div>
         <div class="form-foot">Already have an account? <a href="#" onclick="go('login');return false;">Log in here</a></div>
       </div>
@@ -246,8 +228,8 @@
           <div class="fgr" style="margin-top:14px;"><label>Password <span class="req">*</span></label><input type="password" id="li-pw" placeholder="Your password"/></div>
         </div>
         <div class="bg">
-          <button class="bs" onclick="go('fork')">← Back</button>
-          <button class="bp" id="li-btn" onclick="doLogin()">Log In →</button>
+          <button class="bs" onclick="go('fork')">&#8592; Back</button>
+          <button class="bp" id="li-btn" onclick="doLogin()">Log In &#8594;</button>
         </div>
         <div class="form-foot">New to STEAM Teams? <a href="#" onclick="go('new-account');return false;">Create an account</a></div>
       </div>
@@ -263,14 +245,14 @@
         <div class="stu-cards" id="stu-cards"></div>
         <div id="no-stu" style="display:none;font-size:13px;color:var(--text-muted);padding:12px;background:var(--surface);border-radius:4px;margin-bottom:12px;">No students on this account yet.</div>
         <div class="bg" style="flex-direction:column;gap:10px;">
-          <button class="bp" id="reg-sel-btn" onclick="toEventSelect()" disabled>Register Selected Student →</button>
+          <button class="bp" id="reg-sel-btn" onclick="toNextAfterStudent()" disabled>Register Selected Student &#8594;</button>
           <button class="bs" style="text-align:center;" onclick="toAddStudentReturning()">+ Add a New Student to This Account</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ADD STUDENT -->
+  <!-- STUDENT FORM -->
   <div class="screen" id="s-student">
     <div class="card">
       <div class="ch ch-red"><h2 id="stu-head">Add Your Student</h2><p id="stu-sub">You can add more students after completing registration</p></div>
@@ -278,41 +260,42 @@
     </div>
   </div>
 
-  <!-- EVENT SELECT -->
+  <!-- EVENT SELECT (summer window only) -->
   <div class="screen" id="s-event">
     <div class="card">
       <div class="ch ch-blue"><h2>Select an Event</h2><p id="ev-sub">Choose which event to register for</p></div>
       <div class="cb">
-        <div class="ev-opts">
-          <label class="ev-opt" id="eo-w1" onclick="pickEvent('w1')">
-            <input type="radio" name="ev" value="w1"/>
-            <div class="ev-bar" style="background:var(--red);"></div>
-            <div class="ev-text"><strong>Week 1 — Race Team Training Camp <span class="ev-badge b-red">May 26–29</span></strong><span>Build & maintain race cars · Open to Grades 4–8 · Free</span></div>
-          </label>
-          <label class="ev-opt" id="eo-w2" onclick="pickEvent('w2')">
-            <input type="radio" name="ev" value="w2"/>
-            <div class="ev-bar" style="background:var(--blue);"></div>
-            <div class="ev-text"><strong>Week 2 — Makerspace & Production Camp <span class="ev-badge b-blue">June 1–4</span></strong><span>3D Printing, Digital Art, Laser Engraving · Open to Grades 4–8 · Free</span></div>
-          </label>
-          <label class="ev-opt" id="eo-try" onclick="pickEvent('try')">
-            <input type="radio" name="ev" value="try"/>
-            <div class="ev-bar" style="background:var(--green);"></div>
-            <div class="ev-text"><strong>Week 3 — Team Tryouts &amp; Pre-Season <span class="ev-badge b-green">July 22–24</span></strong><span>Interviews, tryouts &amp; team announcement · Open to Grades 5–10 · Free</span></div>
-          </label>
-          <label class="ev-opt" id="eo-con" onclick="pickEvent('con')">
-            <input type="radio" name="ev" value="con"/>
-            <div class="ev-bar" style="background:var(--gold);"></div>
-            <div class="ev-text"><strong>Team Consideration — Unable to Attend Tryouts <span class="ev-badge b-gold">Grades 5–10</span></strong><span>Can't attend in-person tryouts but want to be considered for the team</span></div>
-          </label>
-        </div>
+        <div class="ev-opts" id="ev-opts-list"></div>
         <span class="em" id="e-ev" style="margin-top:8px;">Please select an event</span>
         <div id="con-note" style="display:none;margin-top:16px;">
           <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Tell us about your situation</div><div class="sdiv-line"></div></div>
           <div class="fgr"><label>Why can't you attend tryouts? <span class="req">*</span></label><textarea id="con-reason" placeholder="Please briefly explain why you're unable to attend in-person tryouts and why you'd like to be considered for the team..."></textarea><span class="em" id="e-con">Please provide a brief explanation</span></div>
         </div>
         <div class="bg">
-          <button class="bs" id="ev-back" onclick="evBack()">← Back</button>
-          <button class="bp" onclick="submitEvent()">Continue →</button>
+          <button class="bs" id="ev-back" onclick="evBack()">&#8592; Back</button>
+          <button class="bp" id="ev-btn" onclick="submitEvent()">Continue &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRYOUT REQUEST (off-season) -->
+  <div class="screen" id="s-request">
+    <div class="card">
+      <div class="ch ch-red"><h2>Request to Try Out</h2><p id="req-sub">Tell us about your student's interest</p></div>
+      <div class="cb">
+        <div class="info-banner"><strong>How this works</strong>Submit this request and a coordinator will be in touch within 5 business days to schedule an interview. There's no commitment required at this stage.</div>
+        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Program Interest</div><div class="sdiv-line"></div></div>
+        <div class="prog-opts" id="prog-opts-list"></div>
+        <span class="em" id="e-prog">Please select a program</span>
+        <div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">Tell Us More</div><div class="sdiv-line"></div></div>
+        <div class="fgr">
+          <label>Why does your student want to join? <span class="opt">(optional)</span></label>
+          <textarea id="req-reason" placeholder="Share anything you'd like us to know — interests, goals, prior experience, or anything else that would help the coordinator prepare for a conversation..."></textarea>
+        </div>
+        <div class="bg">
+          <button class="bs" onclick="reqBack()">&#8592; Back</button>
+          <button class="bp" id="req-btn" onclick="submitRequest()">Submit Request &#8594;</button>
         </div>
       </div>
     </div>
@@ -321,23 +304,23 @@
   <!-- CONFIRMATION -->
   <div class="screen" id="s-confirm">
     <div class="card">
-      <div class="ch ch-dark"><h2>You're Registered! 🎉</h2><p>Your registration has been submitted successfully</p></div>
+      <div class="ch ch-dark"><h2 id="confirm-title">You're Registered!</h2><p id="confirm-sub">Your registration has been submitted successfully</p></div>
       <div class="cb">
         <div class="cc-wrap" id="code-wrap">
           <div class="cc-label">Your Family Code</div>
           <div class="cc-val" id="show-code">CC-0000</div>
           <button class="cc-copy" onclick="copyCode()">Copy Code</button>
-          <div class="cc-copied" id="cc-copied">✓ Copied!</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:10px;line-height:1.5;">Save this code — use it to quickly check dues, volunteer hours, and status without logging in.</div>
+          <div class="cc-copied" id="cc-copied">&#10003; Copied!</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:10px;line-height:1.5;">Save this code &mdash; use it to quickly check dues, volunteer hours, and status without logging in.</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;">Registration Status</div>
-          <div class="pend-badge">⏳ Pending Review</div>
+          <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;" id="confirm-status-label">Registration Status</div>
+          <div class="pend-badge">&#9203; Pending Review</div>
         </div>
-        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Your registration is pending coordinator review. You will receive a status update no later than one week before your registered event.</p>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" id="confirm-msg"></p>
         <div id="tl-items"></div>
-        <div style="background:var(--surface);border-radius:4px;padding:14px;margin-top:14px;border-left:4px solid var(--blue);font-size:13px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">Questions?</strong> Reach out directly to your coordinator — we're here to help.</div>
-        <button class="add-more-btn" onclick="regAnother()">+ Register Another Student or Event</button>
+        <div style="background:var(--surface);border-radius:4px;padding:14px;margin-top:14px;border-left:4px solid var(--blue);font-size:13px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">Questions?</strong> Reach out to your coordinator &mdash; we're here to help.</div>
+        <button class="add-more-btn" onclick="regAnother()">+ Register Another Student</button>
         <div class="bg" style="margin-top:12px;"><button class="bp" onclick="window.location.href='/'">Return to Portal Home</button></div>
       </div>
     </div>
@@ -346,102 +329,192 @@
 </main>
 
 <script>
-var SB_URL = 'https://avbogkupsoeraivbyypu.supabase.co';
-var SB_KEY = 'sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f';
+var SB_URL='https://avbogkupsoeraivbyypu.supabase.co';
+var SB_KEY='sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f'; // TODO: rotate in Supabase dashboard
 
-var fid = null, fcode = null, tok = null, selStuId = null, selStuName = null, selEv = null, selIntent = null, isReturn = false, stuFlow = 'new';
+var fid=null,fcode=null,tok=null;
+var selStuId=null,selStuName=null,selGrade=null;
+var selEv=null,selEvData=null,selProgram=null,selIntent=null;
+var isReturn=false,stuFlow='new';
+var cfg={windowOpen:false,windowLabel:'Registration',events:[]};
 
-var EV_MAP = {
-  w1:  { name: 'Week 1 — Race Team Training Camp (May 26-29)', type: 'summer_camp', deadline: 'May 19' },
-  w2:  { name: 'Week 2 — Makerspace & Production Camp (June 1-4)', type: 'summer_camp', deadline: 'May 25' },
-  try: { name: 'Week 3 — Team Tryouts & Pre-Season (July 22-24)', type: 'tryout', deadline: 'July 15' },
-  con: { name: 'Team Consideration — Unable to Attend Tryouts', type: 'tryout', deadline: 'July 15' }
-};
-
-function go(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  var t = document.getElementById('s-' + id);
-  if (t) t.classList.add('active');
-  updateProg(id);
-  window.scrollTo(0,0);
+function getProgram(g){return g<=5?'goblin':g<=8?'ms_greenpower':'hs_greenpower';}
+function getProgramLabel(p){
+  if(p==='goblin')return{name:'Goblin Program',sub:'Grades 4\u20135 \u00b7 Piedmont Motorsports'};
+  if(p==='ms_greenpower')return{name:'MS Greenpower',sub:'Grades 6\u20138 \u00b7 Renegade Racing'};
+  return{name:'HS Greenpower',sub:'Grades 9\u201312 \u00b7 Renegade Racing'};
 }
 
-function updateProg(id) {
-  var map = { fork:0, 'new-account':1, login:1, dashboard:1, student:2, event:3, confirm:4 };
-  var n = map[id] || 0;
-  for (var i=1;i<=4;i++) {
-    var s = document.getElementById('ps'+i);
-    if(s) s.className = 'prog-step ' + (i<n?'done':i===n?'active':'off');
-  }
-  for (var j=1;j<=3;j++) {
-    var l = document.getElementById('pl'+j);
-    if(l) l.className = 'prog-line ' + (j<n?'done':'off');
-  }
+function loadConfig(){
+  Promise.all([
+    fetch(SB_URL+'/rest/v1/portal_config?select=key,value',{headers:{'apikey':SB_KEY}}).then(function(r){return r.json();}),
+    fetch(SB_URL+'/rest/v1/events?registration_open=eq.true&order=sort_order.asc',{headers:{'apikey':SB_KEY}}).then(function(r){return r.json();})
+  ])
+  .then(function(res){
+    var rows=res[0];var events=res[1];
+    rows.forEach(function(r){
+      if(r.key==='registration_window_open')cfg.windowOpen=(r.value===true||r.value==='true');
+      if(r.key==='registration_window_label')cfg.windowLabel=(r.value+'').replace(/^"|"$/g,'');
+    });
+    cfg.events=Array.isArray(events)?events:[];
+    renderFork();renderEventOptions();
+  })
+  .catch(function(err){console.error('Config load error:',err);cfg.windowOpen=false;renderFork();});
 }
 
-function chk(e, id) { if(e.target.type==='checkbox') return; var c=document.getElementById(id); c.checked=!c.checked; }
-function se(id,show) { var el=document.getElementById(id); if(el){ show?el.classList.add('show'):el.classList.remove('show'); } }
-function fe(id,show) { var el=document.getElementById(id); if(el){ show?el.classList.add('err'):el.classList.remove('err'); } }
-
-function getProgram(g) { return g<=5?'goblin':g<=8?'ms_greenpower':'hs_greenpower'; }
-
-function updateProgramBadge() {
-  var g = parseInt(document.getElementById('s-grade').value);
-  var d = document.getElementById('prog-display');
-  if(!g){ if(d) d.style.display='none'; return; }
-  if(d) d.style.display='block';
-  var n=document.getElementById('prog-name'), s=document.getElementById('prog-sub');
-  if(g<=5){n.textContent='Goblin Program';s.textContent='Grades 4–5 · Piedmont Motorsports';}
-  else if(g<=8){n.textContent='MS Greenpower';s.textContent='Grades 6–8 · Renegade Racing';}
-  else{n.textContent='HS Greenpower';s.textContent='Grades 9–12 · Renegade Racing';}
+function renderFork(){
+  document.getElementById('fork-title').textContent=cfg.windowOpen?cfg.windowLabel+' Registration':'Join STEAM Teams';
+  document.getElementById('fork-sub').textContent=cfg.windowOpen?'Greenpower USA Summer Academy \u00b7 Inspire Academy \u00b7 Lafayette, AL':'Submit a tryout request \u00b7 Inspire Academy \u00b7 Lafayette, AL';
+  var body='';
+  if(!cfg.windowOpen)body+='<div class="info-banner"><strong>Tryout requests are open year-round</strong>Fill out this form and a coordinator will be in touch within 5 business days to schedule an interview.</div>';
+  body+='<p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">Does your family already have an account with STEAM Teams CC?</p>';
+  body+='<div class="fork-grid"><div class="fork-opt" onclick="go(\'new-account\')"><div class="fork-icon">\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66</div><h3>New Family</h3><p>First time with us &mdash; create your family account</p></div><div class="fork-opt" onclick="go(\'login\')"><div class="fork-icon">\uD83D\uDD11</div><h3>Returning Family</h3><p>Already have an account &mdash; log in to continue</p></div></div>';
+  document.getElementById('fork-body').innerHTML=body;
+  if(!cfg.windowOpen){document.getElementById('ps3-label').textContent='Confirm';document.getElementById('ps4').classList.add('hidden');document.getElementById('pl3').classList.add('hidden');}
+  else{document.getElementById('ps3-label').textContent='Event';document.getElementById('ps4').classList.remove('hidden');document.getElementById('pl3').classList.remove('hidden');}
 }
 
-function pickIntent(v) {
-  selIntent = v;
-  document.querySelectorAll('.int-opt').forEach(function(el){ el.classList.remove('sel'); });
+function renderEventOptions(){
+  var cm={red:{bar:'var(--red)',badge:'b-red'},blue:{bar:'var(--blue)',badge:'b-blue'},green:{bar:'var(--green)',badge:'b-green'},gold:{bar:'var(--gold)',badge:'b-gold'}};
+  var html='';
+  cfg.events.forEach(function(ev){
+    var c=cm[ev.color]||cm.blue;
+    html+='<label class="ev-opt" id="eo-'+ev.id+'" onclick="pickEvent(\''+ev.id+'\')">';
+    html+='<input type="radio" name="ev" value="'+ev.id+'"/>';
+    html+='<div class="ev-bar" style="background:'+c.bar+';"></div>';
+    html+='<div class="ev-text"><strong>'+ev.name;
+    if(ev.dates_label)html+=' <span class="ev-badge '+c.badge+'">'+ev.dates_label+'</span>';
+    html+='</strong><span>'+(ev.description||'')+'</span></div></label>';
+  });
+  document.getElementById('ev-opts-list').innerHTML=html||'<p style="color:var(--text-muted);font-size:14px;">No events are currently open for registration.</p>';
+}
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var t=document.getElementById('s-'+id);if(t)t.classList.add('active');
+  updateProg(id);window.scrollTo(0,0);
+}
+
+function updateProg(id){
+  var map4={fork:0,'new-account':1,login:1,dashboard:1,student:2,event:3,confirm:4};
+  var map3={fork:0,'new-account':1,login:1,dashboard:1,student:2,request:3,confirm:3};
+  var map=cfg.windowOpen?map4:map3;var n=map[id]||0;
+  for(var i=1;i<=4;i++){var s=document.getElementById('ps'+i);if(!s)continue;var h=s.classList.contains('hidden');s.className='prog-step '+(i<n?'done':i===n?'active':'off')+(h?' hidden':'');}
+  for(var j=1;j<=3;j++){var l=document.getElementById('pl'+j);if(!l)continue;var lh=l.classList.contains('hidden');l.className='prog-line '+(j<n?'done':'off')+(lh?' hidden':'');}
+}
+
+function chk(e,id){if(e.target.type==='checkbox')return;var c=document.getElementById(id);c.checked=!c.checked;}
+function se(id,show){var el=document.getElementById(id);if(el){show?el.classList.add('show'):el.classList.remove('show');}}
+function fe(id,show){var el=document.getElementById(id);if(el){show?el.classList.add('err'):el.classList.remove('err');}}
+
+function updateProgramBadge(){
+  var g=parseInt(document.getElementById('s-grade').value);
+  var d=document.getElementById('prog-display');if(!g){if(d)d.style.display='none';return;}
+  if(d)d.style.display='block';
+  var lbl=getProgramLabel(getProgram(g));
+  document.getElementById('prog-name').textContent=lbl.name;
+  document.getElementById('prog-sub').textContent=lbl.sub;
+}
+
+function pickIntent(v){
+  selIntent=v;
+  document.querySelectorAll('.int-opt').forEach(function(el){el.classList.remove('sel');});
   var map={camp_only:'io-camp',camp_and_potential:'io-pot',full_participation:'io-full'};
-  var el=document.getElementById(map[v]); if(el) el.classList.add('sel');
+  var el=document.getElementById(map[v]);if(el)el.classList.add('sel');
   se('e-intent',false);
 }
 
-function pickEvent(v) {
-  selEv = v;
-  document.querySelectorAll('.ev-opt').forEach(function(el){ el.classList.remove('sel'); });
-  var el=document.getElementById('eo-'+v); if(el) el.classList.add('sel');
+function pickEvent(id){
+  selEv=id;selEvData=cfg.events.find(function(e){return e.id===id;})||null;
+  document.querySelectorAll('.ev-opt').forEach(function(el){el.classList.remove('sel');});
+  var el=document.getElementById('eo-'+id);if(el)el.classList.add('sel');
   se('e-ev',false);
-  document.getElementById('con-note').style.display = v==='con'?'block':'none';
+  document.getElementById('con-note').style.display=(selEvData&&selEvData.requires_reason)?'block':'none';
+  if(selEvData&&selEvData.requires_reason&&selEvData.reason_prompt){var ta=document.getElementById('con-reason');if(ta)ta.placeholder=selEvData.reason_prompt;}
 }
 
-function evBack() { go(isReturn?'dashboard':'student'); }
-
-// ── STUDENT FORM ──
-function buildStudentForm(backScreen) {
-  return '<div class="fg" style="margin-bottom:16px;">' +
-    '<div class="fgr"><label>First Name <span class="req">*</span></label><input type="text" id="s-first" placeholder="First name"/><span class="em" id="e-sf">Required</span></div>' +
-    '<div class="fgr"><label>Last Name <span class="req">*</span></label><input type="text" id="s-last" placeholder="Last name"/><span class="em" id="e-sl">Required</span></div>' +
-    '</div>' +
-    '<div class="fg" style="margin-bottom:16px;">' +
-    '<div class="fgr"><label>Current Grade <span class="req">*</span></label><select id="s-grade" onchange="updateProgramBadge()"><option value="">Select grade...</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option></select><span class="em" id="e-sg">Required</span></div>' +
-    '<div class="fgr"><label>School <span class="req">*</span></label><select id="s-school"><option value="">Select school...</option><option>Fairfax Elementary</option><option>Eastside Elementary</option><option>JP Powell Middle School</option><option>WF Burns Middle School</option><option>Lafayette High School</option><option>Valley High School</option><option>Other</option></select><span class="em" id="e-sc">Required</span></div>' +
-    '</div>' +
-    '<div id="prog-display" style="display:none;margin-bottom:16px;"><label>Program Assignment</label><div class="prog-badge"><div><div class="prog-badge-text" id="prog-name"></div><div class="prog-badge-sub" id="prog-sub"></div></div></div></div>' +
-    '<div class="fg" style="margin-bottom:16px;">' +
-    '<div class="fgr"><label>Gender <span class="req">*</span></label><select id="s-gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select><span class="em" id="e-sgen">Required</span></div>' +
-    '<div class="fgr"><label>Shirt Size <span class="req">*</span></label><select id="s-shirt"><option value="">Select size...</option><optgroup label="Youth"><option value="YS">Youth Small</option><option value="YM">Youth Medium</option><option value="YL">Youth Large</option><option value="YXL">Youth XL</option></optgroup><optgroup label="Adult"><option value="AS">Adult Small</option><option value="AM">Adult Medium</option><option value="AL">Adult Large</option><option value="AXL">Adult XL</option><option value="A2XL">Adult 2XL</option><option value="A3XL">Adult 3XL</option></optgroup></select><span class="em" id="e-sshi">Required</span></div>' +
-    '</div>' +
-    '<div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Participation Intent</div><div class="sdiv-line"></div></div>' +
-    '<div class="int-opts">' +
-    '<label class="int-opt" id="io-camp" onclick="pickIntent(\'camp_only\')"><input type="radio" name="intent" value="camp_only"/><div class="int-opt-text"><strong>Camp Only</strong><span>Interested in summer camp — not necessarily joining the team</span></div></label>' +
-    '<label class="int-opt" id="io-pot" onclick="pickIntent(\'camp_and_potential\')"><input type="radio" name="intent" value="camp_and_potential"/><div class="int-opt-text"><strong>Camp + Potential Team Member</strong><span>Attend camp and try out for the team</span></div></label>' +
-    '<label class="int-opt" id="io-full" onclick="pickIntent(\'full_participation\')"><input type="radio" name="intent" value="full_participation"/><div class="int-opt-text"><strong>Full Participation</strong><span>Committed to joining the team and the full season</span></div></label>' +
-    '</div><span class="em" id="e-intent" style="margin-top:6px;">Please select a participation level</span>' +
-    '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>' +
-    '<div class="cbx" onclick="chk(event,\'s-policy\')"><input type="checkbox" id="s-policy"/><div class="cbx-label"><strong>Program Policy Agreement</strong>I confirm I have permission to enroll this student and agree to the STEAM Teams program policies.</div></div>' +
-    '<span class="em" id="e-pol" style="margin-top:4px;">You must agree to continue</span>' +
-    '<div class="bg"><button class="bs" onclick="go(\'' + backScreen + '\')">← Back</button><button class="bp" id="stu-btn" onclick="submitStudent()">Continue →</button></div>';
+function filterEventsByGrade(grade){
+  cfg.events.forEach(function(ev){
+    var el=document.getElementById('eo-'+ev.id);if(!el)return;
+    var allowed=grade>=ev.grade_min&&grade<=ev.grade_max;
+    var radio=el.querySelector('input[type=radio]');
+    if(allowed){
+      el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';
+      if(radio)radio.disabled=false;
+      var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();
+    }else{
+      el.style.opacity='0.4';el.style.pointerEvents='none';el.style.cursor='not-allowed';
+      if(radio){radio.disabled=true;radio.checked=false;}
+      el.classList.remove('sel');
+      if(!el.querySelector('.ev-grade-lock')){
+        var note=document.createElement('span');note.className='ev-grade-lock';
+        note.style.cssText='font-size:11px;color:#888;font-style:italic;margin-top:4px;display:block;';
+        note.textContent='Open to Grades '+ev.grade_min+'\u2013'+ev.grade_max+' only';
+        var txt=el.querySelector('.ev-text');if(txt)txt.appendChild(note);
+      }
+      if(selEv===ev.id){selEv=null;selEvData=null;}
+    }
+  });
 }
 
-function validateAccount() {
+function renderProgramOptions(grade){
+  var opts=[];
+  if(grade>=4&&grade<=5)opts.push({val:'goblin',name:'Goblin Program',sub:'Grades 4\u20135 \u00b7 Piedmont Motorsports electric car racing'});
+  if(grade>=6&&grade<=8)opts.push({val:'ms_greenpower',name:'MS Greenpower',sub:'Grades 6\u20138 \u00b7 Renegade Racing electric car program'});
+  if(grade>=9&&grade<=12)opts.push({val:'hs_greenpower',name:'HS Greenpower',sub:'Grades 9\u201312 \u00b7 Renegade Racing electric car program'});
+  var html='';
+  opts.forEach(function(o){
+    html+='<label class="prog-opt" id="po-'+o.val+'" onclick="pickProgram(\''+o.val+'\')">';
+    html+='<input type="radio" name="prog" value="'+o.val+'"/>';
+    html+='<div class="prog-opt-text"><strong>'+o.name+'</strong><span>'+o.sub+'</span></div></label>';
+  });
+  document.getElementById('prog-opts-list').innerHTML=html;
+  if(opts.length===1)pickProgram(opts[0].val);
+}
+
+function pickProgram(v){
+  selProgram=v;
+  document.querySelectorAll('.prog-opt').forEach(function(el){el.classList.remove('sel');});
+  var el=document.getElementById('po-'+v);if(el)el.classList.add('sel');
+  se('e-prog',false);
+}
+
+function toNextAfterStudent(){
+  if(cfg.windowOpen){document.getElementById('ev-sub').textContent='Registering: '+selStuName;filterEventsByGrade(selGrade);go('event');}
+  else{document.getElementById('req-sub').textContent='Student: '+selStuName;renderProgramOptions(selGrade);go('request');}
+}
+
+function evBack(){go(isReturn?'dashboard':'student');}
+function reqBack(){go(isReturn?'dashboard':'student');}
+
+function buildStudentForm(backScreen){
+  var intentSection='';
+  if(cfg.windowOpen){
+    intentSection='<div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Participation Intent</div><div class="sdiv-line"></div></div>'+
+    '<div class="int-opts">'+
+    '<label class="int-opt" id="io-camp" onclick="pickIntent(\'camp_only\')"><input type="radio" name="intent" value="camp_only"/><div class="int-opt-text"><strong>Camp Only</strong><span>Interested in summer camp &mdash; not necessarily joining the team</span></div></label>'+
+    '<label class="int-opt" id="io-pot" onclick="pickIntent(\'camp_and_potential\')"><input type="radio" name="intent" value="camp_and_potential"/><div class="int-opt-text"><strong>Camp + Potential Team Member</strong><span>Attend camp and try out for the team</span></div></label>'+
+    '<label class="int-opt" id="io-full" onclick="pickIntent(\'full_participation\')"><input type="radio" name="intent" value="full_participation"/><div class="int-opt-text"><strong>Full Participation</strong><span>Committed to joining the team and the full season</span></div></label>'+
+    '</div><span class="em" id="e-intent" style="margin-top:6px;">Please select a participation level</span>';
+  }
+  return '<div class="fg" style="margin-bottom:16px;">'+
+    '<div class="fgr"><label>First Name <span class="req">*</span></label><input type="text" id="s-first" placeholder="First name"/><span class="em" id="e-sf">Required</span></div>'+
+    '<div class="fgr"><label>Last Name <span class="req">*</span></label><input type="text" id="s-last" placeholder="Last name"/><span class="em" id="e-sl">Required</span></div>'+
+    '</div><div class="fg" style="margin-bottom:16px;">'+
+    '<div class="fgr"><label>Current Grade <span class="req">*</span></label><select id="s-grade" onchange="updateProgramBadge()"><option value="">Select grade...</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option></select><span class="em" id="e-sg">Required</span></div>'+
+    '<div class="fgr"><label>School <span class="req">*</span></label><select id="s-school"><option value="">Select school...</option><option>Fairfax Elementary</option><option>Eastside Elementary</option><option>JP Powell Middle School</option><option>WF Burns Middle School</option><option>Lafayette High School</option><option>Valley High School</option><option>Other</option></select><span class="em" id="e-sc">Required</span></div>'+
+    '</div><div id="prog-display" style="display:none;margin-bottom:16px;"><label>Program Assignment</label><div class="prog-badge"><div><div class="prog-badge-text" id="prog-name"></div><div class="prog-badge-sub" id="prog-sub"></div></div></div></div>'+
+    '<div class="fg" style="margin-bottom:16px;">'+
+    '<div class="fgr"><label>Gender <span class="req">*</span></label><select id="s-gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select><span class="em" id="e-sgen">Required</span></div>'+
+    '<div class="fgr"><label>Shirt Size <span class="req">*</span></label><select id="s-shirt"><option value="">Select size...</option><optgroup label="Youth"><option value="YS">Youth Small</option><option value="YM">Youth Medium</option><option value="YL">Youth Large</option><option value="YXL">Youth XL</option></optgroup><optgroup label="Adult"><option value="AS">Adult Small</option><option value="AM">Adult Medium</option><option value="AL">Adult Large</option><option value="AXL">Adult XL</option><option value="A2XL">Adult 2XL</option><option value="A3XL">Adult 3XL</option></optgroup></select><span class="em" id="e-sshi">Required</span></div>'+
+    '</div>'+intentSection+
+    '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>'+
+    '<div class="cbx" onclick="chk(event,\'s-policy\')"><input type="checkbox" id="s-policy"/><div class="cbx-label"><strong>Program Policy Agreement</strong>I confirm I have permission to enroll this student and agree to the STEAM Teams program policies.</div></div>'+
+    '<span class="em" id="e-pol" style="margin-top:4px;">You must agree to continue</span>'+
+    '<div class="bg"><button class="bs" onclick="go(\''+backScreen+'\')">&#8592; Back</button><button class="bp" id="stu-btn" onclick="submitStudent()">Continue &#8594;</button></div>';
+}
+
+function validateAccount(){
   var ok=true;
   var p1=document.getElementById('p1').value.trim();
   var em=document.getElementById('reg-email').value.trim();
@@ -451,84 +524,57 @@ function validateAccount() {
   if(!em||em.indexOf('@')===-1){se('e-email',true);fe('reg-email',true);ok=false;}else{se('e-email',false);fe('reg-email',false);}
   if(!pw||pw.length<8){se('e-pw',true);fe('reg-pw',true);ok=false;}else{se('e-pw',false);fe('reg-pw',false);}
   if(!ph){se('e-ph1',true);fe('ph1',true);ok=false;}else{se('e-ph1',false);fe('ph1',false);}
-  if(!ok) return;
-  stuFlow='new'; selIntent=null;
+  if(!ok)return;
+  stuFlow='new';selIntent=null;
   document.getElementById('stu-head').textContent='Add Your Student';
   document.getElementById('stu-sub').textContent='You can add more students after completing registration';
-  document.getElementById('stu-body').innerHTML = buildStudentForm('new-account');
+  document.getElementById('stu-body').innerHTML=buildStudentForm('new-account');
   go('student');
 }
 
-function doLogin() {
+function doLogin(){
   var em=document.getElementById('li-email').value.trim();
   var pw=document.getElementById('li-pw').value;
-  if(!em||!pw) return;
-  var btn=document.getElementById('li-btn');
-  btn.classList.add('btn-spin'); btn.disabled=true;
+  if(!em||!pw)return;
+  var btn=document.getElementById('li-btn');btn.classList.add('btn-spin');btn.disabled=true;
   document.getElementById('login-err').style.display='none';
-  fetch(SB_URL+'/auth/v1/token?grant_type=password',{
-    method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},
-    body:JSON.stringify({email:em,password:pw})
-  })
+  fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:em,password:pw})})
   .then(function(r){return r.json();})
   .then(function(d){
-    if(!d.access_token) throw new Error('bad creds');
-    tok=d.access_token; isReturn=true;
-    return fetch(SB_URL+'/rest/v1/families?email=eq.'+encodeURIComponent(em)+'&select=*',{
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}
-    });
+    if(!d.access_token)throw new Error('bad creds');
+    tok=d.access_token;isReturn=true;
+    return fetch(SB_URL+'/rest/v1/families?email=eq.'+encodeURIComponent(em)+'&select=*',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}});
   })
   .then(function(r){return r.json();})
   .then(function(fams){
-    if(!fams||!fams.length) throw new Error('no family');
-    var f=fams[0]; fid=f.id; fcode=f.family_code;
+    if(!fams||!fams.length)throw new Error('no family');
+    var f=fams[0];fid=f.id;fcode=f.family_code||null;
     document.getElementById('dash-greeting').textContent='Welcome back, '+f.parent_1_name.split(' ')[0]+'!';
-    return fetch(SB_URL+'/rest/v1/students?family_id=eq.'+fid+'&select=*',{
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}
-    });
+    return fetch(SB_URL+'/rest/v1/students?family_id=eq.'+fid+'&select=*',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}});
   })
   .then(function(r){return r.json();})
   .then(function(stus){
-    var c=document.getElementById('stu-cards'); c.innerHTML='';
-    if(!stus||!stus.length){
-      document.getElementById('no-stu').style.display='block';
-    } else {
-      stus.forEach(function(s){
-        var d=document.createElement('div');
-        d.className='stu-card'; d.setAttribute('data-id',s.id); d.setAttribute('data-name',s.first_name+' '+s.last_name);
-        d.innerHTML='<div class="stu-info"><strong>'+s.first_name+' '+s.last_name+'</strong><span>Grade '+s.grade+' · '+s.program.replace(/_/g,' ')+' · '+s.home_school+'</span></div><div class="stu-chk" id="chk-'+s.id+'"></div>';
-        d.onclick=function(){ pickStu(s.id,s.first_name+' '+s.last_name); };
-        c.appendChild(d);
-      });
-    }
-    btn.classList.remove('btn-spin'); btn.disabled=false;
-    go('dashboard');
+    var c=document.getElementById('stu-cards');c.innerHTML='';
+    if(!stus||!stus.length){document.getElementById('no-stu').style.display='block';}
+    else{stus.forEach(function(s){var d=document.createElement('div');d.className='stu-card';d.setAttribute('data-id',s.id);d.innerHTML='<div class="stu-info"><strong>'+s.first_name+' '+s.last_name+'</strong><span>Grade '+s.grade+' \u00b7 '+s.program.replace(/_/g,' ')+' \u00b7 '+s.home_school+'</span></div><div class="stu-chk" id="chk-'+s.id+'"></div>';d.onclick=function(){pickStu(s.id,s.first_name+' '+s.last_name,s.grade);};c.appendChild(d);});}
+    btn.classList.remove('btn-spin');btn.disabled=false;go('dashboard');
   })
-  .catch(function(err){
-    btn.classList.remove('btn-spin'); btn.disabled=false;
-    document.getElementById('login-err').style.display='block';
-    console.error(err);
-  });
+  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;document.getElementById('login-err').style.display='block';console.error(err);});
 }
 
-function pickStu(id,name){
-  selStuId=id; selStuName=name;
-  document.querySelectorAll('.stu-card').forEach(function(c){ c.classList.remove('sel'); var chk=c.querySelector('.stu-chk'); if(chk) chk.textContent=''; });
+function pickStu(id,name,grade){
+  selStuId=id;selStuName=name;selGrade=grade||null;
+  document.querySelectorAll('.stu-card').forEach(function(c){c.classList.remove('sel');var chk=c.querySelector('.stu-chk');if(chk)chk.textContent='';});
   var card=document.querySelector('[data-id="'+id+'"]');
-  if(card){ card.classList.add('sel'); var chk=document.getElementById('chk-'+id); if(chk) chk.textContent='✓'; }
+  if(card){card.classList.add('sel');var chk=document.getElementById('chk-'+id);if(chk)chk.textContent='\u2713';}
   document.getElementById('reg-sel-btn').disabled=false;
 }
 
-function toEventSelect(){
-  document.getElementById('ev-sub').textContent='Registering: '+selStuName;
-  go('event');
-}
-
 function toAddStudentReturning(){
-  stuFlow='returning'; selIntent=null;
+  stuFlow='returning';selIntent=null;
   document.getElementById('stu-head').textContent='Add a New Student';
   document.getElementById('stu-sub').textContent='Adding another child to your family account';
-  document.getElementById('stu-body').innerHTML = buildStudentForm('dashboard');
+  document.getElementById('stu-body').innerHTML=buildStudentForm('dashboard');
   go('student');
 }
 
@@ -547,84 +593,92 @@ function submitStudent(){
   if(!school){se('e-sc',true);fe('s-school',true);ok=false;}else{se('e-sc',false);fe('s-school',false);}
   if(!gender){se('e-sgen',true);fe('s-gender',true);ok=false;}else{se('e-sgen',false);fe('s-gender',false);}
   if(!shirt){se('e-sshi',true);fe('s-shirt',true);ok=false;}else{se('e-sshi',false);fe('s-shirt',false);}
-  if(!selIntent){se('e-intent',true);ok=false;}else{se('e-intent',false);}
+  if(cfg.windowOpen&&!selIntent){se('e-intent',true);ok=false;}else{se('e-intent',false);}
   if(!policy){se('e-pol',true);ok=false;}else{se('e-pol',false);}
-  if(!ok) return;
-  var btn=document.getElementById('stu-btn'); btn.classList.add('btn-spin'); btn.disabled=true;
+  if(!ok)return;
+  var btn=document.getElementById('stu-btn');btn.classList.add('btn-spin');btn.disabled=true;
 
   var createStu=function(famId,token){
-    return fetch(SB_URL+'/rest/v1/students',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(token||SB_KEY),'Prefer':'return=representation'},
-      body:JSON.stringify({family_id:famId,first_name:first,last_name:last,grade:parseInt(grade),gender:gender,home_school:school,program:getProgram(parseInt(grade)),shirt_size:shirt,pipeline_status:selIntent==='full_participation'?'priority':'interested',season_status:'pending',registration_status:'pending',is_first_year:true,gc_joined:false,remind_joined:false,season_verified:false,dietary_flag:false,alert_flag:'none'})
-    })
+    return fetch(SB_URL+'/rest/v1/students',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(token||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({family_id:famId,first_name:first,last_name:last,grade:parseInt(grade),gender:gender,home_school:school,program:getProgram(parseInt(grade)),shirt_size:shirt,pipeline_status:selIntent==='full_participation'?'priority':'interested',season_status:'pending',registration_status:'pending',is_first_year:true,gc_joined:false,remind_joined:false,season_verified:false,dietary_flag:false,alert_flag:'none'})})
     .then(function(r){return r.json();})
-    .then(function(d){
-      var s=Array.isArray(d)?d[0]:d;
-      selStuId=s.id; selStuName=first+' '+last;
-      btn.classList.remove('btn-spin'); btn.disabled=false;
-      document.getElementById('ev-sub').textContent='Registering: '+selStuName;
-      go('event');
-    });
+    .then(function(d){var s=Array.isArray(d)?d[0]:d;selStuId=s.id;selStuName=first+' '+last;selGrade=parseInt(grade);btn.classList.remove('btn-spin');btn.disabled=false;toNextAfterStudent();});
   };
 
   if(isReturn){
-    createStu(fid,tok).catch(function(err){ btn.classList.remove('btn-spin'); btn.disabled=false; alert('Error: '+err.message); });
-  } else {
-    fetch(SB_URL+'/auth/v1/signup',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},
-      body:JSON.stringify({email:document.getElementById('reg-email').value.trim(),password:document.getElementById('reg-pw').value})
+    createStu(fid,tok).catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error: '+err.message);});
+  }else{
+    var regEmail=document.getElementById('reg-email').value.trim();
+    var regPw=document.getElementById('reg-pw').value;
+    fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:regEmail,password:regPw})})
+    .then(function(r){return r.json();})
+    .then(function(a){
+      if(a.error){var msg=a.error.message||a.msg||'';if(msg.toLowerCase().indexOf('already')!==-1||msg.toLowerCase().indexOf('registered')!==-1)throw new Error('DUPLICATE_EMAIL');throw new Error(msg);}
+      return fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:regEmail,password:regPw})});
     })
     .then(function(r){return r.json();})
-    .then(function(a){ if(a.error) throw new Error(a.error.message||a.msg); tok=a.access_token;
-      return fetch(SB_URL+'/rest/v1/families',{
-        method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},
-        body:JSON.stringify({parent_1_name:document.getElementById('p1').value.trim(),parent_2_name:document.getElementById('p2').value.trim()||null,email:document.getElementById('reg-email').value.trim(),emergency_phone_1:document.getElementById('ph1').value.trim(),emergency_phone_2:document.getElementById('ph2').value.trim()||null,notify_opt_in:document.getElementById('opt-in').checked,code_active:true})
-      });
+    .then(function(session){
+      if(!session.access_token)throw new Error('Could not establish session after signup');
+      tok=session.access_token;
+      return fetch(SB_URL+'/rest/v1/families',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok,'Prefer':'return=representation'},body:JSON.stringify({parent_1_name:document.getElementById('p1').value.trim(),parent_2_name:document.getElementById('p2').value.trim()||null,email:regEmail,emergency_phone_1:document.getElementById('ph1').value.trim(),emergency_phone_2:document.getElementById('ph2').value.trim()||null,notify_opt_in:document.getElementById('opt-in').checked,code_active:true})});
     })
     .then(function(r){return r.json();})
-    .then(function(d){ var f=Array.isArray(d)?d[0]:d; if(!f||!f.id) throw new Error('Family creation failed'); fid=f.id; fcode=f.family_code; return createStu(fid,tok); })
-    .catch(function(err){ btn.classList.remove('btn-spin'); btn.disabled=false; alert('Registration error: '+err.message); console.error(err); });
+    .then(function(d){var f=Array.isArray(d)?d[0]:d;if(!f||!f.id)throw new Error('Family creation failed \u2014 please try again or contact your coordinator');fid=f.id;fcode=f.family_code||'CC-0000';return createStu(fid,tok);})
+    .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;if(err.message==='DUPLICATE_EMAIL'){alert('An account with that email already exists. Please use the "Returning Family" option to log in instead.');go('login');}else{alert('Registration error: '+err.message);console.error(err);}});
   }
 }
 
 function submitEvent(){
-  if(!selEv){se('e-ev',true);return;}
-  if(selEv==='con'){
-    var r=document.getElementById('con-reason').value.trim();
-    if(!r){se('e-con',true);return;} se('e-con',false);
-  }
-  var ev=EV_MAP[selEv];
-  var reason=selEv==='con'?document.getElementById('con-reason').value.trim():null;
-  fetch(SB_URL+'/rest/v1/registrations',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},
-    body:JSON.stringify({student_id:selStuId,family_id:fid,event_type:ev.type,event_name:ev.name,program_preference:null,is_current_member:isReturn,priority_status:isReturn?'team_member':'new',registration_status:'pending',photo_release_agreed:true,policy_agreed:true,sessions_selected:reason?{consideration_reason:reason}:null})
-  })
-  .then(function(){ showConfirm(ev.deadline); })
-  .catch(function(err){ alert('Error saving registration: '+err.message); console.error(err); });
+  if(!selEv||!selEvData){se('e-ev',true);return;}
+  if(selEvData.requires_reason){var r=document.getElementById('con-reason').value.trim();if(!r){se('e-con',true);return;}se('e-con',false);}
+  var reason=selEvData.requires_reason?document.getElementById('con-reason').value.trim():null;
+  var btn=document.getElementById('ev-btn');btn.classList.add('btn-spin');btn.disabled=true;
+  fetch(SB_URL+'/rest/v1/registrations',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({student_id:selStuId,family_id:fid,event_type:selEvData.event_type,event_name:selEvData.name,program_preference:null,is_current_member:isReturn,priority_status:isReturn?'team_member':'new',registration_status:'pending',photo_release_agreed:true,policy_agreed:true,sessions_selected:reason?{consideration_reason:reason}:null})})
+  .then(function(){btn.classList.remove('btn-spin');btn.disabled=false;showConfirm('summer',selEvData.deadline_label);})
+  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error saving registration: '+err.message);console.error(err);});
 }
 
-function showConfirm(deadline){
+function submitRequest(){
+  if(!selProgram){se('e-prog',true);return;}
+  var reason=document.getElementById('req-reason').value.trim();
+  var btn=document.getElementById('req-btn');btn.classList.add('btn-spin');btn.disabled=true;
+  fetch(SB_URL+'/rest/v1/registrations',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({student_id:selStuId,family_id:fid,event_type:'tryout_request',event_name:'Tryout Request \u2014 '+getProgramLabel(selProgram).name,program_preference:selProgram,is_current_member:isReturn,priority_status:'interested',registration_status:'pending',photo_release_agreed:true,policy_agreed:true,sessions_selected:reason?{reason:reason}:null})})
+  .then(function(){btn.classList.remove('btn-spin');btn.disabled=false;showConfirm('offseason',null);})
+  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error submitting request: '+err.message);console.error(err);});
+}
+
+function showConfirm(mode,deadlineLabel){
   var cw=document.getElementById('code-wrap');
-  if(isReturn){ cw.style.display='none'; } else { document.getElementById('show-code').textContent=fcode||'CC-0000'; cw.style.display='block'; }
-  var tl=document.getElementById('tl-items');
-  tl.innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Registration received</strong>Your information is in our system and pending coordinator review.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Update by '+deadline+'</strong>You will receive a status update no later than one week before your event.</div></div>';
+  if(isReturn){cw.style.display='none';}else{document.getElementById('show-code').textContent=fcode||'CC-0000';cw.style.display='block';}
+  if(mode==='summer'){
+    document.getElementById('confirm-title').textContent="You're Registered! \uD83C\uDF89";
+    document.getElementById('confirm-sub').textContent='Your registration has been submitted successfully';
+    document.getElementById('confirm-status-label').textContent='Registration Status';
+    document.getElementById('confirm-msg').textContent='Your registration is pending coordinator review. You will receive a status update no later than one week before your event.';
+    document.getElementById('tl-items').innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Registration received</strong>Your information is in our system and pending coordinator review.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Update by '+(deadlineLabel||'one week before your event')+'</strong>You will be notified of your registration status by this date.</div></div>';
+  }else{
+    document.getElementById('confirm-title').textContent='Request Submitted! \u2705';
+    document.getElementById('confirm-sub').textContent='Your tryout request has been received';
+    document.getElementById('confirm-status-label').textContent='Request Status';
+    document.getElementById('confirm-msg').textContent="A coordinator will be in touch within 5 business days to schedule an interview and discuss next steps. There's no commitment required at this stage.";
+    document.getElementById('tl-items').innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Request received</strong>Your student\'s tryout request is in our system.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Coordinator contact within 5 business days</strong>A coordinator will reach out to schedule an interview.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Interview &amp; tryout</strong>Your student will have a chance to meet the team and try out in person.</div></div>';
+  }
   go('confirm');
 }
 
 function copyCode(){
   var c=document.getElementById('show-code').textContent;
-  navigator.clipboard.writeText(c).then(function(){ var el=document.getElementById('cc-copied'); el.style.display='block'; setTimeout(function(){el.style.display='none';},2000); });
+  navigator.clipboard.writeText(c).then(function(){var el=document.getElementById('cc-copied');el.style.display='block';setTimeout(function(){el.style.display='none';},2000);});
 }
 
 function regAnother(){
-  selStuId=null; selStuName=null; selEv=null; selIntent=null;
-  document.querySelectorAll('.ev-opt').forEach(function(el){el.classList.remove('sel');});
+  selStuId=null;selStuName=null;selGrade=null;selEv=null;selEvData=null;selProgram=null;selIntent=null;
+  document.querySelectorAll('.ev-opt').forEach(function(el){el.classList.remove('sel');el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';var radio=el.querySelector('input[type=radio]');if(radio){radio.disabled=false;radio.checked=false;}var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();});
   document.getElementById('con-note').style.display='none';
-  if(isReturn){ document.querySelectorAll('.stu-card').forEach(function(c){c.classList.remove('sel');}); document.getElementById('reg-sel-btn').disabled=true; go('dashboard'); }
-  else { stuFlow='new'; document.getElementById('stu-head').textContent='Add Your Student'; document.getElementById('stu-sub').textContent='You can add more students after completing registration'; document.getElementById('stu-body').innerHTML=buildStudentForm('new-account'); go('student'); }
+  if(isReturn){document.querySelectorAll('.stu-card').forEach(function(c){c.classList.remove('sel');});document.getElementById('reg-sel-btn').disabled=true;go('dashboard');}
+  else{stuFlow='new';document.getElementById('stu-head').textContent='Add Your Student';document.getElementById('stu-sub').textContent='You can add more students after completing registration';document.getElementById('stu-body').innerHTML=buildStudentForm('new-account');go('student');}
 }
+
+loadConfig();
 </script>
 </body>
 </html>
