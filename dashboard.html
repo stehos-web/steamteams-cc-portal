@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM Teams — Coordinator Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c0392b;--red-light:#fdf0ef;--red-border:#e8b4b0;
+  --amber:#b45309;--amber-light:#fffbeb;--amber-border:#f0d080;
+  --green:#15803d;--green-light:#f0fdf4;--green-border:#86efac;
+  --blue:#1d4ed8;--blue-light:#eff6ff;--blue-border:#bfdbfe;
+  --gray-50:#f8f8f6;--gray-100:#f0efeb;--gray-200:#e2e0da;--gray-400:#9b9a94;
+  --gray-600:#5a5955;--gray-800:#2c2b28;--gray-900:#1a1917;
+  --brand:#c0392b;--brand-dark:#96281b;
+  --font:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --radius:6px;--radius-lg:10px;
+  --sidebar:220px;
+}
+body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var(--gray-50);line-height:1.5;min-height:100vh}
+
+/* AUTH SCREEN */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--gray-100)}
+.auth-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:360px;max-width:90vw}
+.auth-logo{font-size:11px;font-family:var(--mono);letter-spacing:0.1em;color:var(--gray-400);text-transform:uppercase;margin-bottom:1.5rem}
+.auth-logo span{color:var(--brand);font-weight:500}
+.auth-card h1{font-size:20px;font-weight:600;color:var(--gray-900);margin-bottom:0.25rem}
+.auth-card p{font-size:13px;color:var(--gray-400);margin-bottom:1.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--gray-600);margin-bottom:4px;letter-spacing:0.03em}
+.field input{width:100%;padding:8px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--gray-800);background:#fff;outline:none;transition:border-color 0.15s}
+.field input:focus{border-color:var(--brand)}
+.btn-primary{width:100%;padding:9px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:background 0.15s;margin-top:0.5rem}
+.btn-primary:hover{background:var(--brand-dark)}
+.auth-error{font-size:12px;color:var(--red);margin-top:0.75rem;display:none}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;background:var(--gray-900);display:flex;flex-direction:column;overflow-y:auto;z-index:100}
+.sidebar-header{padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-brand{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase}
+.sidebar-brand span{color:#e87568}
+.sidebar-season{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
+.sidebar-nav{padding:0.75rem 0;flex:1}
+.nav-section{padding:0.5rem 1rem 0.25rem;font-size:10px;font-family:var(--mono);letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 1rem;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.1s;font-size:13px;border-left:2px solid transparent;text-decoration:none}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.05)}
+.nav-item.active{color:#fff;border-left-color:#e87568;background:rgba(232,117,104,0.1)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:0.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:#c0392b;color:#fff;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.sidebar-footer{padding:0.75rem 1rem;border-top:1px solid rgba(255,255,255,0.08)}
+.sidebar-user{font-size:12px;color:rgba(255,255,255,0.4)}
+.sidebar-user strong{display:block;color:rgba(255,255,255,0.7);font-weight:500}
+.btn-signout{margin-top:8px;font-size:11px;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);transition:color 0.15s}
+.btn-signout:hover{color:rgba(255,255,255,0.7)}
+.main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
+.topbar{padding:1rem 1.5rem;border-bottom:1px solid var(--gray-200);background:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:16px;font-weight:600;color:var(--gray-900)}
+.page-title span{font-weight:400;color:var(--gray-400);font-size:13px;margin-left:8px}
+.topbar-meta{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
+.content{padding:1.5rem;flex:1}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* HOME */
+.nav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
+.nav-tile{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:8px;text-align:left;font-family:var(--font);position:relative}
+.nav-tile:hover{border-color:var(--gray-400);transform:translateY(-1px)}
+.nav-tile svg{width:20px;height:20px;color:var(--gray-400)}
+.nav-tile-label{font-size:13px;font-weight:500;color:var(--gray-800)}
+.nav-tile-sub{font-size:11px;color:var(--gray-400)}
+.tile-badge{position:absolute;top:10px;right:10px;background:#c0392b;color:#fff;font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:10px}
+.section-label{font-size:11px;font-family:var(--mono);letter-spacing:0.08em;color:var(--gray-400);text-transform:uppercase;margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid var(--gray-200)}
+.todo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1.5rem}
+.todo-item{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:0.75rem 1rem;display:flex;align-items:flex-start;gap:10px}
+.todo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.todo-dot.urgent{background:var(--red)}
+.todo-dot.normal{background:var(--amber)}
+.todo-dot.low{background:var(--gray-200)}
+.todo-text{font-size:13px;color:var(--gray-800);flex:1}
+.todo-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.todo-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;margin-left:auto;flex-shrink:0;align-self:center}
+.tag-urgent{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.tag-pending{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.tag-info{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+.reg-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1rem}
+.stat-num{font-size:24px;font-weight:600;font-family:var(--mono);color:var(--gray-900);line-height:1}
+.stat-label{font-size:12px;color:var(--gray-400);margin-top:4px}
+.stat-sub{font-size:11px;color:var(--gray-400);font-family:var(--mono);margin-top:2px}
+
+/* REGISTRATIONS PAGE */
+.filter-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border:1px solid var(--gray-200);border-radius:20px;background:#fff;font-size:12px;color:var(--gray-600);cursor:pointer;font-family:var(--font);transition:all 0.1s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--gray-800);background:var(--gray-800);color:#fff}
+.reg-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.reg-table th{text-align:left;padding:9px 12px;font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--gray-400);text-transform:uppercase;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}
+.reg-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.reg-table tr:last-child td{border-bottom:none}
+.reg-table tr:hover td{background:var(--gray-50)}
+.status-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:500}
+.status-pending{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.status-approved{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.status-waitlisted{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+.status-declined{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.action-btns{display:flex;gap:6px}
+.btn-sm{padding:4px 10px;border-radius:var(--radius);font-size:11px;font-family:var(--font);cursor:pointer;border:1px solid;transition:all 0.1s;font-weight:500}
+.btn-approve{background:var(--green-light);color:var(--green);border-color:var(--green-border)}
+.btn-approve:hover{background:var(--green);color:#fff}
+.btn-decline{background:var(--red-light);color:var(--red);border-color:var(--red-border)}
+.btn-decline:hover{background:var(--red);color:#fff}
+.btn-waitlist{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border)}
+.btn-waitlist:hover{background:var(--blue);color:#fff}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--gray-400);font-size:13px}
+.loading-row td{text-align:center;padding:2rem;color:var(--gray-400);font-size:12px;font-family:var(--mono)}
+.prog-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px}
+.prog-goblin{background:#fdf4ff;color:#7e22ce;border:1px solid #e9d5ff}
+.prog-ms{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+.prog-hs{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.event-tag{font-size:11px;color:var(--gray-600);display:block}
+
+/* STUDENTS PAGE */
+.search-bar{display:flex;gap:8px;margin-bottom:1rem;align-items:center}
+.search-bar input{flex:1;padding:7px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font);font-size:13px;outline:none}
+.search-bar input:focus{border-color:var(--gray-600)}
+.search-bar select{padding:7px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font);font-size:13px;color:var(--gray-800);background:#fff;outline:none}
+.student-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
+.student-table th{text-align:left;padding:9px 12px;font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--gray-400);text-transform:uppercase;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}
+.student-table td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.student-table tr:last-child td{border-bottom:none}
+.student-table tr:hover td{background:var(--gray-50)}
+.season-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px}
+.s-active{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.s-pending{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.s-inactive{background:var(--gray-100);color:var(--gray-400);border:1px solid var(--gray-200)}
+.alert-dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}
+.alert-none{background:var(--gray-200)}
+.alert-blue{background:#3b82f6}
+.alert-yellow{background:#f59e0b}
+.alert-red{background:#ef4444}
+
+/* SETTINGS PAGE */
+.settings-section{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.settings-section h2{font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gray-100)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--gray-100)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:13px;color:var(--gray-800)}
+.setting-desc{font-size:11px;color:var(--gray-400);margin-top:2px}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--gray-200);border-radius:20px;transition:0.2s}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:0.2s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px)}
+.config-val{font-size:12px;font-family:var(--mono);color:var(--gray-600);background:var(--gray-100);padding:3px 8px;border-radius:3px}
+.btn-secondary{padding:6px 14px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;font-size:12px;color:var(--gray-700);cursor:pointer;font-family:var(--font);font-weight:500;transition:all 0.1s}
+.btn-secondary:hover{border-color:var(--gray-400);background:var(--gray-50)}
+.btn-danger{padding:6px 14px;border:1px solid var(--red-border);border-radius:var(--radius);background:var(--red-light);font-size:12px;color:var(--red);cursor:pointer;font-family:var(--font);font-weight:500;transition:all 0.1s}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* TOASTS */
+#toast-container{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--gray-900);color:#fff;padding:10px 14px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn 0.2s ease;max-width:300px}
+.toast.success{border-left:3px solid #22c55e}
+.toast.error{border-left:3px solid #ef4444}
+.toast.info{border-left:3px solid #3b82f6}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius-lg);padding:1.5rem;width:460px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.modal h2{font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--gray-200)}
+.modal-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:13px}
+.modal-row:last-of-type{border-bottom:none}
+.modal-key{color:var(--gray-400);font-size:12px;font-family:var(--mono)}
+.modal-val{color:var(--gray-800);font-weight:500;text-align:right;max-width:60%}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--gray-200)}
+.reason-box{margin-top:0.75rem;padding:0.75rem;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:12px;color:var(--gray-600);font-style:italic}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:8px;margin-top:1rem;justify-content:flex-end}
+.page-btn{padding:5px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--gray-600);transition:all 0.1s}
+.page-btn:hover:not(:disabled){background:var(--gray-800);color:#fff;border-color:var(--gray-800)}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed}
+.page-info{font-size:12px;font-family:var(--mono);color:var(--gray-400)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-220px);transition:transform 0.2s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><span>STEAM Teams</span> CC</div>
+    <h1>Coordinator Login</h1>
+    <p>Staff access only — Inspire Academy</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="auth-email" placeholder="you@chambersk12.org" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">Sign in</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand"><span>STEAM Teams</span> CC</div>
+      <div class="sidebar-season">2025–2026 Season</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a class="nav-item active" data-page="home" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-page="registrations" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Registrations
+        <span class="nav-badge" id="nav-pending-count">—</span>
+      </a>
+      <a class="nav-item" data-page="students" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Students
+      </a>
+      <div class="nav-section" style="margin-top:0.75rem">Config</div>
+      <a class="nav-item" data-page="settings" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <strong id="sidebar-name">Loading…</strong>
+        Coordinator
+      </div>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="topbar-title">Dashboard <span id="topbar-sub"></span></div>
+      </div>
+      <div class="topbar-meta" id="topbar-date"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- HOME PAGE -->
+      <div class="page active" id="page-home">
+        <div class="section-label">Quick navigation</div>
+        <div class="nav-grid">
+          <button class="nav-tile" data-nav="registrations">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div class="nav-tile-label">Registrations</div>
+            <div class="nav-tile-sub">Review &amp; approve</div>
+            <span class="tile-badge" id="tile-pending-count">—</span>
+          </button>
+          <button class="nav-tile" data-nav="students">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <div class="nav-tile-label">Students</div>
+            <div class="nav-tile-sub">Roster &amp; profiles</div>
+          </button>
+          <button class="nav-tile" onclick="window.open('https://steamteams-cc-portal.vercel.app/register','_blank')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <div class="nav-tile-label">Reg. Page</div>
+            <div class="nav-tile-sub">Public form ↗</div>
+          </button>
+          <button class="nav-tile" data-nav="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <div class="nav-tile-label">Settings</div>
+            <div class="nav-tile-sub">Window &amp; config</div>
+          </button>
+          <button class="nav-tile" onclick="window.open('https://app.supabase.com','_blank')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            <div class="nav-tile-label">Supabase</div>
+            <div class="nav-tile-sub">DB direct ↗</div>
+          </button>
+          <button class="nav-tile" onclick="window.open('https://github.com/stehos-web/steamteams-cc-portal','_blank')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            <div class="nav-tile-label">GitHub</div>
+            <div class="nav-tile-sub">Source repo ↗</div>
+          </button>
+        </div>
+
+        <div class="section-label">Open action items</div>
+        <div class="todo-list" id="todo-list">
+          <div class="todo-item">
+            <div class="todo-dot urgent"></div>
+            <div style="flex:1">
+              <div class="todo-text">Rotate Supabase anon key — exposed in register.html source</div>
+              <div class="todo-meta">Settings → API → Regenerate in Supabase, then update SB_KEY in register.html</div>
+            </div>
+            <span class="todo-tag tag-urgent">urgent</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot normal"></div>
+            <div style="flex:1">
+              <div class="todo-text">Review and approve pending summer registrations</div>
+              <div class="todo-meta">Families are waiting — status shows pending until coordinator approves</div>
+            </div>
+            <span class="todo-tag tag-pending" id="todo-pending-tag">— pending</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot normal"></div>
+            <div style="flex:1">
+              <div class="todo-text">Test off-season registration flow end-to-end</div>
+              <div class="todo-meta">Summer window was tested live — off-season path not yet tested with real Supabase data</div>
+            </div>
+            <span class="todo-tag tag-pending">testing</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot normal"></div>
+            <div style="flex:1">
+              <div class="todo-text">Set up custom domain for portal</div>
+              <div class="todo-meta">Currently live at steamteams-cc-portal.vercel.app</div>
+            </div>
+            <span class="todo-tag tag-info">phase 2</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot low"></div>
+            <div style="flex:1">
+              <div class="todo-text">Resolve school IT email access for notifications</div>
+              <div class="todo-meta">Workaround: manual screen review until resolved</div>
+            </div>
+            <span class="todo-tag tag-info">phase 2</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot low"></div>
+            <div style="flex:1">
+              <div class="todo-text">Upload blank school PO form as reference for Universal PO Request system</div>
+              <div class="todo-meta">Electronic version will match school requirement exactly</div>
+            </div>
+            <span class="todo-tag tag-info">phase 3</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot low"></div>
+            <div style="flex:1">
+              <div class="todo-text">Document pre-event tasks per event type (10 types) for event task automation</div>
+              <div class="todo-meta">Needed before event task template system can be built</div>
+            </div>
+            <span class="todo-tag tag-info">phase 5</span>
+          </div>
+          <div class="todo-item">
+            <div class="todo-dot low"></div>
+            <div style="flex:1">
+              <div class="todo-text">Consult school district legal re: performance profiles before Phase 7 build</div>
+              <div class="todo-meta">student_coaching_profiles table exists — no data stored until legal review</div>
+            </div>
+            <span class="todo-tag tag-info">phase 7</span>
+          </div>
+        </div>
+
+        <div class="section-label">Summer 2026 registrations</div>
+        <div class="reg-summary" id="reg-summary">
+          <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total registrations</div><div class="stat-sub">all events</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending approval</div><div class="stat-sub">need action</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-w1">—</div><div class="stat-label">Week 1 camp</div><div class="stat-sub">May 26–29</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-w2">—</div><div class="stat-label">Week 2 camp</div><div class="stat-sub">June 1–4</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-w3">—</div><div class="stat-label">Tryouts</div><div class="stat-sub">July 22–24</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-tc">—</div><div class="stat-label">Team consider.</div><div class="stat-sub">ongoing</div></div>
+        </div>
+      </div>
+
+      <!-- REGISTRATIONS PAGE -->
+      <div class="page" id="page-registrations">
+        <div class="filter-bar">
+          <button class="filter-btn active" data-status="all">All</button>
+          <button class="filter-btn" data-status="pending">Pending</button>
+          <button class="filter-btn" data-status="approved">Approved</button>
+          <button class="filter-btn" data-status="waitlisted">Waitlisted</button>
+          <button class="filter-btn" data-status="declined">Declined</button>
+        </div>
+        <table class="reg-table" id="reg-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Event</th>
+              <th>Program</th>
+              <th>Family code</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reg-tbody">
+            <tr class="loading-row"><td colspan="7">Loading registrations…</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="reg-pagination"></div>
+      </div>
+
+      <!-- STUDENTS PAGE -->
+      <div class="page" id="page-students">
+        <div class="search-bar">
+          <input type="text" id="student-search" placeholder="Search by name or school…">
+          <select id="student-filter-prog">
+            <option value="all">All programs</option>
+            <option value="goblin">Goblins (4–5)</option>
+            <option value="ms_greenpower">MS Greenpower (6–8)</option>
+            <option value="hs_greenpower">HS Greenpower (9–12)</option>
+          </select>
+          <select id="student-filter-status">
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <table class="student-table" id="student-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Grade</th>
+              <th>School</th>
+              <th>Program</th>
+              <th>Season status</th>
+              <th>Alert</th>
+              <th>Family code</th>
+            </tr>
+          </thead>
+          <tbody id="student-tbody">
+            <tr class="loading-row"><td colspan="7">Loading students…</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="student-pagination"></div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div class="settings-section">
+          <h2>Registration window</h2>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Summer window open</div>
+              <div class="setting-desc">Controls whether register.html shows summer event selection or off-season tryout request flow</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-window" onchange="updateWindowConfig(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Window label</div>
+              <div class="setting-desc">Displayed in the registration page header when window is open</div>
+            </div>
+            <span class="config-val" id="window-label-val">—</span>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Events</h2>
+          <div id="events-list">
+            <div style="font-size:12px;color:var(--gray-400);font-family:var(--mono)">Loading events…</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Portal info</h2>
+          <div class="setting-row">
+            <div class="setting-label">Portal URL</div>
+            <span class="config-val">steamteams-cc-portal.vercel.app</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Registration URL</div>
+            <span class="config-val">tinyurl.com/STEAMteamsCC26</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Supabase project</div>
+            <span class="config-val">steamteams-cc-portal</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Hosting</div>
+            <span class="config-val">Vercel — stehos-web</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Anon key status</div>
+            <span class="config-val" style="background:var(--red-light);color:var(--red);border:1px solid var(--red-border)">⚠ needs rotation</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Registration detail</h2>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+const SB_URL = 'https://avbogkupsoeraivbyypu.supabase.co';
+const SB_KEY = 'YOUR_ANON_KEY_HERE';
+
+let SESSION = null;
+let REG_PAGE = 1;
+let REG_FILTER = 'all';
+let REG_DATA = [];
+let STU_PAGE = 1;
+let STU_DATA = [];
+const PAGE_SIZE = 20;
+
+function headers(tok) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + (tok || SB_KEY)
+  };
+}
+
+async function sbGet(path, tok) {
+  const r = await fetch(SB_URL + path, { headers: headers(tok) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbPatch(path, body, tok) {
+  const r = await fetch(SB_URL + path, {
+    method: 'PATCH',
+    headers: { ...headers(tok), 'Prefer': 'return=representation' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function setPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === name);
+  });
+  const titles = { home: 'Dashboard', registrations: 'Registrations', students: 'Students', settings: 'Settings' };
+  const subs = { home: '', registrations: 'Summer 2026', students: 'Active roster', settings: 'Portal configuration' };
+  document.getElementById('topbar-title').innerHTML = titles[name] + (subs[name] ? ' <span>' + subs[name] + '</span>' : '');
+  if (name === 'registrations') loadRegistrations();
+  if (name === 'students') loadStudents();
+  if (name === 'settings') loadSettings();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+  el.addEventListener('click', e => { e.preventDefault(); setPage(el.dataset.page); });
+});
+document.querySelectorAll('.nav-tile[data-nav]').forEach(el => {
+  el.addEventListener('click', () => setPage(el.dataset.nav));
+});
+
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+
+// AUTH
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
+  document.getElementById('btn-login').textContent = 'Signing in…';
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_description || d.msg || 'Login failed');
+    SESSION = d;
+    const staff = await sbGet('/rest/v1/staff_accounts?select=*&limit=1', d.access_token);
+    if (!staff.length) throw new Error('No staff account found for this email. Access denied.');
+    document.getElementById('sidebar-name').textContent = staff[0].name || email.split('@')[0];
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadHomeStats();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    document.getElementById('btn-login').textContent = 'Sign in';
+  }
+});
+
+document.getElementById('auth-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
+});
+
+document.getElementById('btn-signout').addEventListener('click', () => {
+  SESSION = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('btn-login').textContent = 'Sign in';
+});
+
+// HOME STATS
+async function loadHomeStats() {
+  try {
+    const regs = await sbGet('/rest/v1/registrations?select=*,students(name,program)', SESSION.access_token);
+    const pending = regs.filter(r => r.registration_status === 'pending');
+    document.getElementById('stat-total').textContent = regs.length;
+    document.getElementById('stat-pending').textContent = pending.length;
+    document.getElementById('tile-pending-count').textContent = pending.length;
+    document.getElementById('nav-pending-count').textContent = pending.length || '—';
+    document.getElementById('todo-pending-tag').textContent = pending.length + ' pending';
+    const evCounts = {};
+    regs.forEach(r => { evCounts[r.event_type] = (evCounts[r.event_type] || 0) + 1; });
+    const eventMap = { summer_camp: [], tryout: 0, team_consideration: 0 };
+    regs.forEach(r => {
+      if (r.event_type === 'summer_camp') {
+        const n = (r.event_name || '').toLowerCase();
+        if (n.includes('week 1') || n.includes('race team')) eventMap['w1'] = (eventMap['w1'] || 0) + 1;
+        else if (n.includes('week 2') || n.includes('maker')) eventMap['w2'] = (eventMap['w2'] || 0) + 1;
+      } else if (r.event_type === 'tryout') eventMap['w3'] = (eventMap['w3'] || 0) + 1;
+      else if (r.event_type === 'team_consideration') eventMap['tc'] = (eventMap['tc'] || 0) + 1;
+    });
+    document.getElementById('stat-w1').textContent = eventMap['w1'] || 0;
+    document.getElementById('stat-w2').textContent = eventMap['w2'] || 0;
+    document.getElementById('stat-w3').textContent = eventMap['w3'] || 0;
+    document.getElementById('stat-tc').textContent = eventMap['tc'] || 0;
+  } catch(e) {
+    console.error('loadHomeStats error:', e);
+  }
+}
+
+// REGISTRATIONS
+async function loadRegistrations() {
+  const tbody = document.getElementById('reg-tbody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
+  try {
+    REG_DATA = await sbGet('/rest/v1/registrations?select=*,students(name,grade,program,school),families(family_code)&order=created_at.desc', SESSION.access_token);
+    renderRegTable();
+  } catch(e) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
+  }
+}
+
+function renderRegTable() {
+  const filtered = REG_FILTER === 'all' ? REG_DATA : REG_DATA.filter(r => r.registration_status === REG_FILTER);
+  const start = (REG_PAGE - 1) * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('reg-tbody');
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);font-size:13px">No registrations found</td></tr>';
+    document.getElementById('reg-pagination').innerHTML = '';
+    return;
+  }
+  tbody.innerHTML = slice.map(r => {
+    const stu = r.students || {};
+    const fam = r.families || {};
+    const prog = stu.program || 'unknown';
+    const progLabel = prog === 'goblin' ? 'Goblin' : prog === 'ms_greenpower' ? 'MS' : prog === 'hs_greenpower' ? 'HS' : prog;
+    const progClass = prog === 'goblin' ? 'prog-goblin' : prog === 'ms_greenpower' ? 'prog-ms' : 'prog-hs';
+    const status = r.registration_status || 'pending';
+    const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—';
+    const actions = status === 'pending' ? `
+      <div class="action-btns">
+        <button class="btn-sm btn-approve" onclick="openRegModal('${r.id}')">Review</button>
+      </div>` : `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-400);border-color:var(--gray-200)" onclick="openRegModal('${r.id}')">View</button>`;
+    return `<tr>
+      <td><strong style="font-size:13px">${stu.name || '—'}</strong><span class="event-tag">Gr. ${stu.grade || '?'}</span></td>
+      <td>${r.event_name || r.event_type || '—'}</td>
+      <td><span class="prog-badge ${progClass}">${progLabel}</span></td>
+      <td style="font-family:var(--mono);font-size:12px">${fam.family_code || '—'}</td>
+      <td style="font-size:12px;color:var(--gray-400)">${date}</td>
+      <td><span class="status-badge status-${status}">${status}</span></td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+  renderPagination('reg', filtered.length, REG_PAGE, () => { REG_PAGE++; renderRegTable(); }, () => { REG_PAGE--; renderRegTable(); });
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    REG_FILTER = btn.dataset.status;
+    REG_PAGE = 1;
+    renderRegTable();
+  });
+});
+
+function openRegModal(regId) {
+  const reg = REG_DATA.find(r => r.id === regId);
+  if (!reg) return;
+  const stu = reg.students || {};
+  const fam = reg.families || {};
+  const status = reg.registration_status || 'pending';
+  document.getElementById('modal-title').textContent = stu.name || 'Registration';
+  let reason = '';
+  if (reg.sessions_selected) {
+    try {
+      const s = typeof reg.sessions_selected === 'string' ? JSON.parse(reg.sessions_selected) : reg.sessions_selected;
+      if (s.reason) reason = `<div class="reason-box"><strong>Reason/notes:</strong> ${s.reason}</div>`;
+    } catch(e) {}
+  }
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${stu.name || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Grade</span><span class="modal-val">${stu.grade || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">School</span><span class="modal-val">${stu.school || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Program</span><span class="modal-val">${stu.program || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Event</span><span class="modal-val">${reg.event_name || reg.event_type || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Event type</span><span class="modal-val">${reg.event_type || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Current member</span><span class="modal-val">${reg.is_current_member ? 'Yes' : 'No'}</span></div>
+    <div class="modal-row"><span class="modal-key">Family code</span><span class="modal-val" style="font-family:var(--mono)">${fam.family_code || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Status</span><span class="modal-val"><span class="status-badge status-${status}">${status}</span></span></div>
+    <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${reg.created_at ? new Date(reg.created_at).toLocaleString() : '—'}</span></div>
+    ${reason}
+  `;
+  const actions = document.getElementById('modal-actions');
+  if (status === 'pending') {
+    actions.innerHTML = `
+      <button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve</button>
+      <button class="btn-sm btn-waitlist" onclick="updateRegStatus('${regId}','waitlisted')">Waitlist</button>
+      <button class="btn-sm btn-decline" onclick="updateRegStatus('${regId}','declined')">Decline</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal()" style="margin-left:auto">Close</button>
+    `;
+  } else {
+    actions.innerHTML = `
+      <button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>
+      ${status !== 'approved' ? `<button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Set approved</button>` : ''}
+      ${status !== 'pending' ? `<button class="btn-sm btn-waitlist" onclick="updateRegStatus('${regId}','pending')">Reset to pending</button>` : ''}
+    `;
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function updateRegStatus(regId, newStatus) {
+  try {
+    await sbPatch('/rest/v1/registrations?id=eq.' + regId, { registration_status: newStatus }, SESSION.access_token);
+    const idx = REG_DATA.findIndex(r => r.id === regId);
+    if (idx !== -1) REG_DATA[idx].registration_status = newStatus;
+    closeModal();
+    renderRegTable();
+    loadHomeStats();
+    toast('Status updated to ' + newStatus, 'success');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// STUDENTS
+async function loadStudents() {
+  const tbody = document.getElementById('student-tbody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
+  try {
+    STU_DATA = await sbGet('/rest/v1/students?select=*,families(family_code)&order=name.asc', SESSION.access_token);
+    renderStudentTable();
+  } catch(e) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
+  }
+}
+
+function renderStudentTable() {
+  const search = document.getElementById('student-search').value.toLowerCase();
+  const progFilter = document.getElementById('student-filter-prog').value;
+  const statusFilter = document.getElementById('student-filter-status').value;
+  let filtered = STU_DATA.filter(s => {
+    if (search && !( (s.name||'').toLowerCase().includes(search) || (s.school||'').toLowerCase().includes(search) )) return false;
+    if (progFilter !== 'all' && s.program !== progFilter) return false;
+    if (statusFilter !== 'all' && s.season_status !== statusFilter) return false;
+    return true;
+  });
+  const start = (STU_PAGE - 1) * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('student-tbody');
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);font-size:13px">No students found</td></tr>';
+    document.getElementById('student-pagination').innerHTML = '';
+    return;
+  }
+  const progMap = { goblin: ['Goblin','prog-goblin'], ms_greenpower: ['MS','prog-ms'], hs_greenpower: ['HS','prog-hs'] };
+  const alertColors = { none:'alert-none', blue:'alert-blue', yellow:'alert-yellow', red:'alert-red' };
+  tbody.innerHTML = slice.map(s => {
+    const [pLabel, pClass] = progMap[s.program] || [s.program || '—', ''];
+    const ss = s.season_status || 'pending';
+    const ssClass = ss === 'active' ? 's-active' : ss === 'pending' ? 's-pending' : 's-inactive';
+    const alert = s.alert_flag || 'none';
+    const fam = s.families || {};
+    return `<tr>
+      <td><strong style="font-size:13px">${s.name || '—'}</strong></td>
+      <td style="font-family:var(--mono);font-size:12px">${s.grade || '—'}</td>
+      <td style="font-size:12px;color:var(--gray-600)">${s.school || '—'}</td>
+      <td><span class="prog-badge ${pClass}">${pLabel}</span></td>
+      <td><span class="season-badge ${ssClass}">${ss}</span></td>
+      <td title="${alert} flag"><span class="alert-dot ${alertColors[alert] || 'alert-none'}"></span></td>
+      <td style="font-family:var(--mono);font-size:12px">${fam.family_code || '—'}</td>
+    </tr>`;
+  }).join('');
+  renderPagination('student', filtered.length, STU_PAGE, () => { STU_PAGE++; renderStudentTable(); }, () => { STU_PAGE--; renderStudentTable(); });
+}
+
+['student-search','student-filter-prog','student-filter-status'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { STU_PAGE = 1; renderStudentTable(); });
+});
+
+// SETTINGS
+async function loadSettings() {
+  try {
+    const config = await sbGet('/rest/v1/portal_config?select=*', SESSION.access_token);
+    const windowOpen = config.find(c => c.key === 'registration_window_open');
+    const windowLabel = config.find(c => c.key === 'registration_window_label');
+    if (windowOpen) {
+      const isOpen = windowOpen.value === 'true' || windowOpen.value === true;
+      document.getElementById('toggle-window').checked = isOpen;
+    }
+    if (windowLabel) {
+      const raw = windowLabel.value;
+      const label = typeof raw === 'string' ? raw.replace(/^"|"$/g,'') : raw;
+      document.getElementById('window-label-val').textContent = label || '—';
+    }
+    const events = await sbGet('/rest/v1/events?select=*&order=created_at.asc', SESSION.access_token);
+    const el = document.getElementById('events-list');
+    if (!events.length) { el.innerHTML = '<div style="font-size:12px;color:var(--gray-400)">No events found</div>'; return; }
+    el.innerHTML = events.map(ev => `
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">${ev.name || ev.id}</div>
+          <div class="setting-desc">Grades ${ev.grade_min || '?'}–${ev.grade_max || '?'} · ${ev.type || ''}</div>
+        </div>
+        <span class="config-val" style="${ev.registration_open ? 'background:var(--green-light);color:var(--green);border:1px solid var(--green-border)' : 'background:var(--red-light);color:var(--red);border:1px solid var(--red-border)'}">${ev.registration_open ? 'open' : 'closed'}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    toast('Error loading settings: ' + e.message, 'error');
+  }
+}
+
+async function updateWindowConfig(isOpen) {
+  try {
+    await sbPatch('/rest/v1/portal_config?key=eq.registration_window_open', { value: String(isOpen) }, SESSION.access_token);
+    toast('Registration window ' + (isOpen ? 'opened' : 'closed'), 'success');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    document.getElementById('toggle-window').checked = !isOpen;
+  }
+}
+
+// PAGINATION
+function renderPagination(prefix, total, currentPage, onNext, onPrev) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const el = document.getElementById(prefix + '-pagination');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <span class="page-info">${currentPage} of ${totalPages} · ${total} records</span>
+    <button class="page-btn" ${currentPage <= 1 ? 'disabled' : ''} id="${prefix}-prev">← prev</button>
+    <button class="page-btn" ${currentPage >= totalPages ? 'disabled' : ''} id="${prefix}-next">next →</button>
+  `;
+  document.getElementById(prefix + '-prev').addEventListener('click', onPrev);
+  document.getElementById(prefix + '-next').addEventListener('click', onNext);
+}
+</script>
+</body>
+</html>
