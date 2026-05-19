@@ -523,7 +523,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
 <script>
 const SB_URL = 'https://avbogkupsoeraivbyypu.supabase.co';
-const SB_KEY = 'sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f';
+const SB_KEY = 'YOUR_ANON_KEY_HERE';
 
 let SESSION = null;
 let REG_PAGE = 1;
@@ -607,7 +607,7 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     SESSION = d;
     const staff = await sbGet('/rest/v1/staff_accounts?select=*&limit=1', d.access_token);
     if (!staff.length) throw new Error('No staff account found for this email. Access denied.');
-    document.getElementById('sidebar-name').textContent = staff[0].name || email.split('@')[0];
+    document.getElementById('sidebar-name').textContent = staff[0].full_name || email.split('@')[0];
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     loadHomeStats();
@@ -633,7 +633,7 @@ document.getElementById('btn-signout').addEventListener('click', () => {
 // HOME STATS
 async function loadHomeStats() {
   try {
-    const regs = await sbGet('/rest/v1/registrations?select=*,students(name,program)', SESSION.access_token);
+    const regs = await sbGet('/rest/v1/registrations?select=*,students(first_name,last_name,program)', SESSION.access_token);
     const pending = regs.filter(r => r.registration_status === 'pending');
     document.getElementById('stat-total').textContent = regs.length;
     document.getElementById('stat-pending').textContent = pending.length;
@@ -665,7 +665,7 @@ async function loadRegistrations() {
   const tbody = document.getElementById('reg-tbody');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
   try {
-    REG_DATA = await sbGet('/rest/v1/registrations?select=*,students(name,grade,program,school),families(family_code)&order=created_at.desc', SESSION.access_token);
+    REG_DATA = await sbGet('/rest/v1/registrations?select=*,students(first_name,last_name,grade,program,home_school),families(family_code)&order=submitted_at.desc', SESSION.access_token);
     renderRegTable();
   } catch(e) {
     tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
@@ -686,16 +686,17 @@ function renderRegTable() {
     const stu = r.students || {};
     const fam = r.families || {};
     const prog = stu.program || 'unknown';
+    const stuName = stu.first_name ? stu.first_name + ' ' + stu.last_name : '—';
     const progLabel = prog === 'goblin' ? 'Goblin' : prog === 'ms_greenpower' ? 'MS' : prog === 'hs_greenpower' ? 'HS' : prog;
     const progClass = prog === 'goblin' ? 'prog-goblin' : prog === 'ms_greenpower' ? 'prog-ms' : 'prog-hs';
     const status = r.registration_status || 'pending';
-    const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—';
+    const date = r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—';
     const actions = status === 'pending' ? `
       <div class="action-btns">
         <button class="btn-sm btn-approve" onclick="openRegModal('${r.id}')">Review</button>
       </div>` : `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-400);border-color:var(--gray-200)" onclick="openRegModal('${r.id}')">View</button>`;
     return `<tr>
-      <td><strong style="font-size:13px">${stu.name || '—'}</strong><span class="event-tag">Gr. ${stu.grade || '?'}</span></td>
+      <td><strong style="font-size:13px">${stuName}</strong><span class="event-tag">Gr. ${stu.grade || '?'}</span></td>
       <td>${r.event_name || r.event_type || '—'}</td>
       <td><span class="prog-badge ${progClass}">${progLabel}</span></td>
       <td style="font-family:var(--mono);font-size:12px">${fam.family_code || '—'}</td>
@@ -723,7 +724,8 @@ function openRegModal(regId) {
   const stu = reg.students || {};
   const fam = reg.families || {};
   const status = reg.registration_status || 'pending';
-  document.getElementById('modal-title').textContent = stu.name || 'Registration';
+  const stuName = stu.first_name ? stu.first_name + ' ' + stu.last_name : 'Registration';
+  document.getElementById('modal-title').textContent = stuName;
   let reason = '';
   if (reg.sessions_selected) {
     try {
@@ -732,16 +734,16 @@ function openRegModal(regId) {
     } catch(e) {}
   }
   document.getElementById('modal-body').innerHTML = `
-    <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${stu.name || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${stuName}</span></div>
     <div class="modal-row"><span class="modal-key">Grade</span><span class="modal-val">${stu.grade || '—'}</span></div>
-    <div class="modal-row"><span class="modal-key">School</span><span class="modal-val">${stu.school || '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">School</span><span class="modal-val">${stu.home_school || '—'}</span></div>
     <div class="modal-row"><span class="modal-key">Program</span><span class="modal-val">${stu.program || '—'}</span></div>
     <div class="modal-row"><span class="modal-key">Event</span><span class="modal-val">${reg.event_name || reg.event_type || '—'}</span></div>
     <div class="modal-row"><span class="modal-key">Event type</span><span class="modal-val">${reg.event_type || '—'}</span></div>
     <div class="modal-row"><span class="modal-key">Current member</span><span class="modal-val">${reg.is_current_member ? 'Yes' : 'No'}</span></div>
     <div class="modal-row"><span class="modal-key">Family code</span><span class="modal-val" style="font-family:var(--mono)">${fam.family_code || '—'}</span></div>
     <div class="modal-row"><span class="modal-key">Status</span><span class="modal-val"><span class="status-badge status-${status}">${status}</span></span></div>
-    <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${reg.created_at ? new Date(reg.created_at).toLocaleString() : '—'}</span></div>
+    <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${reg.submitted_at ? new Date(reg.submitted_at).toLocaleString() : '—'}</span></div>
     ${reason}
   `;
   const actions = document.getElementById('modal-actions');
@@ -788,7 +790,7 @@ async function loadStudents() {
   const tbody = document.getElementById('student-tbody');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
   try {
-    STU_DATA = await sbGet('/rest/v1/students?select=*,families(family_code)&order=name.asc', SESSION.access_token);
+    STU_DATA = await sbGet('/rest/v1/students?select=*,families(family_code)&order=first_name.asc', SESSION.access_token);
     renderStudentTable();
   } catch(e) {
     tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
@@ -800,7 +802,7 @@ function renderStudentTable() {
   const progFilter = document.getElementById('student-filter-prog').value;
   const statusFilter = document.getElementById('student-filter-status').value;
   let filtered = STU_DATA.filter(s => {
-    if (search && !( (s.name||'').toLowerCase().includes(search) || (s.school||'').toLowerCase().includes(search) )) return false;
+    if (search && !( (s.first_name||'').toLowerCase().includes(search) || (s.last_name||'').toLowerCase().includes(search) || (s.home_school||'').toLowerCase().includes(search) )) return false;
     if (progFilter !== 'all' && s.program !== progFilter) return false;
     if (statusFilter !== 'all' && s.season_status !== statusFilter) return false;
     return true;
@@ -821,10 +823,11 @@ function renderStudentTable() {
     const ssClass = ss === 'active' ? 's-active' : ss === 'pending' ? 's-pending' : 's-inactive';
     const alert = s.alert_flag || 'none';
     const fam = s.families || {};
+    const stuName = s.first_name ? s.first_name + ' ' + s.last_name : '—';
     return `<tr>
-      <td><strong style="font-size:13px">${s.name || '—'}</strong></td>
+      <td><strong style="font-size:13px">${stuName}</strong></td>
       <td style="font-family:var(--mono);font-size:12px">${s.grade || '—'}</td>
-      <td style="font-size:12px;color:var(--gray-600)">${s.school || '—'}</td>
+      <td style="font-size:12px;color:var(--gray-600)">${s.home_school || '—'}</td>
       <td><span class="prog-badge ${pClass}">${pLabel}</span></td>
       <td><span class="season-badge ${ssClass}">${ss}</span></td>
       <td title="${alert} flag"><span class="alert-dot ${alertColors[alert] || 'alert-none'}"></span></td>
