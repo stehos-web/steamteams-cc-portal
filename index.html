@@ -516,7 +516,7 @@ footer{background:#030508;padding:52px 40px 24px;}
 
 <script>
 const SB_URL="https://avbogkupsoeraivbyypu.supabase.co";
-const SB_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
+const SB_KEY="sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 async function sbGet(p){const r=await fetch(SB_URL+"/rest/v1/"+p,{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});return r.json();}
 async function sbPost(p,b){return fetch(SB_URL+"/rest/v1/"+p,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(b)});}
 async function sbAuth(b){const r=await fetch(SB_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json();}
