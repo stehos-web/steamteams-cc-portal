@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM Teams CC — Family Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,700&family=Roboto:wght@300;400;500;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --slab: Rockwell, "Rockwell Nova", "Zilla Slab", "Roboto Slab", Georgia, serif;
+  --sans: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --cond: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+  --red:        #b2292e;
+  --red-dark:   #8f1f23;
+  --red-light:  #f5e8e8;
+  --blue:       #1c355e;
+  --blue-dark:  #142646;
+  --blue-mid:   #2d4a7a;
+  --blue-light: #e8ecf3;
+  --blue-faint: #f2f5fa;
+  --green:      #2e7d32;
+  --green-light:#e8f5e9;
+  --amber:      #e65100;
+  --amber-light:#fff3e0;
+  --white:      #ffffff;
+  --off-white:  #f8f8f6;
+  --surface:    #f0f2f5;
+  --text:       #1a1a1a;
+  --text-muted: #555555;
+  --text-light: #888888;
+  --border:     #dde1e8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-height:100vh;}
+
+/* ── HEADER ── */
+.site-header {
+  background:var(--blue);
+  box-shadow:0 2px 16px rgba(0,0,0,0.2);
+  position:sticky;top:0;z-index:100;
+}
+.site-header::before{content:"";display:block;height:3px;background:linear-gradient(90deg,var(--red),var(--red-dark));}
+.header-inner {
+  max-width:1060px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;
+}
+.header-logo {display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+.header-logo-title {font-family:var(--slab);font-weight:700;font-size:16px;color:white;letter-spacing:1px;text-transform:uppercase;}
+.header-logo-title em {color:var(--red);font-style:normal;}
+.header-logo-sub {font-family:var(--cond);font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.header-right {display:flex;align-items:center;gap:16px;}
+.header-family-code {font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.45);}
+.btn-signout {
+  background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.2);
+  padding:7px 16px;border-radius:2px;font-family:var(--slab);font-weight:700;font-size:11px;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+}
+.btn-signout:hover{color:white;border-color:rgba(255,255,255,0.5);}
+
+/* ── PAGE WRAP ── */
+.page-wrap {max-width:1060px;margin:0 auto;padding:32px;}
+
+/* ── WELCOME BAR ── */
+.welcome-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;flex-wrap:wrap;gap:12px;
+}
+.welcome-title {font-family:var(--slab);font-weight:700;font-size:24px;color:var(--blue);text-transform:uppercase;letter-spacing:0.3px;}
+.welcome-sub {font-size:13px;color:var(--text-muted);margin-top:3px;}
+.season-badge {
+  background:var(--blue);color:white;
+  font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  padding:6px 14px;border-radius:2px;
+}
+
+/* ── READINESS BANNER ── */
+.readiness-banner {
+  background:var(--amber-light);border:1.5px solid var(--amber);
+  border-radius:3px;padding:16px 20px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.readiness-banner.complete {background:var(--green-light);border-color:var(--green);}
+.readiness-banner.hidden {display:none;}
+.readiness-icon {font-size:22px;flex-shrink:0;margin-top:1px;}
+.readiness-content {}
+.readiness-title {font-family:var(--slab);font-weight:700;font-size:14px;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
+.readiness-banner.complete .readiness-title {color:var(--green);}
+.readiness-items {display:flex;flex-wrap:wrap;gap:8px;}
+.readiness-item {
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;padding:4px 10px;border-radius:2px;
+}
+.readiness-item.done {background:var(--green-light);color:var(--green);}
+.readiness-item.todo {background:var(--amber-light);color:var(--amber);border:1px solid rgba(230,81,0,0.3);}
+.readiness-item.todo {cursor:pointer;}
+.readiness-item.todo:hover {background:#ffe0b2;}
+
+/* ── GRID ── */
+.dashboard-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.grid-full {grid-column:1/-1;}
+
+/* ── CARD BASE ── */
+.card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:4px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  transition:box-shadow 0.2s;
+}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+
+.card-header {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.card-header-left {display:flex;align-items:center;gap:10px;}
+.card-accent {width:4px;height:24px;border-radius:2px;flex-shrink:0;}
+.accent-blue   {background:var(--blue);}
+.accent-red    {background:var(--red);}
+.accent-green  {background:var(--green);}
+.accent-amber  {background:var(--amber);}
+.accent-gray   {background:var(--text-light);}
+
+.card-title {font-family:var(--slab);font-weight:700;font-size:14px;text-transform:uppercase;color:var(--blue);letter-spacing:0.3px;}
+.card-action {
+  font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--blue);background:none;border:none;cursor:pointer;padding:4px 0;
+  transition:color 0.2s;
+}
+.card-action:hover{color:var(--red);}
+
+.card-body {padding:20px;}
+.card-body-sm {padding:16px 20px;}
+
+/* ── PLACEHOLDER CARD ── */
+.placeholder-body {
+  padding:28px 20px;text-align:center;
+}
+.placeholder-icon {font-size:32px;margin-bottom:10px;opacity:0.4;}
+.placeholder-msg {font-family:var(--slab);font-weight:600;font-size:14px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px;}
+.placeholder-sub {font-size:12px;color:var(--text-light);line-height:1.5;}
+.coming-soon-tag {
+  display:inline-block;margin-top:10px;
+  font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 12px;border-radius:2px;
+  background:var(--blue-light);color:var(--blue);
+}
+
+/* ── STUDENT CARD ── */
+.student-card {border-left:4px solid var(--blue);}
+
+.student-card-header {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.student-name {font-family:var(--slab);font-weight:700;font-size:16px;color:var(--text);text-transform:uppercase;}
+.student-grade {font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+/* status badges */
+.status-badge {
+  font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 12px;border-radius:2px;white-space:nowrap;
+}
+.status-approved-new  {background:#e8f5e9;color:var(--green);border:1px solid rgba(46,125,50,0.3);}
+.status-active        {background:var(--blue-light);color:var(--blue);}
+.status-alternate     {background:#fff3e0;color:var(--amber);}
+.status-pending       {background:var(--surface);color:var(--text-muted);border:1px solid var(--border);}
+.status-waitlist      {background:#f3e5f5;color:#6a1b9a;}
+.status-declined      {background:var(--red-light);color:var(--red);}
+.status-interested    {background:var(--blue-faint);color:var(--blue-mid);}
+.status-priority      {background:#e8f5e9;color:var(--green);}
+
+.student-card-body {padding:16px 20px;}
+
+.student-detail-row {display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.student-detail {display:flex;align-items:center;gap:8px;font-size:13px;}
+.student-detail-label {font-weight:600;color:var(--text-muted);min-width:80px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
+.student-detail-value {color:var(--text);}
+
+/* expandable tasks */
+.student-tasks-toggle {
+  width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--border);border-radius:2px;
+  padding:10px 14px;cursor:pointer;transition:background 0.2s;
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--slab);font-weight:700;font-size:12px;text-transform:uppercase;
+  color:var(--blue);letter-spacing:0.3px;
+}
+.student-tasks-toggle:hover{background:var(--blue-faint);}
+.toggle-arrow {font-size:10px;transition:transform 0.2s;}
+.toggle-arrow.open {transform:rotate(180deg);}
+
+.student-tasks-panel {
+  display:none;margin-top:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:2px;
+  padding:12px 14px;
+}
+.student-tasks-panel.open {display:block;}
+.tasks-placeholder {font-size:12px;color:var(--text-light);text-align:center;padding:8px;font-style:italic;}
+
+/* ── BALANCE CARD ── */
+.balance-amount {
+  font-family:var(--slab);font-weight:700;font-size:40px;
+  color:var(--blue);line-height:1;margin-bottom:4px;
+}
+.balance-amount.overdue {color:var(--red);}
+.balance-amount.clear   {color:var(--green);}
+.balance-label {font-size:12px;color:var(--text-muted);margin-bottom:16px;}
+
+.balance-summary {display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.balance-row {display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);}
+.balance-row:last-child{border-bottom:none;}
+.balance-row-label {color:var(--text-muted);}
+.balance-row-val {font-weight:600;color:var(--text);}
+.balance-row-val.credit {color:var(--green);}
+.balance-row-val.charge {color:var(--red);}
+
+.btn-ledger {
+  width:100%;text-align:center;
+  background:var(--blue-faint);color:var(--blue);border:1px solid var(--border);
+  border-radius:2px;padding:10px;cursor:pointer;transition:all 0.2s;
+  font-family:var(--slab);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;
+}
+.btn-ledger:hover{background:var(--blue-light);}
+
+/* ── VOLUNTEER LOG CARD ── */
+.vol-activity-list {display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.vol-activity-item {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;background:var(--surface);border-radius:2px;border:1px solid var(--border);
+  font-size:13px;cursor:pointer;transition:background 0.2s;
+}
+.vol-activity-item:hover{background:var(--blue-faint);border-color:var(--blue);}
+.vol-activity-name {font-weight:600;color:var(--text);}
+.vol-activity-credit {font-family:var(--slab);font-weight:700;font-size:13px;color:var(--green);}
+
+.vol-form {display:none;margin-top:12px;}
+.vol-form.open {display:block;}
+.vol-form-group {display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.vol-form-label {font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);}
+.vol-form-input {
+  background:var(--surface);border:1.5px solid var(--border);border-radius:2px;
+  padding:9px 12px;font-family:var(--sans);font-size:14px;color:var(--text);
+  outline:none;transition:border-color 0.2s;width:100%;
+}
+.vol-form-input:focus{border-color:var(--blue);background:white;}
+.vol-form-input::placeholder{color:var(--text-light);}
+.vol-form-note {font-size:11px;color:var(--text-light);margin-top:-4px;}
+
+.btn-submit-vol {
+  background:var(--green);color:white;border:none;
+  padding:11px;border-radius:2px;width:100%;
+  font-family:var(--slab);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-submit-vol:hover{background:#1b5e20;}
+.btn-submit-vol:disabled{opacity:0.6;cursor:not-allowed;}
+.vol-cancel {
+  display:block;text-align:center;margin-top:8px;
+  font-size:12px;color:var(--text-muted);cursor:pointer;
+}
+.vol-cancel:hover{color:var(--red);}
+.vol-success {display:none;text-align:center;padding:12px;background:var(--green-light);border-radius:2px;margin-top:8px;}
+.vol-success.show {display:block;}
+.vol-success-msg {font-weight:600;color:var(--green);font-size:13px;}
+
+/* ── CALENDAR CARD ── */
+.mini-event {
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.mini-event:last-child{border-bottom:none;}
+.mini-event-date {
+  font-family:var(--slab);font-weight:700;font-size:13px;color:var(--blue);
+  min-width:44px;text-align:center;
+}
+.mini-event-name {font-size:13px;font-weight:500;color:var(--text);}
+.mini-event-type {font-size:11px;color:var(--text-muted);}
+
+/* ── READINESS CHECKLIST CARD ── */
+.checklist-items {display:flex;flex-direction:column;gap:8px;}
+.checklist-item {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-radius:2px;border:1px solid var(--border);
+  transition:all 0.2s;
+}
+.checklist-item.done {background:var(--green-light);border-color:rgba(46,125,50,0.3);}
+.checklist-item.todo {background:var(--amber-light);border-color:rgba(230,81,0,0.25);cursor:pointer;}
+.checklist-item.todo:hover{background:#ffe0b2;}
+.checklist-item-left {display:flex;align-items:center;gap:10px;}
+.checklist-check {font-size:16px;}
+.checklist-name {font-weight:600;font-size:13px;color:var(--text);}
+.checklist-desc {font-size:11px;color:var(--text-muted);margin-top:1px;}
+.checklist-cta {
+  font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--amber);background:none;border:none;cursor:pointer;padding:0;
+}
+
+/* ── REGISTRATION STATUS ── */
+.reg-items {display:flex;flex-direction:column;gap:8px;}
+.reg-item {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--surface);border-radius:2px;border:1px solid var(--border);
+}
+.reg-item-name {font-weight:600;font-size:13px;color:var(--text);}
+.reg-item-event {font-size:11px;color:var(--text-muted);margin-top:2px;}
+.reg-status-dot {
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+}
+.dot {width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-pending  {background:#bbb;}
+.dot-approved {background:var(--green);}
+.dot-waitlist {background:#ab47bc;}
+.dot-declined {background:var(--red);}
+
+/* ── LOADING / ERROR STATES ── */
+.loading-screen {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:16px;
+}
+.loading-spinner {
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--blue);
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg {font-family:var(--slab);font-weight:700;font-size:14px;text-transform:uppercase;color:var(--text-muted);}
+
+.error-screen {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:12px;text-align:center;padding:40px;
+}
+.error-icon {font-size:40px;}
+.error-title {font-family:var(--slab);font-weight:700;font-size:18px;text-transform:uppercase;color:var(--blue);}
+.error-msg {font-size:14px;color:var(--text-muted);max-width:400px;line-height:1.6;}
+.btn-back {
+  background:var(--red);color:white;border:none;
+  padding:12px 28px;border-radius:2px;
+  font-family:var(--slab);font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;margin-top:8px;
+}
+.btn-back:hover{background:var(--red-dark);}
+
+/* ── CODE ENTRY SCREEN ── */
+.code-entry-screen {
+  display:flex;align-items:center;justify-content:center;
+  min-height:80vh;padding:40px 20px;
+}
+.code-entry-card {
+  background:white;border:1px solid var(--border);border-radius:4px;
+  padding:40px 36px;width:100%;max-width:420px;
+  box-shadow:0 6px 32px rgba(0,0,0,0.08);
+}
+.code-entry-title {font-family:var(--slab);font-weight:700;font-size:22px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;}
+.code-entry-sub {font-size:14px;color:var(--text-muted);margin-bottom:28px;font-weight:300;line-height:1.55;}
+.code-input {
+  background:var(--surface);border:1.5px solid var(--border);border-radius:2px;
+  padding:13px 16px;font-family:var(--sans);font-size:18px;color:var(--text);
+  outline:none;transition:border-color 0.2s;width:100%;
+  letter-spacing:2px;text-align:center;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.code-input:focus{border-color:var(--blue);background:white;}
+.code-input::placeholder{color:var(--text-light);letter-spacing:1px;font-size:14px;}
+.code-hint {font-size:12px;color:var(--text-light);text-align:center;margin-bottom:16px;}
+.btn-lookup {
+  background:var(--red);color:white;border:none;
+  padding:13px;border-radius:2px;width:100%;
+  font-family:var(--slab);font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-lookup:hover{background:var(--red-dark);}
+.btn-lookup:disabled{opacity:0.6;cursor:not-allowed;}
+.code-error {
+  display:none;font-size:12px;color:var(--red);
+  background:var(--red-light);border:1px solid rgba(178,41,46,0.2);
+  border-radius:2px;padding:8px 12px;text-align:center;margin-top:8px;
+}
+.code-error.show {display:block;}
+.code-entry-foot {margin-top:20px;padding-top:20px;border-top:1px solid var(--border);text-align:center;}
+.code-entry-foot a {font-size:12px;color:var(--text-muted);text-decoration:none;}
+.code-entry-foot a:hover{color:var(--blue);}
+
+/* ── FOOTER ── */
+.site-footer {
+  margin-top:48px;padding:24px 32px;
+  border-top:1px solid var(--border);
+  max-width:1060px;margin-left:auto;margin-right:auto;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-copy {font-size:12px;color:var(--text-light);}
+.footer-links-row {display:flex;gap:16px;}
+.footer-link {font-size:12px;color:var(--text-light);text-decoration:none;}
+.footer-link:hover{color:var(--blue);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:760px){
+  .dashboard-grid{grid-template-columns:1fr;}
+  .grid-full{grid-column:1;}
+  .page-wrap{padding:20px 16px;}
+  .header-inner{padding:0 16px;}
+  .header-family-code{display:none;}
+  .welcome-bar{flex-direction:column;align-items:flex-start;}
+  .code-entry-card{padding:28px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── SITE HEADER ── -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="header-logo">
+      <div class="header-logo-title"><em>STEAM</em> Teams CC</div>
+      <div class="header-logo-sub">Family Portal</div>
+    </a>
+    <div class="header-right">
+      <span class="header-family-code" id="header-code"></span>
+      <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── CODE ENTRY SCREEN (shown when no code in session) ── -->
+<div id="screen-entry" style="display:none;">
+  <div class="code-entry-screen">
+    <div class="code-entry-card">
+      <div class="code-entry-title">Family Check-In</div>
+      <div class="code-entry-sub">Enter your family code to view your registration status, balance, and program updates.</div>
+      <input class="code-input" type="text" id="code-input" placeholder="CC-XXXX" maxlength="7" oninput="fmtCode(this)" onkeydown="codeKeydown(event)"/>
+      <div class="code-hint">Your CC-XXXX code is on your registration confirmation</div>
+      <div class="code-error" id="code-error"></div>
+      <button class="btn-lookup" id="btn-lookup" onclick="lookupFamily()">Check My Status</button>
+      <div class="code-entry-foot">
+        <a href="/register">Need to register? Start here &rarr;</a><br><br>
+        <a href="/">Back to home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOADING SCREEN ── -->
+<div id="screen-loading" style="display:none;">
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-msg">Loading your dashboard&hellip;</div>
+  </div>
+</div>
+
+<!-- ── ERROR SCREEN ── -->
+<div id="screen-error" style="display:none;">
+  <div class="error-screen">
+    <div class="error-icon">&#128683;</div>
+    <div class="error-title">Something went wrong</div>
+    <div class="error-msg" id="error-msg">We could not load your family dashboard. Please try again.</div>
+    <a href="/" class="btn-back">Back to Home</a>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="screen-dashboard" style="display:none;">
+  <div class="page-wrap">
+
+    <!-- Welcome bar -->
+    <div class="welcome-bar">
+      <div>
+        <div class="welcome-title" id="welcome-title">Welcome Back</div>
+        <div class="welcome-sub" id="welcome-sub">Season 2026&ndash;2027 &middot; Inspire Academy</div>
+      </div>
+      <div class="season-badge">2026&ndash;2027 Season</div>
+    </div>
+
+    <!-- Readiness banner -->
+    <div class="readiness-banner" id="readiness-banner">
+      <div class="readiness-icon" id="readiness-icon">&#9888;&#65039;</div>
+      <div class="readiness-content">
+        <div class="readiness-title" id="readiness-title">Action Required &mdash; Complete Your Family Profile</div>
+        <div class="readiness-items" id="readiness-items"></div>
+      </div>
+    </div>
+
+    <!-- Dashboard grid -->
+    <div class="dashboard-grid">
+
+      <!-- STUDENT CARDS — injected by JS, grid-full -->
+      <div id="student-cards-wrap" class="grid-full"></div>
+
+      <!-- BALANCE CARD -->
+      <div class="card" id="card-balance">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-blue"></div>
+            <div class="card-title">Account Balance</div>
+          </div>
+          <button class="card-action" onclick="toggleLedger()">View Ledger</button>
+        </div>
+        <div class="card-body" id="balance-body">
+          <!-- Populated by JS when dues data available; placeholder until Phase 2 -->
+          <div class="placeholder-body">
+            <div class="placeholder-icon">&#128179;</div>
+            <div class="placeholder-msg">Dues &amp; Payments</div>
+            <div class="placeholder-sub">Your balance, payment history, and volunteer credits will appear here once the dues system is live.</div>
+            <span class="coming-soon-tag">Available Phase 2</span>
+          </div>
+        </div>
+        <!-- Ledger panel (hidden until Phase 2) -->
+        <div id="ledger-panel" style="display:none;padding:0 20px 20px;">
+          <div class="placeholder-sub" style="text-align:center;padding:16px 0;font-style:italic;">Full ledger coming in Phase 2.</div>
+        </div>
+      </div>
+
+      <!-- VOLUNTEER LOG CARD -->
+      <div class="card" id="card-volunteer">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-green"></div>
+            <div class="card-title">Volunteer Hours</div>
+          </div>
+          <button class="card-action" id="vol-log-toggle" onclick="toggleVolForm()">Log Hours</button>
+        </div>
+        <div class="card-body-sm">
+          <div class="vol-activity-list" id="vol-activity-list">
+            <!-- Seeded activity types -->
+            <div class="vol-activity-item" onclick="selectActivity('Race Day Volunteer','25')">
+              <div>
+                <div class="vol-activity-name">Race Day Volunteer</div>
+                <div style="font-size:11px;color:var(--text-light);">4 hours &middot; race event</div>
+              </div>
+              <div class="vol-activity-credit">+$25</div>
+            </div>
+            <div class="vol-activity-item" onclick="selectActivity('Practice Support','20')">
+              <div>
+                <div class="vol-activity-name">Practice Support</div>
+                <div style="font-size:11px;color:var(--text-light);">per session</div>
+              </div>
+              <div class="vol-activity-credit">+$20</div>
+            </div>
+            <div class="vol-activity-item" onclick="selectActivity('Parent Meeting','20')">
+              <div>
+                <div class="vol-activity-name">Parent Meeting</div>
+                <div style="font-size:11px;color:var(--text-light);">per meeting</div>
+              </div>
+              <div class="vol-activity-credit">+$20</div>
+            </div>
+            <div class="vol-activity-item" onclick="selectActivity('Support Bundle','15')">
+              <div>
+                <div class="vol-activity-name">Support Bundle</div>
+                <div style="font-size:11px;color:var(--text-light);">general support</div>
+              </div>
+              <div class="vol-activity-credit">+$15</div>
+            </div>
+          </div>
+          <div class="vol-form" id="vol-form">
+            <div class="vol-form-group">
+              <label class="vol-form-label">Activity Type</label>
+              <input class="vol-form-input" type="text" id="vol-activity" placeholder="Select from above" readonly/>
+            </div>
+            <div class="vol-form-group">
+              <label class="vol-form-label">Date</label>
+              <input class="vol-form-input" type="date" id="vol-date"/>
+            </div>
+            <div class="vol-form-group">
+              <label class="vol-form-label">Hours</label>
+              <input class="vol-form-input" type="number" id="vol-hours" placeholder="e.g. 4" min="0.5" max="12" step="0.5"/>
+              <div class="vol-form-note">Hours will be verified by the coordinator before credit is applied.</div>
+            </div>
+            <div class="vol-form-group">
+              <label class="vol-form-label">Notes (optional)</label>
+              <input class="vol-form-input" type="text" id="vol-notes" placeholder="Any additional detail"/>
+            </div>
+            <button class="btn-submit-vol" id="btn-submit-vol" onclick="submitVolLog()">Submit for Approval</button>
+            <span class="vol-cancel" onclick="cancelVolForm()">Cancel</span>
+            <div class="vol-success" id="vol-success">
+              <div class="vol-success-msg">&#10003; Submitted! Pending coordinator approval.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR CARD -->
+      <div class="card" id="card-calendar">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-blue"></div>
+            <div class="card-title">Upcoming Events</div>
+          </div>
+          <button class="card-action" onclick="window.location.href='/#calendar'">Full Calendar</button>
+        </div>
+        <div class="card-body-sm" id="calendar-body">
+          <!-- Static for now; wires to Supabase events table in Phase 3 -->
+          <div class="mini-event"><div class="mini-event-date">JUL 22</div><div><div class="mini-event-name">Team Tryouts &amp; Pre-Season</div><div class="mini-event-type">Jul 22&ndash;24 &middot; Inspire Academy</div></div></div>
+          <div class="mini-event"><div class="mini-event-date">AUG 7</div><div><div class="mini-event-name">First Day of School</div><div class="mini-event-type">Chambers County Schools</div></div></div>
+          <div class="mini-event"><div class="mini-event-date">AUG ~14</div><div><div class="mini-event-name">Season Kickoff &mdash; All Programs</div><div class="mini-event-type">Approx. 1 week after school starts</div></div></div>
+          <div class="mini-event"><div class="mini-event-date">OCT</div><div><div class="mini-event-name">First Race of 2026&ndash;2027 Season</div><div class="mini-event-type">2nd&ndash;3rd weekend &middot; Location TBD</div></div></div>
+        </div>
+      </div>
+
+      <!-- FAMILY READINESS CHECKLIST CARD -->
+      <div class="card" id="card-readiness">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-amber"></div>
+            <div class="card-title">Family Readiness</div>
+          </div>
+        </div>
+        <div class="card-body-sm">
+          <div class="checklist-items" id="checklist-items">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- REGISTRATION STATUS CARD -->
+      <div class="card grid-full" id="card-registrations">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-red"></div>
+            <div class="card-title">Registration Status</div>
+          </div>
+          <button class="card-action" onclick="window.location.href='/register'">Register Another</button>
+        </div>
+        <div class="card-body-sm">
+          <div class="reg-items" id="reg-items">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- MERCH ORDERS CARD — Phase 2 placeholder -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-gray"></div>
+            <div class="card-title">Merch Orders</div>
+          </div>
+        </div>
+        <div class="placeholder-body">
+          <div class="placeholder-icon">&#128085;</div>
+          <div class="placeholder-msg">Team Store</div>
+          <div class="placeholder-sub">Your merchandise orders and fulfillment status will appear here.</div>
+          <span class="coming-soon-tag">Available Phase 2</span>
+        </div>
+      </div>
+
+      <!-- WAIVER & COMPLIANCE CARD — Phase 2 placeholder -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-accent accent-gray"></div>
+            <div class="card-title">Waivers &amp; Compliance</div>
+          </div>
+        </div>
+        <div class="placeholder-body">
+          <div class="placeholder-icon">&#128196;</div>
+          <div class="placeholder-msg">Documents</div>
+          <div class="placeholder-sub">Season waivers and medical form status. All required before the first race.</div>
+          <span class="coming-soon-tag">Available Phase 2</span>
+        </div>
+      </div>
+
+    </div><!-- /dashboard-grid -->
+
+    <footer class="site-footer">
+      <div class="footer-copy">&copy; 2026 STEAM Teams CC &middot; Inspire Academy &middot; Chambers County Schools</div>
+      <div class="footer-links-row">
+        <a href="mailto:steam.teams@chambersk12.org" class="footer-link">Contact Us</a>
+        <a href="/" class="footer-link">Home</a>
+        <a href="/register" class="footer-link">Register</a>
+      </div>
+    </footer>
+
+  </div>
+</div><!-- /screen-dashboard -->
+
+<script>
+var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
+var SB_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+
+async function sbGet(path) {
+  var r = await fetch(SB_URL + "/rest/v1/" + path, {
+    headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }
+  });
+  if (!r.ok) throw new Error("Fetch failed: " + r.status);
+  return r.json();
+}
+async function sbPost(path, body) {
+  var r = await fetch(SB_URL + "/rest/v1/" + path, {
+    method: "POST",
+    headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+    body: JSON.stringify(body)
+  });
+  return r;
+}
+
+/* ── SCREENS ── */
+function showScreen(id) {
+  ["screen-entry","screen-loading","screen-error","screen-dashboard"].forEach(function(s) {
+    document.getElementById(s).style.display = "none";
+  });
+  document.getElementById(id).style.display = "block";
+}
+
+/* ── STATUS LABEL LOGIC ── */
+function statusLabel(dbStatus, approvedAt, program, car) {
+  var now = new Date();
+  if (dbStatus === "approved") {
+    var approvalDate = approvedAt ? new Date(approvedAt) : null;
+    var daysSince = approvalDate ? (now - approvalDate) / (1000 * 60 * 60 * 24) : 999;
+    if (daysSince < 14) {
+      return { label: "You're In!", cls: "status-approved-new" };
+    } else {
+      var prog = program || "Program";
+      // Map program to display name
+      var progMap = {
+        "goblin": "Goblins",
+        "ms_greenpower": "MS Greenpower",
+        "hs_greenpower": "HS Greenpower",
+        "ten80_ms": "Ten80 MS",
+        "ten80_hs": "Ten80 HS"
+      };
+      var progDisplay = progMap[prog] || prog;
+      if (car) progDisplay = "Car " + car;
+      return { label: "Active — " + progDisplay, cls: "status-active" };
+    }
+  }
+  if (dbStatus === "alternate")     return { label: "Alternate — On Deck", cls: "status-alternate" };
+  if (dbStatus === "tryout_pending") return { label: "Under Review", cls: "status-pending" };
+  if (dbStatus === "waitlist")       return { label: "On the Waitlist", cls: "status-waitlist" };
+  if (dbStatus === "declined")       return { label: "Not Accepted This Season", cls: "status-declined" };
+  if (dbStatus === "interested")     return { label: "Pipeline — Camp", cls: "status-interested" };
+  if (dbStatus === "priority")       return { label: "Priority Consideration", cls: "status-priority" };
+  return { label: dbStatus, cls: "status-pending" };
+}
+
+/* ── RENDER STUDENT CARDS ── */
+function renderStudentCards(students, registrations) {
+  var wrap = document.getElementById("student-cards-wrap");
+  if (!students || !students.length) {
+    wrap.innerHTML = "<div class='card grid-full'><div class='placeholder-body'><div class='placeholder-icon'>&#128100;</div><div class='placeholder-msg'>No students found</div><div class='placeholder-sub'>Register a student to get started.</div></div></div>";
+    return;
+  }
+
+  wrap.innerHTML = students.map(function(s, i) {
+    var st = statusLabel(s.season_status, s.approved_at, s.program, s.car_number);
+    // Find registrations for this student
+    var stuRegs = (registrations || []).filter(function(r){ return r.student_id === s.id; });
+    var latestReg = stuRegs.length ? stuRegs[0] : null;
+
+    var programMap = {
+      "goblin": "Piedmont Motorsports — Goblin",
+      "ms_greenpower": "Renegade Racing — MS Greenpower",
+      "hs_greenpower": "Renegade Racing — HS Greenpower",
+      "ten80_ms": "Ten80 Education MS",
+      "ten80_hs": "Ten80 Education HS"
+    };
+    var programDisplay = programMap[s.program] || (s.program || "Pending Assignment");
+    var carDisplay = s.car_number ? "Car " + s.car_number : "—";
+    var roleDisplay = s.leadership_role || "Team Member";
+    var eventDisplay = latestReg ? latestReg.event_name : "No event registered";
+
+    return "<div class='card grid-full student-card'>" +
+      "<div class='student-card-header'>" +
+        "<div>" +
+          "<div class='student-name'>" + s.first_name + " " + s.last_name + "</div>" +
+          "<div class='student-grade'>Grade " + s.grade + " &middot; " + (s.home_school || "Chambers County") + "</div>" +
+        "</div>" +
+        "<span class='status-badge " + st.cls + "'>" + st.label + "</span>" +
+      "</div>" +
+      "<div class='student-card-body'>" +
+        "<div class='student-detail-row'>" +
+          "<div class='student-detail'><span class='student-detail-label'>Program</span><span class='student-detail-value'>" + programDisplay + "</span></div>" +
+          "<div class='student-detail'><span class='student-detail-label'>Car</span><span class='student-detail-value'>" + carDisplay + "</span></div>" +
+          "<div class='student-detail'><span class='student-detail-label'>Role</span><span class='student-detail-value'>" + roleDisplay + "</span></div>" +
+          "<div class='student-detail'><span class='student-detail-label'>Registered</span><span class='student-detail-value'>" + eventDisplay + "</span></div>" +
+        "</div>" +
+        "<button class='student-tasks-toggle' onclick='toggleTasks(this)' data-idx='" + i + "'>" +
+          "<span>Tasks This Week</span><span class='toggle-arrow'>&#9660;</span>" +
+        "</button>" +
+        "<div class='student-tasks-panel' id='tasks-panel-" + i + "'>" +
+          "<div class='tasks-placeholder'>Task visibility coming in Phase 3. Students can view their own tasks by logging in with their username and code.</div>" +
+        "</div>" +
+      "</div>" +
+    "</div>";
+  }).join("");
+}
+
+/* ── RENDER READINESS BANNER ── */
+function renderReadiness(family) {
+  var banner = document.getElementById("readiness-banner");
+  var itemsEl = document.getElementById("readiness-items");
+  var titleEl = document.getElementById("readiness-title");
+  var iconEl  = document.getElementById("readiness-icon");
+
+  var checks = [
+    { key: "waiver_on_file",     label: "Waiver",           desc: "Sign season waiver" },
+    { key: "medical_on_file",    label: "Medical Info",     desc: "Update medical information" },
+    { key: "profile_complete",   label: "Student Profile",  desc: "Complete student profile" },
+    { key: "volunteer_profile",  label: "Volunteer Profile",desc: "Add volunteer availability" }
+  ];
+
+  var allDone = checks.every(function(c){ return family[c.key]; });
+
+  if (allDone) {
+    banner.classList.add("complete");
+    banner.classList.remove("hidden");
+    iconEl.innerHTML = "&#10003;";
+    titleEl.textContent = "Family Profile Complete — You're all set!";
+    itemsEl.innerHTML = "";
+    // Auto-hide after 4s if complete
+    setTimeout(function(){ banner.classList.add("hidden"); }, 4000);
+    return;
+  }
+
+  itemsEl.innerHTML = checks.map(function(c) {
+    if (family[c.key]) {
+      return "<div class='readiness-item done'>&#10003; " + c.label + "</div>";
+    } else {
+      return "<div class='readiness-item todo' onclick='alert(\"" + c.desc + " — Coming in Phase 2\")'>&#9675; " + c.label + "</div>";
+    }
+  }).join("");
+}
+
+/* ── RENDER CHECKLIST CARD ── */
+function renderChecklistCard(family) {
+  var checks = [
+    { key: "waiver_on_file",    label: "Season Waiver",     desc: "Signed and on file for 2026–2027", icon: "&#128196;" },
+    { key: "medical_on_file",   label: "Medical Information",desc: "Current and verified",                  icon: "&#10084;&#65039;" },
+    { key: "profile_complete",  label: "Student Profile",   desc: "Complete and up to date",               icon: "&#128100;" },
+    { key: "volunteer_profile", label: "Volunteer Profile", desc: "At least one family volunteer on file",  icon: "&#129309;" }
+  ];
+  var el = document.getElementById("checklist-items");
+  el.innerHTML = checks.map(function(c) {
+    var done = family[c.key];
+    return "<div class='checklist-item " + (done ? "done" : "todo") + "' onclick='" + (done ? "" : "alert('Coming in Phase 2')") + "'>" +
+      "<div class='checklist-item-left'>" +
+        "<div class='checklist-check'>" + (done ? "&#9989;" : "&#9675;") + "</div>" +
+        "<div><div class='checklist-name'>" + c.label + "</div><div class='checklist-desc'>" + c.desc + "</div></div>" +
+      "</div>" +
+      (done ? "" : "<button class='checklist-cta'>Complete &rarr;</button>") +
+    "</div>";
+  }).join("");
+}
+
+/* ── RENDER REGISTRATION STATUS ── */
+function renderRegistrations(registrations) {
+  var el = document.getElementById("reg-items");
+  if (!registrations || !registrations.length) {
+    el.innerHTML = "<div style='text-align:center;padding:16px;font-size:13px;color:var(--text-light);'>No registrations found. <a href='/register' style='color:var(--blue);'>Register now &rarr;</a></div>";
+    return;
+  }
+  var statusMap = {
+    "pending":   { label: "Pending Review", dot: "dot-pending" },
+    "approved":  { label: "Approved",       dot: "dot-approved" },
+    "waitlisted":{ label: "Waitlisted",     dot: "dot-waitlist" },
+    "declined":  { label: "Not Accepted",   dot: "dot-declined" }
+  };
+  el.innerHTML = registrations.map(function(r) {
+    var st = statusMap[r.registration_status] || { label: r.registration_status, dot: "dot-pending" };
+    return "<div class='reg-item'>" +
+      "<div><div class='reg-item-name'>" + (r.student_first + " " + r.student_last) + "</div><div class='reg-item-event'>" + (r.event_name || r.event_type) + "</div></div>" +
+      "<div class='reg-status-dot'><div class='dot " + st.dot + "'></div>" + st.label + "</div>" +
+    "</div>";
+  }).join("");
+}
+
+/* ── VOLUNTEER LOG ── */
+var selectedActivity = "";
+var selectedCredit = "";
+
+function selectActivity(name, credit) {
+  selectedActivity = name;
+  selectedCredit = credit;
+  document.getElementById("vol-activity").value = name + " (+$" + credit + ")";
+  document.getElementById("vol-date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("vol-form").classList.add("open");
+  document.getElementById("vol-success").classList.remove("show");
+}
+function toggleVolForm() {
+  var f = document.getElementById("vol-form");
+  f.classList.toggle("open");
+}
+function cancelVolForm() {
+  document.getElementById("vol-form").classList.remove("open");
+}
+async function submitVolLog() {
+  var activity = document.getElementById("vol-activity").value;
+  var date     = document.getElementById("vol-date").value;
+  var hours    = parseFloat(document.getElementById("vol-hours").value);
+  var notes    = document.getElementById("vol-notes").value.trim();
+  var familyId = sessionStorage.getItem("st_family_id");
+
+  if (!activity || !date || !hours || hours <= 0) {
+    alert("Please fill in activity, date, and hours.");
+    return;
+  }
+  var btn = document.getElementById("btn-submit-vol");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  try {
+    await sbPost("volunteer_logs", {
+      family_id:     familyId,
+      activity_type: selectedActivity,
+      activity_date: date,
+      hours:         hours,
+      credit_amount: parseFloat(selectedCredit) || 0,
+      notes:         notes,
+      status:        "pending"
+    });
+    document.getElementById("vol-success").classList.add("show");
+    document.getElementById("vol-hours").value = "";
+    document.getElementById("vol-notes").value = "";
+    setTimeout(function(){ document.getElementById("vol-form").classList.remove("open"); document.getElementById("vol-success").classList.remove("show"); }, 3000);
+  } catch(e) {
+    alert("Submission failed. Please try again.");
+  } finally {
+    btn.disabled = false; btn.textContent = "Submit for Approval";
+  }
+}
+
+/* ── TASKS TOGGLE ── */
+function toggleTasks(btn) {
+  var idx = btn.getAttribute("data-idx");
+  var panel = document.getElementById("tasks-panel-" + idx);
+  var arrow = btn.querySelector(".toggle-arrow");
+  panel.classList.toggle("open");
+  arrow.classList.toggle("open");
+}
+
+/* ── LEDGER TOGGLE ── */
+function toggleLedger() {
+  var p = document.getElementById("ledger-panel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+}
+
+/* ── SIGN OUT ── */
+function signOut() {
+  sessionStorage.removeItem("st_family_code");
+  sessionStorage.removeItem("st_family_id");
+  window.location.href = "/";
+}
+
+/* ── FORMAT CODE ── */
+function fmtCode(el) {
+  var v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 6);
+  el.value = v.slice(0, 7);
+}
+function codeKeydown(e) { if (e.key === "Enter") lookupFamily(); }
+
+/* ── LOOKUP FAMILY ── */
+async function lookupFamily() {
+  var code = document.getElementById("code-input").value.trim().toUpperCase();
+  var errEl = document.getElementById("code-error");
+  var btn   = document.getElementById("btn-lookup");
+  errEl.classList.remove("show");
+
+  if (!code.match(/^CC-[A-Z0-9]{4}$/)) {
+    errEl.textContent = "Enter a valid family code (CC-XXXX)";
+    errEl.classList.add("show");
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Looking up…";
+  try {
+    var rows = await sbGet("families?family_code=eq." + code + "&select=id,family_code");
+    if (!rows || !rows.length) {
+      errEl.textContent = "Family code not found. Check your confirmation email.";
+      errEl.classList.add("show");
+    } else {
+      sessionStorage.setItem("st_family_code", code);
+      sessionStorage.setItem("st_family_id", rows[0].id);
+      loadDashboard(rows[0].id, code);
+    }
+  } catch(e) {
+    errEl.textContent = "Connection error — please try again.";
+    errEl.classList.add("show");
+  } finally {
+    btn.disabled = false; btn.textContent = "Check My Status";
+  }
+}
+
+/* ── LOAD DASHBOARD ── */
+async function loadDashboard(familyId, familyCode) {
+  showScreen("screen-loading");
+  try {
+    // Fetch family record
+    var families = await sbGet("families?id=eq." + familyId + "&select=id,family_code,parent_1_name,parent_2_name,email,waiver_on_file,medical_on_file,profile_complete,volunteer_profile");
+    if (!families || !families.length) throw new Error("Family not found");
+    var family = families[0];
+
+    // Fetch students
+    var students = await sbGet("students?family_id=eq." + familyId + "&select=id,first_name,last_name,grade,home_school,program,season_status,approved_at,car_number,leadership_role&order=first_name.asc");
+
+    // Fetch registrations with student names joined
+    var registrations = [];
+    if (students && students.length) {
+      var stuIds = students.map(function(s){ return s.id; }).join(",");
+      var regs = await sbGet("registrations?student_id=in.(" + stuIds + ")&select=id,student_id,event_name,event_type,registration_status,submitted_at&order=submitted_at.desc");
+      // Attach student names
+      registrations = (regs || []).map(function(r) {
+        var stu = students.find(function(s){ return s.id === r.student_id; });
+        r.student_first = stu ? stu.first_name : "";
+        r.student_last  = stu ? stu.last_name  : "";
+        return r;
+      });
+    }
+
+    // Build welcome name
+    var familyName = family.parent_1_name ? family.parent_1_name.split(" ").slice(-1)[0] + " Family" : "Your Family";
+    document.getElementById("welcome-title").textContent = "Welcome, " + familyName;
+    document.getElementById("header-code").textContent = familyCode;
+
+    // Render
+    renderReadiness(family);
+    renderChecklistCard(family);
+    renderStudentCards(students, registrations);
+    renderRegistrations(registrations);
+
+    showScreen("screen-dashboard");
+  } catch(e) {
+    document.getElementById("error-msg").textContent = "We could not load your family dashboard. Please try again or contact steam.teams@chambersk12.org.";
+    showScreen("screen-error");
+  }
+}
+
+/* ── INIT ── */
+(function init() {
+  var code = sessionStorage.getItem("st_family_code");
+  var id   = sessionStorage.getItem("st_family_id");
+  if (code && id) {
+    loadDashboard(id, code);
+  } else {
+    showScreen("screen-entry");
+  }
+})();
+</script>
+</body>
+</html>
