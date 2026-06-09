@@ -131,11 +131,7 @@
           class="bg-race-red text-white px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block">
           Register Now
         </a>
-        <!-- View Status → opens portal login modal -->
-        <button onclick="openModal()"
-          class="border-2 border-on-primary text-on-primary px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest hover:bg-on-primary hover:text-primary transition-all">
-          View Status
-        </button>
+
       </div>
     </div>
 
@@ -222,7 +218,7 @@
 
           <!-- Footer of card -->
           <p class="text-center text-label-caps font-label-caps text-on-surface-variant pt-2 border-t border-outline/10">
-            <a href="/register" class="hover:underline text-race-red">New family? Register for Summer 2026 &rarr;</a>
+            <a href="/register" class="hover:underline text-race-red">New family? Register here &rarr;</a>
           </p>
         </div>
       </div>
@@ -239,20 +235,20 @@
 <div class="bg-asphalt-black text-white py-6 overflow-hidden -mt-10 relative z-20">
   <div class="container mx-auto px-margin-mobile md:px-margin-desktop flex flex-wrap justify-between items-center gap-8">
     <div class="flex items-center gap-4">
-      <span class="text-headline-md font-headline-md font-black italic text-race-red">5</span>
-      <span class="text-label-caps font-label-caps uppercase text-surface-variant">Programs</span>
+      <span id="stat-programs" class="text-headline-md font-headline-md font-black italic text-race-red">5</span>
+      <span id="stat-programs-label" class="text-label-caps font-label-caps uppercase text-surface-variant">Programs</span>
     </div>
     <div class="flex items-center gap-4 border-l border-white/10 pl-8">
-      <span class="text-headline-md font-headline-md font-black italic text-race-red">70+</span>
-      <span class="text-label-caps font-label-caps uppercase text-surface-variant">Active Students</span>
+      <span id="stat-students" class="text-headline-md font-headline-md font-black italic text-race-red">70+</span>
+      <span id="stat-students-label" class="text-label-caps font-label-caps uppercase text-surface-variant">Active Students</span>
     </div>
     <div class="flex items-center gap-4 border-l border-white/10 pl-8">
-      <span class="text-headline-md font-headline-md font-black italic text-race-red">4</span>
-      <span class="text-label-caps font-label-caps uppercase text-surface-variant">Cars at Nationals</span>
+      <span id="stat-cars" class="text-headline-md font-headline-md font-black italic text-race-red">4</span>
+      <span id="stat-cars-label" class="text-label-caps font-label-caps uppercase text-surface-variant">Cars at Nationals</span>
     </div>
     <div class="flex items-center gap-4 border-l border-white/10 pl-8">
-      <span class="text-headline-md font-headline-md font-black italic text-race-red">2013</span>
-      <span class="text-label-caps font-label-caps uppercase text-surface-variant">Founded</span>
+      <span id="stat-founded" class="text-headline-md font-headline-md font-black italic text-race-red">2013</span>
+      <span id="stat-founded-label" class="text-label-caps font-label-caps uppercase text-surface-variant">Founded</span>
     </div>
   </div>
 </div>
@@ -364,10 +360,10 @@
       </div>
     </div>
     <div class="flex gap-4">
-      <a href="#" id="merch-link"
-        class="bg-race-red text-white px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block">
-        Visit the Store
-      </a>
+      <button id="merch-link" onclick="alert('The STEAM Teams merch store is coming soon — it will be available right here in the portal. Check back before the 2026–2027 season!')"
+        class="bg-race-red text-white px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block cursor-pointer">
+        Store — Coming Soon
+      </button>
       <a href="#calendar"
         class="border-2 border-asphalt-black text-asphalt-black px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest hover:bg-asphalt-black hover:text-white transition-all inline-block">
         Race Schedule
@@ -669,7 +665,7 @@
       </div>
 
       <p class="text-center text-label-caps font-label-caps text-on-surface-variant pt-2 border-t border-outline/10">
-        <a href="/register" class="hover:underline text-race-red">New family? Register for Summer 2026 &rarr;</a>
+        <a href="/register" class="hover:underline text-race-red">New family? Register here &rarr;</a>
       </p>
     </div>
   </div>
@@ -908,8 +904,37 @@ window.addEventListener("scroll", function() {
   if (hero) hero.style.backgroundPositionY = -(scrolled * 0.1) + "px";
 });
 
+// ── Homepage config loader ────────────────────────
+// Reads home_* rows from portal_config and updates the DOM.
+// Falls back gracefully to hardcoded HTML values if Supabase is unreachable.
+async function loadHomeConfig() {
+  try {
+    var rows = await sbGet("portal_config?key=like.home_%&select=key,value");
+    if (!rows || !rows.length) return;
+    // Build a quick lookup map — strip JSON quotes from values
+    var cfg = {};
+    rows.forEach(function(r) {
+      try { cfg[r.key] = JSON.parse(r.value); } catch(e) { cfg[r.key] = r.value; }
+    });
+    // Stats bar numbers + labels
+    var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.textContent = val; };
+    set("stat-programs",       cfg["home_stat_programs"]);
+    set("stat-programs-label", cfg["home_stat_programs_label"]);
+    set("stat-students",       cfg["home_stat_students"]);
+    set("stat-students-label", cfg["home_stat_students_label"]);
+    set("stat-cars",           cfg["home_stat_cars"]);
+    set("stat-cars-label",     cfg["home_stat_cars_label"]);
+    set("stat-founded",        cfg["home_stat_founded"]);
+    set("stat-founded-label",  cfg["home_stat_founded_label"]);
+  } catch(e) {
+    // Silently fall back — hardcoded values remain visible
+    console.warn("loadHomeConfig: could not reach portal_config", e);
+  }
+}
+
 // ── Boot ──────────────────────────────────────────
 renderCalendar();
+loadHomeConfig();
 </script>
 
 </body>
