@@ -423,7 +423,13 @@
     </div>
   </section>
 
-  <!-- ── SPONSORS SECTION  (Stitch aesthetic · submitSponsor() live logic) ── -->
+  <!-- ══════════════════════════════════════════
+       SPONSORS SECTION (V7)
+       Tier structure: Platinum → Gold → Silver → Bronze → Legacy Partners
+       All sponsor data driven by portal_config key "home_sponsors" (JSON array)
+       renderSponsors() reads config and builds the list dynamically
+       Impact stats wired to portal_config via loadHomeConfig()
+  ══════════════════════════════════════════ -->
   <section class="space-y-10" id="sponsors">
     <div class="border-b-2 border-asphalt-black pb-4">
       <h2 class="text-headline-lg font-headline-lg">Invest in What's Next</h2>
@@ -431,57 +437,83 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
 
-      <!-- Left: impact stats + partner list -->
+      <!-- Left: impact stats + tiered sponsor list -->
       <div class="space-y-8 reveal">
+
+        <!-- Impact stats — wired to portal_config -->
         <div class="grid grid-cols-2 gap-px bg-outline/10">
           <div class="bg-white p-8 space-y-1">
-            <span class="text-headline-md font-headline-md font-black italic text-race-red">70+</span>
-            <p class="text-label-caps font-label-caps uppercase text-on-surface-variant">Active Students</p>
+            <span id="sponsor-stat-students" class="text-headline-md font-headline-md font-black italic text-race-red">70+</span>
+            <p id="sponsor-stat-students-label" class="text-label-caps font-label-caps uppercase text-on-surface-variant">Active Students</p>
           </div>
           <div class="bg-white p-8 space-y-1">
-            <span class="text-headline-md font-headline-md font-black italic text-race-red">4–12</span>
-            <p class="text-label-caps font-label-caps uppercase text-on-surface-variant">Grade Range + College</p>
+            <span id="sponsor-stat-grades" class="text-headline-md font-headline-md font-black italic text-race-red">4–12</span>
+            <p id="sponsor-stat-grades-label" class="text-label-caps font-label-caps uppercase text-on-surface-variant">Grade Range + College</p>
           </div>
           <div class="bg-white p-8 space-y-1">
-            <span class="text-headline-md font-headline-md font-black italic text-race-red">12+</span>
-            <p class="text-label-caps font-label-caps uppercase text-on-surface-variant">Years Running</p>
+            <span id="sponsor-stat-years" class="text-headline-md font-headline-md font-black italic text-race-red">12+</span>
+            <p id="sponsor-stat-years-label" class="text-label-caps font-label-caps uppercase text-on-surface-variant">Years Running</p>
           </div>
           <div class="bg-white p-8 space-y-1">
-            <span class="text-headline-md font-headline-md font-black italic text-race-red">4</span>
-            <p class="text-label-caps font-label-caps uppercase text-on-surface-variant">Cars at Nationals</p>
+            <span id="sponsor-stat-cars" class="text-headline-md font-headline-md font-black italic text-race-red">4</span>
+            <p id="sponsor-stat-cars-label" class="text-label-caps font-label-caps uppercase text-on-surface-variant">Cars at Nationals</p>
           </div>
         </div>
+
+        <!-- Sponsorship tiers — package overview -->
+        <div class="space-y-2">
+          <p class="text-label-caps font-label-caps uppercase font-bold text-on-surface-variant">Sponsorship Tiers</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3 border-l-4" style="border-left-color:#B8860B;">
+              <span class="font-label-caps text-label-caps font-bold uppercase text-xs" style="color:#B8860B; min-width:64px;">Platinum</span>
+              <span class="font-body-md text-on-surface-variant text-sm">$10,000+</span>
+              <span class="ml-auto font-label-caps text-label-caps text-on-surface-variant text-xs uppercase">Title Recognition</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3 border-l-4" style="border-left-color:#C8A800;">
+              <span class="font-label-caps text-label-caps font-bold uppercase text-xs" style="color:#C8A800; min-width:64px;">Gold</span>
+              <span class="font-body-md text-on-surface-variant text-sm">$5,000+</span>
+              <span class="ml-auto font-label-caps text-label-caps text-on-surface-variant text-xs uppercase">Large Logo + Spotlight</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3 border-l-4" style="border-left-color:#708090;">
+              <span class="font-label-caps text-label-caps font-bold uppercase text-xs" style="color:#708090; min-width:64px;">Silver</span>
+              <span class="font-body-md text-on-surface-variant text-sm">$2,500+</span>
+              <span class="ml-auto font-label-caps text-label-caps text-on-surface-variant text-xs uppercase">Medium Logo + Spotlight</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3 border-l-4" style="border-left-color:#8B6B3D;">
+              <span class="font-label-caps text-label-caps font-bold uppercase text-xs" style="color:#8B6B3D; min-width:64px;">Bronze</span>
+              <span class="font-body-md text-on-surface-variant text-sm">$500+</span>
+              <span class="ml-auto font-label-caps text-label-caps text-on-surface-variant text-xs uppercase">Logo + Social Shoutout</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current + Legacy sponsors — rendered by renderSponsors() -->
         <div class="space-y-3">
-          <p class="text-label-caps font-label-caps uppercase font-bold text-on-surface-variant">Current Partners</p>
-          <div class="space-y-2">
-            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3">
-              <span class="w-2 h-2 bg-race-red flex-shrink-0" style="clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span>
-              <span class="font-body-md font-medium">KIA Manufacturing Georgia</span>
-              <span class="ml-auto text-label-caps font-label-caps text-on-surface-variant text-xs uppercase">Primary Sponsor</span>
-            </div>
-            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3">
-              <span class="w-2 h-2 bg-deep-navy flex-shrink-0" style="clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span>
-              <span class="font-body-md font-medium">SOLV Energy</span>
-              <span class="ml-auto text-label-caps font-label-caps text-on-surface-variant text-xs uppercase">Major Sponsor</span>
-            </div>
-            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3">
-              <span class="w-2 h-2 flex-shrink-0" style="background:#2e7d32;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span>
-              <span class="font-body-md font-medium">Heart of America Foundation</span>
-              <span class="ml-auto text-label-caps font-label-caps text-on-surface-variant text-xs uppercase">Sponsor</span>
-            </div>
-            <div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3">
-              <span class="w-2 h-2 flex-shrink-0" style="background:#2e7d32;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></span>
-              <span class="font-body-md font-medium">Thalamus Electric</span>
-              <span class="ml-auto text-label-caps font-label-caps text-on-surface-variant text-xs uppercase">Sponsor</span>
-            </div>
+          <p class="text-label-caps font-label-caps uppercase font-bold text-on-surface-variant">Our Partners</p>
+          <div id="sponsor-list" class="space-y-1">
+            <!-- JS fills this from portal_config home_sponsors -->
           </div>
         </div>
+
       </div>
 
-      <!-- Right: sponsor inquiry form → submitSponsor() -->
+      <!-- Right: sponsor inquiry form → submitSponsor() (unchanged) -->
       <div class="bg-white border border-outline/10 p-8 space-y-6 reveal">
         <h3 class="text-headline-md font-headline-md">Express Interest</h3>
         <p class="text-on-surface-variant text-body-md">Tell us about your organization. Seth will follow up within a few business days.</p>
+        <!-- Tier picker -->
+        <div>
+          <label class="block text-label-caps font-label-caps uppercase text-on-surface-variant mb-2">Sponsorship Level</label>
+          <select id="sf-tier"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 font-body-md bg-white">
+            <option value="">Select a tier (optional)</option>
+            <option value="Platinum">Platinum — $10,000+</option>
+            <option value="Gold">Gold — $5,000+</option>
+            <option value="Silver">Silver — $2,500+</option>
+            <option value="Bronze">Bronze — $500+</option>
+            <option value="Other">Other / Let's talk</option>
+          </select>
+        </div>
         <div id="sf-form-body" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -922,6 +954,7 @@ function renderCalendar() {
 
 // ── Sponsor form submission ───────────────────────
 async function submitSponsor() {
+  var tier  = document.getElementById("sf-tier").value.trim();
   var name  = document.getElementById("sf-name").value.trim();
   var org   = document.getElementById("sf-org").value.trim();
   var email = document.getElementById("sf-email").value.trim();
@@ -933,10 +966,11 @@ async function submitSponsor() {
   try {
     await sbPost("notify_list", {
       email: email,
-      notes: "SPONSOR | Name:" + name + " | Org:" + org + " | Phone:" + phone + " | Msg:" + msg
+      notes: "SPONSOR | Tier:" + (tier||"Not specified") + " | Name:" + name + " | Org:" + org + " | Phone:" + phone + " | Msg:" + msg
     });
   } catch(e) {}
   document.getElementById("sf-form-body").classList.add("hidden");
+  document.getElementById("sf-tier").classList.add("hidden");
   document.getElementById("sf-success").classList.remove("hidden");
 }
 
@@ -955,6 +989,67 @@ window.addEventListener("scroll", function() {
   if (hero) hero.style.backgroundPositionY = -(scrolled * 0.1) + "px";
 });
 
+// ── Default sponsor data (fallback if portal_config unreachable) ─
+var DEFAULT_SPONSORS = [
+  { name:"KIA Manufacturing Georgia", tier:"platinum" },
+  { name:"Thalamus Electric",          tier:"bronze"   },
+  { name:"SOLV Energy",                tier:"legacy"   },
+  { name:"Heart of America Foundation",tier:"legacy"   }
+];
+
+// ── Sponsor tier config ───────────────────────────
+// Colors and labels for each tier — single source of truth
+var TIER_CONFIG = {
+  "platinum": { label:"Platinum", color:"#B8860B", borderColor:"#B8860B" },
+  "gold":     { label:"Gold",     color:"#C8A800", borderColor:"#C8A800" },
+  "silver":   { label:"Silver",   color:"#708090", borderColor:"#708090" },
+  "bronze":   { label:"Bronze",   color:"#8B6B3D", borderColor:"#8B6B3D" },
+  "legacy":   { label:"Legacy Partner", color:"#9E9E9E", borderColor:"#BDBDBD" }
+};
+
+// ── Sponsor list renderer ─────────────────────────
+// Reads home_sponsors JSON from portal_config and builds the tiered list.
+// Tier order: platinum → gold → silver → bronze → legacy
+// Falls back to hardcoded sponsors if portal_config is unreachable.
+function renderSponsors(sponsors) {
+  var order = ["platinum","gold","silver","bronze","legacy"];
+  var list = document.getElementById("sponsor-list");
+  if (!list) return;
+  var html = "";
+  var grouped = {};
+  order.forEach(function(t) { grouped[t] = []; });
+  sponsors.forEach(function(s) {
+    var tier = (s.tier || "bronze").toLowerCase();
+    if (!grouped[tier]) grouped[tier] = [];
+    grouped[tier].push(s);
+  });
+  var hasLegacy = grouped["legacy"].length > 0;
+  // Active tiers
+  order.filter(function(t){ return t !== "legacy"; }).forEach(function(tier) {
+    var cfg = TIER_CONFIG[tier];
+    grouped[tier].forEach(function(s) {
+      html += '<div class="flex items-center gap-3 bg-white border border-outline/10 px-4 py-3 border-l-4" style="border-left-color:' + cfg.borderColor + ';">';
+      html += '<span class="font-label-caps text-label-caps font-bold uppercase text-xs" style="color:' + cfg.color + '; min-width:64px;">' + cfg.label + '</span>';
+      html += '<span class="font-body-md font-medium text-on-surface">' + s.name + '</span>';
+      html += '</div>';
+    });
+  });
+  // Legacy Partners — visually separated, muted
+  if (hasLegacy) {
+    html += '<div class="pt-3 mt-1 border-t border-outline/10">';
+    html += '<p class="text-label-caps font-label-caps uppercase text-xs text-on-surface-variant/60 mb-2 tracking-widest">Legacy Partners</p>';
+    grouped["legacy"].forEach(function(s) {
+      html += '<div class="flex items-center gap-3 bg-surface border border-outline/10 px-4 py-2 border-l-4" style="border-left-color:#BDBDBD;">';
+      html += '<span class="font-body-md text-on-surface-variant text-sm italic">' + s.name + '</span>';
+      html += '<span class="ml-auto font-label-caps text-label-caps text-on-surface-variant/50 text-xs uppercase">Legacy</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  list.innerHTML = html || '<p class="text-on-surface-variant text-sm italic">Partner list loading...</p>';
+}
+
+// ── Homepage config loader ────────────────────────
 // ── Homepage config loader ────────────────────────
 // Reads home_* rows from portal_config and updates the DOM.
 // Falls back silently to hardcoded values if Supabase unreachable.
@@ -991,8 +1086,28 @@ async function loadHomeConfig() {
     set("bento-slot4-label",        cfg["home_slot4_label"]);
     set("bento-slot4-grades",       cfg["home_slot4_grades"]);
     set("bento-slot4-desc",         cfg["home_slot4_desc"]);
+    // Sponsor section impact stats
+    set("sponsor-stat-students",       cfg["home_sponsor_stat_students"]);
+    set("sponsor-stat-students-label", cfg["home_sponsor_stat_students_label"]);
+    set("sponsor-stat-grades",         cfg["home_sponsor_stat_grades"]);
+    set("sponsor-stat-grades-label",   cfg["home_sponsor_stat_grades_label"]);
+    set("sponsor-stat-years",          cfg["home_sponsor_stat_years"]);
+    set("sponsor-stat-years-label",    cfg["home_sponsor_stat_years_label"]);
+    set("sponsor-stat-cars",           cfg["home_sponsor_stat_cars"]);
+    set("sponsor-stat-cars-label",     cfg["home_sponsor_stat_cars_label"]);
+    // Sponsor list — JSON array
+    if (cfg["home_sponsors"]) {
+      try {
+        var sponsors = typeof cfg["home_sponsors"] === "string"
+          ? JSON.parse(cfg["home_sponsors"]) : cfg["home_sponsors"];
+        renderSponsors(sponsors);
+      } catch(e) { renderSponsors(DEFAULT_SPONSORS); }
+    } else {
+      renderSponsors(DEFAULT_SPONSORS);
+    }
   } catch(e) {
     console.warn("loadHomeConfig: could not reach portal_config", e);
+    renderSponsors(DEFAULT_SPONSORS);
   }
 }
 
