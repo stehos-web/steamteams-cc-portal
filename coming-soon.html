@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Coming Soon — STEAM Teams CC Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- NOTE: Tailwind CDN is intentional. Static HTML/Vercel deployment. Upgrade to CLI before v2. -->
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Archivo+Narrow:ital,wght@0,400;0,500;0,700;1,700&family=Roboto+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  .diagonal-stripe {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.05) 10px,
+      transparent 10px,
+      transparent 20px
+    );
+  }
+  .angled-cut-card { clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%); }
+  .brutalist-shadow:hover { box-shadow: 4px 4px 0px 0px #B2292E; transform: translate(-2px, -2px); }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  /* Page label derived from URL path */
+  #page-label { text-transform: uppercase; }
+</style>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "race-red":"#B2292E","deep-navy":"#1C355E","track-white":"#F8F8F6",
+          "asphalt-black":"#1A1A1A","primary":"#011f48","on-primary":"#ffffff",
+          "on-primary-fixed-variant":"#2f4771","secondary-fixed-dim":"#ffb3af",
+          "outline":"#74777f","on-surface":"#1c1b1b","on-surface-variant":"#44474e",
+          "surface":"#fcf9f8","surface-variant":"#e5e2e1","secondary-container":"#fe615f",
+          "on-secondary-container":"#65000c","error":"#ba1a1a","error-container":"#ffdad6"
+        },
+        fontFamily: {
+          "headline-lg":["Domine"],"headline-md":["Domine"],
+          "display-lg":["Domine"],"label-caps":["Archivo Narrow"],
+          "body-md":["Roboto Flex"],"body-lg":["Roboto Flex"]
+        },
+        fontSize: {
+          "display-lg":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}],
+          "headline-lg":["32px",{lineHeight:"40px",fontWeight:"700"}],
+          "headline-md":["24px",{lineHeight:"32px",fontWeight:"600"}],
+          "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+          "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
+          "label-caps":["14px",{lineHeight:"20px",letterSpacing:"0.05em",fontWeight:"700"}]
+        },
+        spacing: { "margin-desktop":"48px","margin-mobile":"16px" }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-primary text-on-primary min-h-screen flex flex-col overflow-x-hidden diagonal-stripe">
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 border-b border-white/10 flex-shrink-0">
+  <a href="/" class="font-headline-md font-black italic uppercase tracking-wide text-on-primary">
+    <em class="text-race-red not-italic">STEAM</em>Teams CC
+  </a>
+  <a href="/"
+    class="flex items-center gap-2 font-label-caps text-label-caps uppercase text-on-primary/50 hover:text-on-primary transition-colors">
+    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    Back to Home
+  </a>
+</header>
+
+<!-- ── MAIN ───────────────────────────────────────────── -->
+<main class="flex-1 flex items-center justify-center px-margin-mobile md:px-margin-desktop py-20">
+  <div class="w-full max-w-lg text-center space-y-8">
+
+    <!-- Red accent bar -->
+    <div class="flex justify-center">
+      <div class="w-16 h-1 bg-race-red"></div>
+    </div>
+
+    <!-- Page label — set dynamically from URL path -->
+    <div id="page-label"
+      class="font-label-caps text-label-caps text-race-red tracking-widest">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- Headline -->
+    <h1 class="font-display-lg text-display-lg leading-tight">
+      Coming<br>
+      <em class="text-race-red">Soon</em>
+    </h1>
+
+    <!-- Supporting copy -->
+    <p class="font-body-lg text-body-lg text-on-primary/60 max-w-sm mx-auto">
+      This section of the portal is being built right now and will be ready before the
+      <strong class="text-on-primary">2026&ndash;2027 season</strong> kicks off.
+    </p>
+
+    <!-- Angled card with info -->
+    <div class="bg-white/5 border border-white/10 p-8 angled-cut-card text-left space-y-4">
+      <div class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-race-red flex-shrink-0" style="font-size:20px;">calendar_month</span>
+        <div>
+          <p class="font-label-caps text-label-caps uppercase text-race-red text-xs tracking-widest mb-1">Season Calendar</p>
+          <p class="font-body-md text-body-md text-on-primary/70 text-sm">Full event calendar, race schedules, and practice dates will live here.</p>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-4 flex items-start gap-3">
+        <span class="material-symbols-outlined text-race-red flex-shrink-0" style="font-size:20px;">notifications</span>
+        <div>
+          <p class="font-label-caps text-label-caps uppercase text-race-red text-xs tracking-widest mb-1">Race Day Alerts</p>
+          <p class="font-body-md text-body-md text-on-primary/70 text-sm">Get same-day cancellation alerts via the <strong class="text-on-primary">Remind App</strong> — ask your coordinator to add you.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/"
+        class="bg-race-red text-white px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block text-center">
+        Back to Home
+      </a>
+      <a href="/register"
+        class="border-2 border-white/30 text-on-primary px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest hover:border-white hover:bg-white/5 transition-all inline-block text-center">
+        Register Now
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer class="border-t border-white/10 px-margin-mobile md:px-margin-desktop py-6 flex flex-col sm:flex-row justify-between items-center gap-3 flex-shrink-0">
+  <p class="font-label-caps text-label-caps text-on-primary/25 text-xs">
+    &copy; 2026 STEAM Teams CC &middot; Inspire Academy &middot; Chambers County Schools
+  </p>
+  <p class="font-label-caps text-label-caps text-on-primary/20 text-xs">
+    Greenpower USA &middot; Ten80 Education &middot; Founded 2013
+  </p>
+</footer>
+
+<script>
+// Set the page label from the URL path
+// /calendar → "Season Calendar"  /merch → "Merch Store"  /sponsors → "Sponsorship"
+var labels = {
+  "calendar":  "Season Calendar",
+  "merch":     "Merch Store",
+  "sponsors":  "Sponsorship",
+  "student":   "Student Portal"
+};
+var path = window.location.pathname.replace(/\//g, "").toLowerCase();
+var label = labels[path] || "Portal Feature";
+var el = document.getElementById("page-label");
+if (el) el.textContent = label;
+</script>
+
+</body>
+</html>
