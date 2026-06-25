@@ -570,12 +570,28 @@
       <p class="text-surface-variant/60 text-body-md">Driving engineering innovation through the spirit of competition.
         Empowering future leaders in technology and design. Powered by Inspire Academy &amp; Chambers County Schools since 2013.</p>
       <div class="flex gap-4">
+        <!-- Facebook — confirmed live at facebook.com/SteamTeamsCC -->
         <a href="https://facebook.com/SteamTeamsCC" target="_blank"
-          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all">
+          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
+          aria-label="STEAM Teams CC on Facebook">
           <span class="material-symbols-outlined">share</span>
         </a>
-        <a href="mailto:steam.teams@chambersk12.org"
-          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all">
+        <!-- Instagram — placeholder until handle confirmed -->
+        <a href="/coming-soon.html"
+          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
+          aria-label="STEAM Teams CC on Instagram">
+          <span class="material-symbols-outlined">photo_camera</span>
+        </a>
+        <!-- LinkedIn — placeholder until page set up -->
+        <a href="/coming-soon.html"
+          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
+          aria-label="STEAM Teams CC on LinkedIn">
+          <span class="material-symbols-outlined">business</span>
+        </a>
+        <!-- Email — placeholder until program email set up -->
+        <a href="/coming-soon.html"
+          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
+          aria-label="Email STEAM Teams CC">
           <span class="material-symbols-outlined">mail</span>
         </a>
       </div>
@@ -599,7 +615,7 @@
         <li><a href="/calendar" class="hover:text-white transition-colors">Season Calendar</a></li>
         <li><a href="/merch" class="hover:text-white transition-colors">Merch Store</a></li>
         <li><a href="/sponsors" class="hover:text-white transition-colors">Sponsorship</a></li>
-        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+        <li><a href="/coming-soon.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
       </ul>
     </div>
 
@@ -624,7 +640,7 @@
   </div>
 
   <div class="container mx-auto px-margin-mobile md:px-margin-desktop pt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-surface-variant/40 text-label-caps font-label-caps">
-    <p>&copy; 2026 STEAM Teams Chambers County. All Rights Reserved.</p>
+    <p>&copy; <span id="footer-year">2026</span> STEAM Teams Chambers County. All Rights Reserved.</p>
     <p>Greenpower USA &middot; Ten80 Education &middot; Founded 2013</p>
   </div>
 </footer>
@@ -1157,6 +1173,11 @@ async function loadHomeConfig() {
 // ── Boot ──────────────────────────────────────────
 renderCalendar();
 loadHomeConfig();
+// Dynamic copyright year
+(function() {
+  var el = document.getElementById("footer-year");
+  if (el) el.textContent = new Date().getFullYear();
+})();
 </script>
 
 </body>
