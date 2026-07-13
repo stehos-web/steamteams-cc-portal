@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Season Calendar — STEAM Teams CC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- NOTE: Tailwind CDN is intentional — matches index_V8.html. Static HTML/Vercel
+     deployment, no build step. Upgrade to Tailwind CLI before V2 season launch. -->
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Archivo+Narrow:ital,wght@0,400;0,500;0,700;1,700&family=Roboto+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .brutalist-shadow:hover { box-shadow: 4px 4px 0px 0px #B2292E; transform: translate(-2px, -2px); }
+  .cancelled-strike { text-decoration: line-through; text-decoration-color: #B2292E; text-decoration-thickness: 2px; }
+  .filter-chip.active { background:#1A1A1A; color:#fff; }
+  .login-panel { display: none; }
+  .login-panel.active { display: block; }
+  .race-banner { animation: pulseBanner 2.4s ease-in-out infinite; }
+  @keyframes pulseBanner { 0%,100% { opacity:1; } 50% { opacity:.85; } }
+</style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-secondary-container":"#65000c","inverse-primary":"#afc7f8","on-primary-container":"#879ece",
+          "tertiary-fixed":"#ffddba","outline":"#74777f","on-tertiary":"#ffffff","track-white":"#F8F8F6",
+          "surface-container":"#f0eded","inverse-on-surface":"#f3f0ef","on-primary-fixed-variant":"#2f4771",
+          "surface-container-low":"#f6f3f2","surface-container-lowest":"#ffffff","on-error":"#ffffff",
+          "on-background":"#1c1b1b","secondary-container":"#fe615f","tertiary-fixed-dim":"#f2bc82",
+          "race-red":"#B2292E","asphalt-black":"#1A1A1A","primary-fixed-dim":"#afc7f8","secondary":"#b2292e",
+          "surface-bright":"#fcf9f8","error-container":"#ffdad6","surface-dim":"#dcd9d9",
+          "on-primary-fixed":"#001b3f","on-secondary-fixed-variant":"#900b1a","secondary-fixed":"#ffdad7",
+          "surface-variant":"#e5e2e1","surface":"#fcf9f8","surface-tint":"#475e8a",
+          "secondary-fixed-dim":"#ffb3af","on-tertiary-container":"#c6955e","error":"#ba1a1a",
+          "on-tertiary-fixed-variant":"#633f0f","deep-navy":"#1C355E","outline-variant":"#c4c6d0",
+          "on-surface-variant":"#44474e","primary":"#011f48","on-secondary":"#ffffff",
+          "on-tertiary-fixed":"#2b1700","surface-container-high":"#eae7e7","tertiary":"#321b00",
+          "tertiary-container":"#4f2e00","on-surface":"#1c1b1b","surface-container-highest":"#e5e2e1",
+          "on-error-container":"#93000a","primary-container":"#1c355e","on-primary":"#ffffff",
+          "primary-fixed":"#d7e2ff","inverse-surface":"#313030","background":"#fcf9f8","on-secondary-fixed":"#410005"
+        },
+        borderRadius: { DEFAULT:"0.25rem", lg:"0.5rem", xl:"0.75rem", full:"9999px" },
+        spacing: { "margin-desktop":"48px","container-max":"1440px","gutter":"24px","margin-mobile":"16px","unit":"4px" },
+        fontFamily: {
+          "headline-md":["Domine"],"headline-lg":["Domine"],"data-tabular":["Archivo Narrow"],
+          "body-md":["Roboto Flex"],"body-lg":["Roboto Flex"],"label-caps":["Archivo Narrow"],
+          "headline-lg-mobile":["Domine"],"display-lg":["Domine"]
+        },
+        fontSize: {
+          "headline-md":["24px",{lineHeight:"32px",fontWeight:"600"}],
+          "headline-lg":["32px",{lineHeight:"40px",fontWeight:"700"}],
+          "data-tabular":["14px",{lineHeight:"18px",fontWeight:"500"}],
+          "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
+          "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+          "label-caps":["14px",{lineHeight:"20px",letterSpacing:"0.05em",fontWeight:"700"}],
+          "headline-lg-mobile":["28px",{lineHeight:"36px",fontWeight:"700"}],
+          "display-lg":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}]
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+
+<!-- ═══════════════════════════════════════════════
+     TOP NAVIGATION BAR (matches index_V8.html)
+═══════════════════════════════════════════════ -->
+<header class="bg-primary flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 z-50 border-b border-outline/20 sticky top-0">
+  <div class="h-8 flex items-center">
+    <a href="/" class="text-headline-md font-headline-md font-black text-on-primary italic uppercase tracking-wide">
+      <em class="text-race-red not-italic">STEAM</em>Teams CC
+    </a>
+  </div>
+  <div class="flex items-center gap-6">
+    <nav class="hidden md:flex items-center gap-8">
+      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/">Home</a>
+      <a class="text-race-red font-bold border-b-2 border-race-red pb-1 text-label-caps font-label-caps" href="/calendar">Calendar</a>
+      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/merch">Merch Store</a>
+      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/sponsors">Sponsor Us</a>
+    </nav>
+    <button onclick="openModal()"
+      class="bg-race-red text-white px-6 py-2 rounded-none font-label-caps text-label-caps brutalist-shadow transition-all uppercase flex items-center gap-2">
+      <span class="material-symbols-outlined" style="font-size:18px;">account_circle</span>
+      Member Login
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     RACE DAY MODE BANNER (hidden unless an event is active)
+     Trigger rules per Calendar System Design v2.1 §5.1:
+     activates 7:00am CT on start_date, deactivates 11:59pm CT on end_date,
+     all programs, cancelled events never trigger.
+═══════════════════════════════════════════════ -->
+<div id="race-day-banner" class="hidden bg-race-red text-white race-banner">
+  <div class="container mx-auto px-margin-mobile md:px-margin-desktop py-3 flex items-center gap-3">
+    <span class="material-symbols-outlined">emoji_events</span>
+    <p class="font-label-caps text-label-caps uppercase tracking-wide" id="race-day-banner-text">Race Day Mode Active</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════════════ -->
+<section class="bg-deep-navy text-on-primary pb-10 pt-10">
+  <div class="container mx-auto px-margin-mobile md:px-margin-desktop space-y-4">
+    <p class="text-race-red font-label-caps text-label-caps uppercase tracking-widest italic font-bold">#WallEnergy &middot; 2026&ndash;2027 Season</p>
+    <h1 class="font-display-lg text-display-lg leading-tight">Season Calendar</h1>
+    <p class="text-body-lg font-body-lg text-on-primary-container max-w-2xl">Races, practices, tryouts, and team events across Goblin Racing, Greenpower &amp; Ten80. All times shown in Central Time.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<main class="container mx-auto px-margin-mobile md:px-margin-desktop space-y-10 pt-10 pb-24">
+
+  <!-- Program filter chips -->
+  <div class="flex flex-wrap gap-3" id="filter-row">
+    <button data-filter="all" class="filter-chip active border-2 border-asphalt-black px-5 py-2 font-label-caps text-label-caps uppercase transition-all">All Programs</button>
+    <button data-filter="goblin" class="filter-chip border-2 border-asphalt-black px-5 py-2 font-label-caps text-label-caps uppercase transition-all">Goblin Racing</button>
+    <button data-filter="greenpower" class="filter-chip border-2 border-asphalt-black px-5 py-2 font-label-caps text-label-caps uppercase transition-all">Greenpower &amp; Ten80</button>
+  </div>
+
+  <!-- Staff-view notice (only shown when a staff session is detected) -->
+  <div id="staff-notice" class="hidden bg-surface-container border-l-4 border-race-red px-5 py-3 text-body-md text-on-surface-variant">
+    <span class="font-bold">Staff view:</span> draft events are included below (visible to coordinators/coaches only). Everyone else sees published events only.
+  </div>
+
+  <!-- Calendar list — rendered by renderCalendarList() -->
+  <div id="calendar-list" class="space-y-12">
+    <p class="text-on-surface-variant font-label-caps text-label-caps uppercase">Loading calendar…</p>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER (matches index_V8.html)
+═══════════════════════════════════════════════ -->
+<footer class="bg-asphalt-black text-white pt-20 pb-10">
+  <div class="container mx-auto px-margin-mobile md:px-margin-desktop grid md:grid-cols-4 gap-12 border-b border-white/10 pb-16">
+    <div class="space-y-6">
+      <div class="text-headline-md font-headline-md font-black text-race-red italic uppercase">STEAM Teams CC</div>
+      <p class="text-surface-variant/60 text-body-md">Driving engineering innovation through the spirit of competition.
+        Empowering future leaders in technology and design. Powered by Inspire Academy &amp; Chambers County Schools since 2013.</p>
+      <div class="flex gap-4">
+        <a href="https://facebook.com/SteamTeamsCC" target="_blank"
+          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
+          aria-label="STEAM Teams CC on Facebook">
+          <span class="material-symbols-outlined">share</span>
+        </a>
+        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="STEAM Teams CC on Instagram">
+          <span class="material-symbols-outlined">photo_camera</span>
+        </a>
+        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="STEAM Teams CC on LinkedIn">
+          <span class="material-symbols-outlined">business</span>
+        </a>
+        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="Email STEAM Teams CC">
+          <span class="material-symbols-outlined">mail</span>
+        </a>
+      </div>
+    </div>
+    <div class="space-y-6">
+      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Portal</h5>
+      <ul class="space-y-3 text-surface-variant">
+        <li><a href="/register" class="hover:text-white transition-colors">Register</a></li>
+        <li><a href="/dashboard" class="hover:text-white transition-colors">Staff Dashboard</a></li>
+        <li><a href="/family" class="hover:text-white transition-colors">Family Portal</a></li>
+      </ul>
+    </div>
+    <div class="space-y-6">
+      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Program</h5>
+      <ul class="space-y-3 text-surface-variant">
+        <li><a href="/calendar" class="hover:text-white transition-colors">Season Calendar</a></li>
+        <li><a href="/merch" class="hover:text-white transition-colors">Merch Store</a></li>
+        <li><a href="/sponsors" class="hover:text-white transition-colors">Sponsorship</a></li>
+        <li><a href="/coming-soon.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+      </ul>
+    </div>
+    <div class="space-y-6">
+      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Connect</h5>
+      <p class="text-surface-variant/60 text-body-md">
+        Get race-day alerts via the <strong class="text-white">Remind App</strong>.<br>
+        Or email us directly.
+      </p>
+      <div class="space-y-2">
+        <a href="mailto:steam.teams@chambersk12.org" class="flex items-center gap-2 text-surface-variant hover:text-white transition-colors">
+          <span class="material-symbols-outlined text-race-red" style="font-size:18px;">mail</span>
+          steam.teams@chambersk12.org
+        </a>
+        <a href="tel:+13347488665" class="flex items-center gap-2 text-surface-variant hover:text-white transition-colors">
+          <span class="material-symbols-outlined text-race-red" style="font-size:18px;">phone</span>
+          (334) 748-8665
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="container mx-auto px-margin-mobile md:px-margin-desktop pt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-surface-variant/40 text-label-caps font-label-caps">
+    <p>&copy; <span id="footer-year">2026</span> STEAM Teams Chambers County. All Rights Reserved.</p>
+    <p>Greenpower USA &middot; Ten80 Education &middot; Founded 2013</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════
+     MOBILE BOTTOM NAV (matches index_V8.html)
+═══════════════════════════════════════════════ -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-2 md:hidden bg-primary z-50 border-t-2 border-race-red">
+  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/">
+    <span class="material-symbols-outlined">home</span>
+    <span class="text-[10px] font-label-caps">HOME</span>
+  </a>
+  <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg px-3 py-1" href="/calendar">
+    <span class="material-symbols-outlined">calendar_month</span>
+    <span class="text-[10px] font-label-caps">CALENDAR</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/merch">
+    <span class="material-symbols-outlined">shopping_cart</span>
+    <span class="text-[10px] font-label-caps">MERCH</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/sponsors">
+    <span class="material-symbols-outlined">handshake</span>
+    <span class="text-[10px] font-label-caps">SPONSOR</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/register">
+    <span class="material-symbols-outlined">edit_document</span>
+    <span class="text-[10px] font-label-caps">REGISTER</span>
+  </a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     PORTAL LOGIN MODAL (identical markup/logic to index_V8.html —
+     kept in sync so "Member Login" behaves the same on every page)
+═══════════════════════════════════════════════ -->
+<div id="login-modal" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-6"
+  style="background:rgba(1,31,72,0.88);backdrop-filter:blur(8px);"
+  onclick="backdropClose(event)">
+  <div class="bg-white w-full max-w-sm relative shadow-2xl" style="clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%);">
+    <div class="absolute -bottom-3 -right-3 w-full h-full bg-race-red -z-10 opacity-10" style="clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%);"></div>
+    <div class="p-8 space-y-6">
+      <button onclick="closeModal()"
+        class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-surface hover:bg-race-red hover:text-white transition-all text-on-surface">
+        <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+      </button>
+      <h2 class="text-headline-md font-headline-md uppercase">Portal Login</h2>
+      <p class="text-label-caps font-label-caps text-on-surface-variant uppercase">Select your role to sign in</p>
+      <div class="flex border-b border-outline/10">
+        <button id="modal-tab-family" onclick="switchTab('modal','family',this)"
+          class="flex-1 py-3 text-label-caps font-label-caps border-b-2 border-race-red text-race-red uppercase">Family</button>
+        <button id="modal-tab-student" onclick="switchTab('modal','student',this)"
+          class="flex-1 py-3 text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase">Student</button>
+        <button id="modal-tab-staff" onclick="switchTab('modal','staff',this)"
+          class="flex-1 py-3 text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase">Staff</button>
+      </div>
+      <div id="modal-panel-family" class="login-panel active space-y-4">
+        <div>
+          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Family Code</label>
+          <input id="modal-fam-code" type="text" maxlength="7" oninput="fmtCode(this)" placeholder="CC-XXXX"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
+          <p class="mt-1 text-xs text-on-surface-variant">From your registration confirmation</p>
+        </div>
+        <div id="modal-fam-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
+        <button onclick="loginFamily('modal')"
+          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Check My Status</button>
+        <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
+          <a href="#" onclick="goEmailLogin('modal',event)" class="hover:underline">Sign in with email instead &rarr;</a>
+        </p>
+      </div>
+      <div id="modal-panel-student" class="login-panel space-y-4">
+        <div>
+          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Username</label>
+          <input id="modal-stu-user" type="text" placeholder="e.g. chrodriguez"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
+        </div>
+        <div>
+          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Code</label>
+          <input id="modal-stu-code" type="text" maxlength="6" placeholder="e.g. CR491"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
+          <p class="mt-1 text-xs text-on-surface-variant">Provided by your coach on approval</p>
+        </div>
+        <div id="modal-stu-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
+        <button onclick="loginStudent('modal')"
+          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Sign In</button>
+      </div>
+      <div id="modal-panel-staff" class="login-panel space-y-4">
+        <div>
+          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Email</label>
+          <input id="modal-staff-email" type="email" placeholder="your@chambersk12.org"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
+        </div>
+        <div>
+          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Password</label>
+          <input id="modal-staff-pass" type="password" placeholder="••••••••"
+            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
+        </div>
+        <div id="modal-staff-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
+        <button onclick="loginStaff('modal')"
+          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Sign In</button>
+        <p class="text-center text-label-caps font-label-caps text-on-surface-variant"><a href="#" class="hover:underline">Forgot password?</a></p>
+      </div>
+      <p class="text-center text-label-caps font-label-caps text-on-surface-variant pt-2 border-t border-outline/10">
+        <a href="/register" class="hover:underline text-race-red">New family? Register here &rarr;</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Supabase credentials (same publishable key as index_V8.html) ──
+const SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
+const SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
+
+async function sbGet(p, token) {
+  // token param: pass a real staff auth token (not the public key) to read
+  // under the 'authenticated' role. events has a RESTRICTIVE RLS policy
+  // that hides status='draft' rows from the anon/public key at the
+  // database level — the public key alone can never return drafts
+  // regardless of what this page's JS does. Only a verified staff token
+  // gets past that policy.
+  const r = await fetch(SB_URL + "/rest/v1/" + p, {
+    headers: { apikey: SB_KEY, Authorization: "Bearer " + (token || SB_KEY) }
+  });
+  return r.json();
+}
+async function sbAuth(b) {
+  const r = await fetch(SB_URL + "/auth/v1/token?grant_type=password", {
+    method: "POST",
+    headers: { apikey: SB_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(b)
+  });
+  return r.json();
+}
+
+// ── Login modal — identical behavior to index_V8.html ──
+function openModal() {
+  document.getElementById("login-modal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  document.getElementById("login-modal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+function backdropClose(e) {
+  if (e.target.id === "login-modal") closeModal();
+}
+document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeModal(); });
+
+function switchTab(ctx, role, btn) {
+  const prefix = "modal";
+  ["family","student","staff"].forEach(function(t) {
+    const panel = document.getElementById(prefix + "-panel-" + t);
+    const tabBtn = document.getElementById("modal-tab-" + t);
+    if (panel) { panel.classList.remove("active"); }
+    if (tabBtn) {
+      tabBtn.classList.remove("border-b-2","border-race-red","text-race-red");
+      tabBtn.classList.add("text-on-surface-variant");
+    }
+  });
+  const activePanel = document.getElementById(prefix + "-panel-" + role);
+  if (activePanel) activePanel.classList.add("active");
+  btn.classList.add("border-b-2","border-race-red","text-race-red");
+  btn.classList.remove("text-on-surface-variant");
+}
+function goEmailLogin(ctx, e) {
+  e.preventDefault();
+  const staffBtn = document.getElementById("modal-tab-staff");
+  if (staffBtn) switchTab(ctx, "staff", staffBtn);
+}
+function fmtCode(el) {
+  var v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 6);
+  el.value = v.slice(0, 7);
+}
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+function hideErr(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.add("hidden");
+}
+async function loginFamily(ctx) {
+  var code = document.getElementById("modal-fam-code").value.trim().toUpperCase();
+  var errId = "modal-fam-err";
+  hideErr(errId);
+  if (!code.match(/^CC-[A-Z0-9]{4}$/)) { showErr(errId, "Enter a valid family code (CC-XXXX)"); return; }
+  var btn = document.getElementById("modal-fam-code").closest(".login-panel").querySelector("button[onclick]");
+  btn.disabled = true; btn.textContent = "Looking up…";
+  try {
+    var rows = await sbGet("families?family_code=eq." + code + "&select=id,family_code");
+    if (!rows || !rows.length) {
+      showErr(errId, "Family code not found. Check your confirmation email.");
+    } else {
+      sessionStorage.setItem("st_family_code", code);
+      sessionStorage.setItem("st_family_id", rows[0].id);
+      window.location.href = "/family";
+    }
+  } catch(e) { showErr(errId, "Connection error — please try again."); }
+  finally { btn.disabled = false; btn.textContent = "Check My Status"; }
+}
+async function loginStudent(ctx) {
+  var user = document.getElementById("modal-stu-user").value.trim().toLowerCase();
+  var code = document.getElementById("modal-stu-code").value.trim().toUpperCase();
+  var errId = "modal-stu-err";
+  hideErr(errId);
+  if (!user || !code) { showErr(errId, "Please enter both username and code."); return; }
+  var btn = document.getElementById("modal-stu-code").closest(".login-panel").querySelector("button[onclick]");
+  btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    var rows = await sbGet("students?username=eq." + user + "&login_code=eq." + code + "&select=id,first_name,last_name");
+    if (!rows || !rows.length) {
+      showErr(errId, "Username or code not recognized.");
+    } else {
+      sessionStorage.setItem("st_student_id", rows[0].id);
+      sessionStorage.setItem("st_student_name", rows[0].first_name + " " + rows[0].last_name);
+      window.location.href = "/student";
+    }
+  } catch(e) { showErr(errId, "Connection error — please try again."); }
+  finally { btn.disabled = false; btn.textContent = "Sign In"; }
+}
+async function loginStaff(ctx) {
+  var email = document.getElementById("modal-staff-email").value.trim();
+  var pass = document.getElementById("modal-staff-pass").value;
+  var errId = "modal-staff-err";
+  hideErr(errId);
+  if (!email || !pass) { showErr(errId, "Please enter your email and password."); return; }
+  var btn = document.getElementById("modal-staff-pass").closest(".login-panel").querySelector("button[onclick]");
+  btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    var data = await sbAuth({ email: email, password: pass });
+    if (!data.access_token) {
+      showErr(errId, "Invalid email or password.");
+    } else {
+      sessionStorage.setItem("st_staff_token", data.access_token);
+      window.location.href = "/dashboard";
+    }
+  } catch(e) { showErr(errId, "Connection error — please try again."); }
+  finally { btn.disabled = false; btn.textContent = "Sign In"; }
+}
+
+// ── Viewer role ────────────────────────────────────
+// NOTE (confirmed against dashboard.html Jul 2026): dashboard.html does NOT
+// read sessionStorage.st_staff_token — it keeps its own in-memory SESSION
+// and re-authenticates independently on every load. So a staff member who
+// logs in via the index.html modal gets st_staff_token set, but dashboard.html
+// itself ignores it and re-prompts. That token is still the only signal this
+// browser has "done the staff login step," so we use it here too, but we
+// verify it against staff_accounts (same check dashboard.html does at
+// login) rather than trusting the token's mere presence — since the index.html
+// modal only confirms valid Supabase Auth credentials, not staff_accounts
+// membership. Note this is a client-side UI filter, not an RLS boundary —
+// the anon key already has public read on the full events table including
+// drafts, consistent with the rest of the portal's current v1 security model.
+// Program-scoped "their program only" filtering for family/student
+// (Section 4 note) is deferred — needs an enrolled-programs lookup that
+// doesn't exist yet as a simple session value; hook point noted below.
+async function getViewerRole() {
+  var staffToken = sessionStorage.getItem("st_staff_token");
+  if (staffToken) {
+    try {
+      var r = await fetch(SB_URL + "/rest/v1/staff_accounts?select=id&limit=1", {
+        headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken }
+      });
+      var rows = await r.json();
+      if (r.ok && rows && rows.length) return "staff";
+    } catch (e) { /* fall through to lower tiers */ }
+  }
+  if (sessionStorage.getItem("st_student_id")) return "student";
+  if (sessionStorage.getItem("st_family_id")) return "family";
+  return "public";
+}
+
+// ── Calendar type metadata — icon + color per base type name.
+// Scope (All Programs / MS & HS / HS Only / etc.) is a separate column
+// and is rendered as its own badge rather than folded into the type name,
+// per Calendar Design's own note that scope is "the only difference"
+// between same-named event types.
+const CALENDAR_TYPE_META = {
+  "Race — Single Day (Away)":  { icon: "directions_car",  color: "text-race-red" },
+  "Race — Multi-Day (Away)":   { icon: "directions_car",  color: "text-race-red" },
+  "Hosted Race":                { icon: "stadium",         color: "text-race-red" },
+  "Ten80 Nationals":            { icon: "emoji_events",    color: "text-race-red" },
+  "Practice":                   { icon: "sports_score",    color: "text-deep-navy" },
+  "Team Meeting":               { icon: "groups",          color: "text-deep-navy" },
+  "Summer Academy":              { icon: "school",          color: "text-[#2e7d32]" },
+  "Tryouts":                     { icon: "flag",            color: "text-[#b26d00]" },
+  "Leadership Retreat":          { icon: "military_tech",   color: "text-deep-navy" }
+};
+const DEFAULT_TYPE_META = { icon: "event", color: "text-on-surface-variant" };
+
+// ── Program filter — maps a scope value to the filter chip it belongs to
+function scopeMatchesFilter(scope, filter) {
+  if (filter === "all") return true;
+  var s = (scope || "").toLowerCase();
+  if (filter === "goblin") return s.indexOf("goblin") !== -1 || s.indexOf("all programs") !== -1;
+  if (filter === "greenpower") {
+    return s.indexOf("ms & hs") !== -1 || s.indexOf("hs only") !== -1 ||
+           s.indexOf("all programs") !== -1 || s.indexOf("select") !== -1 ||
+           s.indexOf("leadership") !== -1 || s.indexOf("configurable") !== -1;
+  }
+  return true;
+}
+
+// ── Current date/time in Central Time (portal standard — Section 3.2 /
+// Section 5.1: all trigger times are CT regardless of venue location)
+function nowCentralParts() {
+  var fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", hour12: false
+  });
+  var parts = {};
+  fmt.formatToParts(new Date()).forEach(function(p) { parts[p.type] = p.value; });
+  var hour = parseInt(parts.hour, 10);
+  if (hour === 24) hour = 0;
+  return { dateStr: parts.year + "-" + parts.month + "-" + parts.day, hour: hour };
+}
+
+// ── Race day mode check for one event (Section 5.1 trigger rules)
+function isRaceDayActive(ev, today) {
+  if (!ev.race_day_mode || ev.status !== "published") return false;
+  if (!ev.start_date || !ev.end_date) return false;
+  if (today.dateStr < ev.start_date || today.dateStr > ev.end_date) return false;
+  if (today.dateStr === ev.start_date && today.hour < 7) return false;
+  return true;
+}
+
+// ── Days-until countdown (Section 5.3 concept — shown as a small badge
+// on upcoming race-day-mode events within 30 days, rather than a separate
+// dashboard widget which belongs on /student, out of scope here)
+function daysUntil(dateStr, todayStr) {
+  var a = new Date(todayStr + "T00:00:00");
+  var b = new Date(dateStr + "T00:00:00");
+  return Math.round((b - a) / 86400000);
+}
+
+function fmtDateRange(ev) {
+  if (!ev.start_date) return ev.dates_label || "Date TBD";
+  var opts = { month: "short", day: "numeric" };
+  var start = new Date(ev.start_date + "T00:00:00");
+  var startStr = start.toLocaleDateString("en-US", opts);
+  if (!ev.end_date || ev.end_date === ev.start_date) return startStr;
+  var end = new Date(ev.end_date + "T00:00:00");
+  var endStr = end.toLocaleDateString("en-US", opts);
+  return startStr + " – " + endStr;
+}
+
+function monthLabel(dateStr) {
+  if (!dateStr) return "Date TBD";
+  var d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+// ── Card renderer ───────────────────────────────────
+function renderEventCard(ev, today) {
+  var meta = CALENDAR_TYPE_META[ev.calendar_event_type] || DEFAULT_TYPE_META;
+  var isCancelled = ev.status === "cancelled";
+  var isDraft = ev.status === "draft";
+  var titleClasses = "text-headline-md font-headline-md" + (isCancelled ? " cancelled-strike text-on-surface-variant" : "");
+
+  var badges = "";
+  if (ev.scope) {
+    badges += '<span class="border border-outline/30 px-2 py-1 text-[11px] font-label-caps uppercase text-on-surface-variant">' + ev.scope + '</span>';
+  }
+  if (ev.is_hosted) {
+    badges += '<span class="bg-deep-navy text-white px-2 py-1 text-[11px] font-label-caps uppercase">Hosted</span>';
+  }
+  if (isDraft) {
+    badges += '<span class="bg-[#b26d00] text-white px-2 py-1 text-[11px] font-label-caps uppercase">Draft</span>';
+  }
+  if (isCancelled) {
+    badges += '<span class="bg-race-red text-white px-2 py-1 text-[11px] font-label-caps uppercase">Cancelled</span>';
+  }
+  if (ev.grade_min != null && ev.grade_max != null && (ev.calendar_event_type === "Tryouts" || ev.calendar_event_type === "Summer Academy")) {
+    badges += '<span class="border border-outline/30 px-2 py-1 text-[11px] font-label-caps uppercase text-on-surface-variant">Grades ' + ev.grade_min + '–' + ev.grade_max + '</span>';
+  }
+
+  var countdown = "";
+  if (ev.race_day_mode && ev.status === "published" && ev.start_date) {
+    var d = daysUntil(ev.start_date, today.dateStr);
+    if (d >= 0 && d <= 30) {
+      countdown = '<span class="ml-auto font-label-caps text-label-caps uppercase text-race-red font-bold">' + (d === 0 ? "Today" : d + " day" + (d === 1 ? "" : "s")) + '</span>';
+    }
+  }
+
+  var venue = "";
+  if (ev.venue_name) {
+    venue = '<div class="flex items-center gap-2 text-on-surface-variant text-sm"><span class="material-symbols-outlined" style="font-size:16px;">location_on</span>' +
+      ev.venue_name + (ev.venue_city_state ? ", " + ev.venue_city_state : "") + '</div>';
+  }
+
+  return [
+    '<div class="bg-white border border-outline/10 p-6 space-y-3 hover:shadow-lg transition-shadow' + (isCancelled ? " opacity-70" : "") + '">',
+      '<div class="flex items-start gap-4">',
+        '<span class="material-symbols-outlined ' + meta.color + '" style="font-size:28px;">' + meta.icon + '</span>',
+        '<div class="flex-1 space-y-1">',
+          '<div class="' + meta.color + ' font-label-caps text-label-caps uppercase font-bold">' + fmtDateRange(ev) + '</div>',
+          '<h4 class="' + titleClasses + '">' + ev.name + '</h4>',
+          venue,
+        '</div>',
+        countdown,
+      '</div>',
+      '<div class="flex flex-wrap gap-2 pt-2">' + badges + '</div>',
+    '</div>'
+  ].join('');
+}
+
+// ── Main render ──────────────────────────────────────
+function renderCalendarList(events, role, today) {
+  var container = document.getElementById("calendar-list");
+  var filter = document.querySelector(".filter-chip.active").getAttribute("data-filter");
+
+  var visible = events.filter(function(ev) {
+    if (ev.show_on_calendar === false) return false;
+    if (ev.status === "draft" && role !== "staff") return false;
+    if (!scopeMatchesFilter(ev.scope, filter)) return false;
+    return true;
+  });
+
+  if (!visible.length) {
+    container.innerHTML = '<p class="text-on-surface-variant font-body-md">No events to show for this filter yet.</p>';
+    return;
+  }
+
+  var groups = [];
+  var groupMap = {};
+  visible.forEach(function(ev) {
+    var key = ev.start_date ? ev.start_date.slice(0, 7) : "zzz-tbd";
+    if (!groupMap[key]) { groupMap[key] = []; groups.push(key); }
+    groupMap[key].push(ev);
+  });
+  groups.sort();
+
+  var html = "";
+  groups.forEach(function(key) {
+    var label = key === "zzz-tbd" ? "Date TBD" : monthLabel(groupMap[key][0].start_date);
+    html += '<div class="space-y-4">';
+    html += '<h3 class="text-headline-md font-headline-md border-b-2 border-asphalt-black pb-2">' + label + '</h3>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    groupMap[key].forEach(function(ev) { html += renderEventCard(ev, today); });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+// ── Race day banner ──────────────────────────────────
+function updateRaceDayBanner(events, today) {
+  var active = events.filter(function(ev) { return isRaceDayActive(ev, today); });
+  var banner = document.getElementById("race-day-banner");
+  if (!active.length) { banner.classList.add("hidden"); return; }
+  var names = active.map(function(ev) { return ev.name; }).join(", ");
+  document.getElementById("race-day-banner-text").textContent = "Race Day Mode Active — " + names;
+  banner.classList.remove("hidden");
+}
+
+// ── Boot ──────────────────────────────────────────────
+var ALL_EVENTS = [];
+var VIEWER_ROLE = "public"; // upgraded to staff/student/family by loadCalendar() before first render
+
+async function loadCalendar() {
+  var today = nowCentralParts();
+  try {
+    VIEWER_ROLE = await getViewerRole();
+    // Staff: use their own verified auth token so the RESTRICTIVE RLS
+    // policy's 'authenticated' carve-out applies and drafts come through.
+    // Everyone else: public key, which can never receive draft rows.
+    var authToken = VIEWER_ROLE === "staff" ? sessionStorage.getItem("st_staff_token") : null;
+    var rows = await sbGet("events?select=*&order=start_date.asc.nullslast", authToken);
+    ALL_EVENTS = rows || [];
+    if (VIEWER_ROLE === "staff") {
+      document.getElementById("staff-notice").classList.remove("hidden");
+    }
+    updateRaceDayBanner(ALL_EVENTS, today);
+    renderCalendarList(ALL_EVENTS, VIEWER_ROLE, today);
+  } catch (e) {
+    console.warn("loadCalendar: could not reach events table", e);
+    document.getElementById("calendar-list").innerHTML =
+      '<p class="text-on-surface-variant font-body-md">Calendar temporarily unavailable — please check back shortly.</p>';
+  }
+}
+
+document.getElementById("filter-row").addEventListener("click", function(e) {
+  var btn = e.target.closest(".filter-chip");
+  if (!btn) return;
+  document.querySelectorAll(".filter-chip").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  renderCalendarList(ALL_EVENTS, VIEWER_ROLE, nowCentralParts());
+});
+
+loadCalendar();
+(function() {
+  var el = document.getElementById("footer-year");
+  if (el) el.textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>
