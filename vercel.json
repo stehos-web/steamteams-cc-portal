@@ -3,7 +3,7 @@
     { "source": "/register",  "destination": "/register.html"      },
     { "source": "/dashboard", "destination": "/dashboard.html"     },
     { "source": "/family",    "destination": "/family-dashboard.html" },
-    { "source": "/calendar",  "destination": "/coming-soon.html"   },
+    { "source": "/calendar",  "destination": "/calendar.html"   },
     { "source": "/merch",     "destination": "/coming-soon.html"   },
     { "source": "/sponsors",  "destination": "/coming-soon.html"   },
     { "source": "/student",   "destination": "/coming-soon.html"   }
