@@ -212,7 +212,7 @@
               Sign In
             </button>
             <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
-              <a href="#" class="hover:underline">Forgot password?</a>
+              Forgot password? Email <a href="mailto:stehos@chambersk12.org" class="text-race-red hover:underline">stehos@chambersk12.org</a> to reset.
             </p>
           </div>
 
@@ -760,7 +760,7 @@
           Sign In
         </button>
         <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
-          <a href="#" class="hover:underline">Forgot password?</a>
+          Forgot password? Email <a href="mailto:stehos@chambersk12.org" class="text-race-red hover:underline">stehos@chambersk12.org</a> to reset.
         </p>
       </div>
 
@@ -778,6 +778,11 @@
 // ── Supabase credentials ──────────────────────────
 const SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
 const SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
+
+// ── Feature flags ─────────────────────────────────
+// Default OFF until the student dashboard (/student) ships (target Aug 17).
+// Flipped live by the portal_config row 'student_login_enabled' — no redeploy.
+var STUDENT_LOGIN_ENABLED = false;
 
 // ── Supabase helpers ──────────────────────────────
 async function sbGet(p) {
@@ -890,6 +895,10 @@ async function loginFamily(ctx) {
 // ── Login: Student ────────────────────────────────
 async function loginStudent(ctx) {
   var prefix = ctx === "hero" ? "hero" : "modal";
+  if (!STUDENT_LOGIN_ENABLED) {
+    showErr(prefix + "-stu-err", "Student logins open August 17. Your coach will provide your username and code.");
+    return;
+  }
   var user   = document.getElementById(prefix + "-stu-user").value.trim().toLowerCase();
   var code   = document.getElementById(prefix + "-stu-code").value.trim().toUpperCase();
   var errId  = prefix + "-stu-err";
@@ -1145,7 +1154,10 @@ window.addEventListener("scroll", function() {
 // ── Homepage config loader ────────────────────────
 // Reads home_* rows from portal_config and updates the DOM.
 // Falls back gracefully to hardcoded HTML values if Supabase is unreachable.
-async function loadHomeConfig() {
+// [FIXED] This was a duplicate second definition that overrode the full loader
+// above (which also drives bento slots + sponsors). Renamed + unused so the
+// complete loader is authoritative. Safe to delete this whole block later.
+async function _loadHomeConfigStatsOnly_DEAD() {
   try {
     var rows = await sbGet("portal_config?key=like.home_%&select=key,value");
     if (!rows || !rows.length) return;
@@ -1170,9 +1182,45 @@ async function loadHomeConfig() {
   }
 }
 
+// ── Student login gate (Phase 1.5) ────────────────
+// The student dashboard (/student) ships ~Aug 17. Until then the Student tab
+// shows a "coming soon" panel and login is blocked. To go live on Aug 17:
+// set portal_config row 'student_login_enabled' to true AND route /student in
+// vercel.json — no redeploy of this page needed. Fails safe (stays gated) if
+// portal_config is unreachable.
+async function loadStudentGate() {
+  try {
+    var rows = await sbGet("portal_config?key=eq.student_login_enabled&select=value");
+    var v = rows && rows.length ? rows[0].value : null;
+    STUDENT_LOGIN_ENABLED = (v === true || v === "true" || v === "TRUE" || v === "1");
+  } catch (e) {
+    STUDENT_LOGIN_ENABLED = false;
+  }
+  if (!STUDENT_LOGIN_ENABLED) {
+    gateStudentPanel("hero");
+    gateStudentPanel("modal");
+  }
+}
+function gateStudentPanel(prefix) {
+  var panel = document.getElementById(prefix + "-panel-student");
+  if (!panel || panel.querySelector(".stu-soon")) return;
+  // Hide the live login form, show the coming-soon message in its place.
+  Array.prototype.forEach.call(panel.children, function(c) { c.classList.add("hidden"); });
+  var d = document.createElement("div");
+  d.className = "stu-soon text-center py-8 px-4 space-y-3";
+  d.innerHTML =
+    '<span class="material-symbols-outlined text-race-red" style="font-size:40px;">schedule</span>' +
+    '<h3 class="text-headline-md font-headline-md uppercase">Student Logins Open August 17</h3>' +
+    '<p class="text-on-surface-variant font-body-md">Your coach will give you your username and code. ' +
+    'Check back on <span class="font-bold">August 17</span> to sign in and see your team, tasks, and race schedule.</p>' +
+    '<p class="text-label-caps font-label-caps uppercase text-on-surface-variant/70 pt-2">Families can check status now — use the Family tab.</p>';
+  panel.appendChild(d);
+}
+
 // ── Boot ──────────────────────────────────────────
 renderCalendar();
 loadHomeConfig();
+loadStudentGate();
 // Dynamic copyright year
 (function() {
   var el = document.getElementById("footer-year");
