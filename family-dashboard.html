@@ -502,7 +502,7 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
             <div class="card-accent accent-blue"></div>
             <div class="card-title">Account Balance</div>
           </div>
-          <button class="card-action" onclick="toggleLedger()">View Ledger</button>
+          <button class="card-action" id="balance-ledger-action" onclick="toggleLedger()">View Ledger</button>
         </div>
         <div class="card-body" id="balance-body">
           <!-- Populated by JS when dues data available; placeholder until Phase 2 -->
@@ -524,55 +524,35 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
         <div class="card-header">
           <div class="card-header-left">
             <div class="card-accent accent-green"></div>
-            <div class="card-title">Volunteer Hours</div>
+            <div class="card-title">Volunteer Log</div>
           </div>
-          <button class="card-action" id="vol-log-toggle" onclick="toggleVolForm()">Log Hours</button>
+          <button class="card-action" id="vol-log-toggle" onclick="toggleVolForm()">Log Activity</button>
         </div>
         <div class="card-body-sm">
-          <div class="vol-activity-list" id="vol-activity-list">
-            <!-- Seeded activity types -->
-            <div class="vol-activity-item" onclick="selectActivity('Race Day Volunteer','25')">
-              <div>
-                <div class="vol-activity-name">Race Day Volunteer</div>
-                <div style="font-size:11px;color:var(--text-light);">4 hours &middot; race event</div>
-              </div>
-              <div class="vol-activity-credit">+$25</div>
-            </div>
-            <div class="vol-activity-item" onclick="selectActivity('Practice Support','20')">
-              <div>
-                <div class="vol-activity-name">Practice Support</div>
-                <div style="font-size:11px;color:var(--text-light);">per session</div>
-              </div>
-              <div class="vol-activity-credit">+$20</div>
-            </div>
-            <div class="vol-activity-item" onclick="selectActivity('Parent Meeting','20')">
-              <div>
-                <div class="vol-activity-name">Parent Meeting</div>
-                <div style="font-size:11px;color:var(--text-light);">per meeting</div>
-              </div>
-              <div class="vol-activity-credit">+$20</div>
-            </div>
-            <div class="vol-activity-item" onclick="selectActivity('Support Bundle','15')">
-              <div>
-                <div class="vol-activity-name">Support Bundle</div>
-                <div style="font-size:11px;color:var(--text-light);">general support</div>
-              </div>
-              <div class="vol-activity-credit">+$15</div>
-            </div>
-          </div>
+          <!-- Activity types are rendered from volunteer_activity_types by
+               renderActivityTypes(). Nothing is hardcoded here: the old
+               static list carried stale rates ($25 race day vs the real
+               $30) and offered "Support Bundle", which is coordinator-only
+               manual entry on dues_accounts, not a loggable activity.
+               There is also no hours field, deliberately: volunteer_logs
+               has no `hours` column. Credit is a flat amount per activity
+               type, confirmed both by migration 002's trigger (which
+               looks up credit_amount from the activity type alone) and
+               by the live schema (checked July 30, 2026). -->
+          <div class="vol-activity-list" id="vol-activity-list"></div>
           <div class="vol-form" id="vol-form">
             <div class="vol-form-group">
               <label class="vol-form-label">Activity Type</label>
               <input class="vol-form-input" type="text" id="vol-activity" placeholder="Select from above" readonly/>
             </div>
             <div class="vol-form-group">
-              <label class="vol-form-label">Date</label>
-              <input class="vol-form-input" type="date" id="vol-date"/>
+              <label class="vol-form-label">Which Student</label>
+              <select class="vol-form-input" id="vol-student"></select>
+              <div class="vol-form-note">Every log is tied to one student's account, even for general support.</div>
             </div>
             <div class="vol-form-group">
-              <label class="vol-form-label">Hours</label>
-              <input class="vol-form-input" type="number" id="vol-hours" placeholder="e.g. 4" min="0.5" max="12" step="0.5"/>
-              <div class="vol-form-note">Hours will be verified by the coordinator before credit is applied.</div>
+              <label class="vol-form-label">Date</label>
+              <input class="vol-form-input" type="date" id="vol-date"/>
             </div>
             <div class="vol-form-group">
               <label class="vol-form-label">Notes (optional)</label>
@@ -584,6 +564,11 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
               <div class="vol-success-msg">&#10003; Submitted! Pending coordinator approval.</div>
             </div>
           </div>
+          <!-- Their own submitted logs and where each one stands -->
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+            <div class="vol-form-label" style="margin-bottom:8px;">Your Submitted Activity</div>
+            <div class="balance-summary" id="vol-history" style="margin-bottom:0;"></div>
+          </div>
         </div>
       </div>
 
@@ -594,14 +579,13 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
             <div class="card-accent accent-blue"></div>
             <div class="card-title">Upcoming Events</div>
           </div>
-          <button class="card-action" onclick="window.location.href='/#calendar'">Full Calendar</button>
+          <!-- /calendar went live July 30, 2026. The old '/#calendar'
+               target was also an anchor link, which Master Knowledge Doc
+               v9 §4.4 disallows in navigation. -->
+          <button class="card-action" onclick="window.location.href='/calendar'">Full Calendar</button>
         </div>
         <div class="card-body-sm" id="calendar-body">
-          <!-- Static for now; wires to Supabase events table in Phase 3 -->
-          <div class="mini-event"><div class="mini-event-date">JUL 22</div><div><div class="mini-event-name">Team Tryouts &amp; Pre-Season</div><div class="mini-event-type">Jul 22&ndash;24 &middot; Inspire Academy</div></div></div>
-          <div class="mini-event"><div class="mini-event-date">AUG 7</div><div><div class="mini-event-name">First Day of School</div><div class="mini-event-type">Chambers County Schools</div></div></div>
-          <div class="mini-event"><div class="mini-event-date">AUG ~14</div><div><div class="mini-event-name">Season Kickoff &mdash; All Programs</div><div class="mini-event-type">Approx. 1 week after school starts</div></div></div>
-          <div class="mini-event"><div class="mini-event-date">OCT</div><div><div class="mini-event-name">First Race of 2026&ndash;2027 Season</div><div class="mini-event-type">2nd&ndash;3rd weekend &middot; Location TBD</div></div></div>
+          <!-- Populated by renderEvents() from the events table -->
         </div>
       </div>
 
@@ -686,20 +670,49 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
 var SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
-async function sbGet(path) {
-  var r = await fetch(SB_URL + "/rest/v1/" + path, {
-    headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }
+/* ──────────────────────────────────────────────────────────────
+   DATA ACCESS — everything goes through RPC now.
+   Direct table reads (families / students / registrations) do not
+   work for families: the RLS policies in 001_RLS_remediation.sql
+   gate on current_setting('app.family_code'), and an anon client
+   has no way to set that GUC. The old sbGet() calls returned zero
+   rows for every real family. See migrations/01-family-02.
+   ────────────────────────────────────────────────────────────── */
+async function sbRpc(fn, body) {
+  var r = await fetch(SB_URL + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: {
+      apikey: SB_KEY,
+      Authorization: "Bearer " + SB_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body || {})
   });
-  if (!r.ok) throw new Error("Fetch failed: " + r.status);
+  if (!r.ok) throw new Error("RPC " + fn + " failed: " + r.status);
   return r.json();
 }
-async function sbPost(path, body) {
-  var r = await fetch(SB_URL + "/rest/v1/" + path, {
-    method: "POST",
-    headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
-    body: JSON.stringify(body)
-  });
-  return r;
+
+/* Human-readable copy for every non-ok reason the RPC can return.
+   Deliberately does NOT distinguish "no such code" from anything
+   that would help someone guessing codes. */
+var REASON_TEXT = {
+  invalid_format: "Enter a valid family code (CC-XXXX).",
+  not_found:      "That family code wasn't found. Check your registration confirmation email.",
+  rate_limited:   "Too many attempts. Please wait about 15 minutes and try again, or email stehos@chambersk12.org."
+};
+
+/* Shared payload from the last successful RPC call. */
+var DASH = null;
+
+function money(n) {
+  var v = Number(n) || 0;
+  var neg = v < 0;
+  return (neg ? "−$" : "$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function esc(s) {
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 /* ── SCREENS ── */
@@ -733,7 +746,14 @@ function statusLabel(dbStatus, approvedAt, program, car) {
       return { label: "Active — " + progDisplay, cls: "status-active" };
     }
   }
-  if (dbStatus === "alternate")     return { label: "Alternate — On Deck", cls: "status-alternate" };
+  // 'active' and 'pending' are both real values in the wild but are
+  // absent from the Master Knowledge Doc v9 §6.1 badge table:
+  // register.html inserts season_status='pending', and
+  // trg_activate_dues_for_season keys off season_status='active'.
+  // Without these two lines the raw database string is shown to parents.
+  if (dbStatus === "active")         return { label: "Active", cls: "status-active" };
+  if (dbStatus === "pending")        return { label: "Under Review", cls: "status-pending" };
+  if (dbStatus === "alternate")      return { label: "Alternate — On Deck", cls: "status-alternate" };
   if (dbStatus === "tryout_pending") return { label: "Under Review", cls: "status-pending" };
   if (dbStatus === "waitlist")       return { label: "On the Waitlist", cls: "status-waitlist" };
   if (dbStatus === "declined")       return { label: "Not Accepted This Season", cls: "status-declined" };
@@ -756,42 +776,57 @@ function renderStudentCards(students, registrations) {
     var stuRegs = (registrations || []).filter(function(r){ return r.student_id === s.id; });
     var latestReg = stuRegs.length ? stuRegs[0] : null;
 
+    // EXTERNAL program labels only. Master Knowledge Doc v9 §3:
+    // "External-facing portal pages use program names, never internal
+    // team names." The previous map printed "Piedmont Motorsports" and
+    // "Renegade Racing" to parents, which those are not for.
     var programMap = {
-      "goblin": "Piedmont Motorsports — Goblin",
-      "ms_greenpower": "Renegade Racing — MS Greenpower",
-      "hs_greenpower": "Renegade Racing — HS Greenpower",
-      "ten80_ms": "Ten80 Education MS",
-      "ten80_hs": "Ten80 Education HS"
+      "goblin":        "Goblin Racing",
+      "ms_greenpower": "MS Greenpower & Ten80",
+      "hs_greenpower": "HS Greenpower & Ten80",
+      "ten80_ms":      "MS Greenpower & Ten80",
+      "ten80_hs":      "HS Greenpower & Ten80"
     };
     var programDisplay = programMap[s.program] || (s.program || "Pending Assignment");
-    var carDisplay = s.car_number ? "Car " + s.car_number : "—";
-    var roleDisplay = s.leadership_role || "Team Member";
-    var eventDisplay = latestReg ? latestReg.event_name : "No event registered";
+    var eventDisplay   = latestReg ? (latestReg.event_name || latestReg.event_type) : "No event registered";
+
+    // car_number / leadership_role may not exist as columns at all (see
+    // migrations/01-family-01-schema-probe.sql). The RPC omits absent
+    // keys rather than erroring, so these rows self-hide.
+    var rows = "";
+    rows += detailRow("Program", programDisplay);
+    if ("car_number" in s)      rows += detailRow("Car",  s.car_number ? "Car " + s.car_number : "Not yet assigned");
+    if ("leadership_role" in s) rows += detailRow("Role", s.leadership_role || "Team Member");
+    rows += detailRow("Registered", eventDisplay);
 
     return "<div class='card grid-full student-card'>" +
       "<div class='student-card-header'>" +
         "<div>" +
-          "<div class='student-name'>" + s.first_name + " " + s.last_name + "</div>" +
-          "<div class='student-grade'>Grade " + s.grade + " &middot; " + (s.home_school || "Chambers County") + "</div>" +
+          "<div class='student-name'>" + esc(s.first_name) + " " + esc(s.last_name) + "</div>" +
+          "<div class='student-grade'>Grade " + esc(s.grade) + " &middot; " + esc(s.home_school || "Chambers County") + "</div>" +
         "</div>" +
-        "<span class='status-badge " + st.cls + "'>" + st.label + "</span>" +
+        "<span class='status-badge " + st.cls + "'>" + esc(st.label) + "</span>" +
       "</div>" +
       "<div class='student-card-body'>" +
-        "<div class='student-detail-row'>" +
-          "<div class='student-detail'><span class='student-detail-label'>Program</span><span class='student-detail-value'>" + programDisplay + "</span></div>" +
-          "<div class='student-detail'><span class='student-detail-label'>Car</span><span class='student-detail-value'>" + carDisplay + "</span></div>" +
-          "<div class='student-detail'><span class='student-detail-label'>Role</span><span class='student-detail-value'>" + roleDisplay + "</span></div>" +
-          "<div class='student-detail'><span class='student-detail-label'>Registered</span><span class='student-detail-value'>" + eventDisplay + "</span></div>" +
-        "</div>" +
+        "<div class='student-detail-row'>" + rows + "</div>" +
         "<button class='student-tasks-toggle' onclick='toggleTasks(this)' data-idx='" + i + "'>" +
           "<span>Tasks This Week</span><span class='toggle-arrow'>&#9660;</span>" +
         "</button>" +
+        // Task health (x of y complete, needs-help flags) per Design Spec
+        // v2 §7.1 depends on the Task System (workstream 06b), which is on
+        // the critical path but not landed. Degrades to this until it is.
         "<div class='student-tasks-panel' id='tasks-panel-" + i + "'>" +
-          "<div class='tasks-placeholder'>Task visibility coming in Phase 3. Students can view their own tasks by logging in with their username and code.</div>" +
+          "<div class='tasks-placeholder'>Task tracking isn't switched on yet. " +
+          "Students can already see their own tasks by signing in with their username and code.</div>" +
         "</div>" +
       "</div>" +
     "</div>";
   }).join("");
+}
+function detailRow(label, value) {
+  return "<div class='student-detail'>" +
+    "<span class='student-detail-label'>" + esc(label) + "</span>" +
+    "<span class='student-detail-value'>" + esc(value) + "</span></div>";
 }
 
 /* ── RENDER READINESS BANNER ── */
@@ -808,6 +843,16 @@ function renderReadiness(family) {
     { key: "volunteer_profile",  label: "Volunteer Profile",desc: "Add volunteer availability" }
   ];
 
+  // These four may not be columns on `families` at all — Build Status
+  // v10 §2 doesn't list them, and they appear nowhere else in the repo.
+  // Run migrations/01-family-01-schema-probe.sql to settle it. If they're
+  // absent the RPC simply omits the keys, and showing every family four
+  // permanently-incomplete items would be worse than showing nothing.
+  if (!checks.some(function(c){ return c.key in family; })) {
+    banner.classList.add("hidden");
+    return;
+  }
+
   var allDone = checks.every(function(c){ return family[c.key]; });
 
   if (allDone) {
@@ -821,12 +866,11 @@ function renderReadiness(family) {
     return;
   }
 
+  banner.classList.remove("hidden", "complete");
   itemsEl.innerHTML = checks.map(function(c) {
-    if (family[c.key]) {
-      return "<div class='readiness-item done'>&#10003; " + c.label + "</div>";
-    } else {
-      return "<div class='readiness-item todo' onclick='alert(\"" + c.desc + " — Coming in Phase 2\")'>&#9675; " + c.label + "</div>";
-    }
+    return family[c.key]
+      ? "<div class='readiness-item done'>&#10003; " + esc(c.label) + "</div>"
+      : "<div class='readiness-item todo' title='" + esc(c.desc) + "'>&#9675; " + esc(c.label) + "</div>";
   }).join("");
 }
 
@@ -838,26 +882,43 @@ function renderChecklistCard(family) {
     { key: "profile_complete",  label: "Student Profile",   desc: "Complete and up to date",               icon: "&#128100;" },
     { key: "volunteer_profile", label: "Volunteer Profile", desc: "At least one family volunteer on file",  icon: "&#129309;" }
   ];
-  var el = document.getElementById("checklist-items");
+  var el   = document.getElementById("checklist-items");
+  var card = document.getElementById("card-readiness");
+
+  // Same column-existence guard as renderReadiness().
+  if (!checks.some(function(c){ return c.key in family; })) {
+    if (card) card.style.display = "none";
+    return;
+  }
+  if (card) card.style.display = "";
+
+  // The previous version built onclick='alert('Coming in Phase 2')' —
+  // nested single quotes inside a single-quoted attribute, so the
+  // handler was malformed and threw on every click. The completion
+  // flow itself belongs to Registration & Onboarding (workstream 10),
+  // which owns the readiness checklist; this card only reports state.
   el.innerHTML = checks.map(function(c) {
     var done = family[c.key];
-    return "<div class='checklist-item " + (done ? "done" : "todo") + "' onclick='" + (done ? "" : "alert('Coming in Phase 2')") + "'>" +
+    return "<div class='checklist-item " + (done ? "done" : "todo") + "'>" +
       "<div class='checklist-item-left'>" +
         "<div class='checklist-check'>" + (done ? "&#9989;" : "&#9675;") + "</div>" +
-        "<div><div class='checklist-name'>" + c.label + "</div><div class='checklist-desc'>" + c.desc + "</div></div>" +
+        "<div><div class='checklist-name'>" + esc(c.label) + "</div>" +
+          "<div class='checklist-desc'>" + esc(c.desc) + "</div></div>" +
       "</div>" +
-      (done ? "" : "<button class='checklist-cta'>Complete &rarr;</button>") +
     "</div>";
   }).join("");
 }
 
 /* ── RENDER REGISTRATION STATUS ── */
-function renderRegistrations(registrations) {
+function renderRegistrations(registrations, students) {
   var el = document.getElementById("reg-items");
   if (!registrations || !registrations.length) {
     el.innerHTML = "<div style='text-align:center;padding:16px;font-size:13px;color:var(--text-light);'>No registrations found. <a href='/register' style='color:var(--blue);'>Register now &rarr;</a></div>";
     return;
   }
+  var byId = {};
+  (students || []).forEach(function(s) { byId[s.id] = s; });
+
   var statusMap = {
     "pending":   { label: "Pending Review", dot: "dot-pending" },
     "approved":  { label: "Approved",       dot: "dot-approved" },
@@ -865,65 +926,265 @@ function renderRegistrations(registrations) {
     "declined":  { label: "Not Accepted",   dot: "dot-declined" }
   };
   el.innerHTML = registrations.map(function(r) {
-    var st = statusMap[r.registration_status] || { label: r.registration_status, dot: "dot-pending" };
+    var st  = statusMap[r.registration_status] || { label: r.registration_status, dot: "dot-pending" };
+    var stu = byId[r.student_id];
+    var who = stu ? (stu.first_name + " " + stu.last_name) : "Your student";
     return "<div class='reg-item'>" +
-      "<div><div class='reg-item-name'>" + (r.student_first + " " + r.student_last) + "</div><div class='reg-item-event'>" + (r.event_name || r.event_type) + "</div></div>" +
-      "<div class='reg-status-dot'><div class='dot " + st.dot + "'></div>" + st.label + "</div>" +
+      "<div><div class='reg-item-name'>" + esc(who) + "</div>" +
+        "<div class='reg-item-event'>" + esc(r.event_name || r.event_type) + "</div></div>" +
+      "<div class='reg-status-dot'><div class='dot " + st.dot + "'></div>" + esc(st.label) + "</div>" +
     "</div>";
   }).join("");
 }
 
-/* ── VOLUNTEER LOG ── */
-var selectedActivity = "";
-var selectedCredit = "";
+/* ── VOLUNTEER LOG ──────────────────────────────────────────
+   The activity list is rendered from volunteer_activity_types, not
+   hardcoded. Two consequences, both intentional:
+     * rates are whatever the coordinator set in the table, so they
+       can never drift out of sync with what actually gets credited;
+     * "Support Bundle" cannot appear here. It isn't a volunteer
+       activity at all — it's dues_accounts.support_bundle_count /
+       support_bundle_amount, coordinator manual entry only.
+   The browser sends an activity_type_id and NEVER a dollar amount.
+   The credit is looked up server-side by trg_apply_volunteer_credit
+   at approval time.
+   ───────────────────────────────────────────────────────────── */
+var selectedActivityId   = "";
+var selectedActivityName = "";
 
-function selectActivity(name, credit) {
-  selectedActivity = name;
-  selectedCredit = credit;
-  document.getElementById("vol-activity").value = name + " (+$" + credit + ")";
-  document.getElementById("vol-date").value = new Date().toISOString().split("T")[0];
+function renderActivityTypes(types) {
+  var el = document.getElementById("vol-activity-list");
+  if (!types.length) {
+    el.innerHTML = "<div style='text-align:center;padding:14px;font-size:12px;color:var(--text-light);'>" +
+      "No volunteer activities are open for logging right now.</div>";
+    document.getElementById("vol-log-toggle").style.display = "none";
+    return;
+  }
+  document.getElementById("vol-log-toggle").style.display = "";
+  el.innerHTML = types.map(function(t) {
+    return "<div class='vol-activity-item' onclick=\"selectActivity('" + esc(t.id) + "')\">" +
+      "<div><div class='vol-activity-name'>" + esc(t.name) + "</div></div>" +
+      "<div class='vol-activity-credit'>+" + money(t.credit_amount) + "</div>" +
+    "</div>";
+  }).join("");
+}
+
+/* volunteer_logs.student_id is NOT NULL — every log must name one of
+   this family's own students. Populated once, from the same students
+   array the student cards use. */
+function renderVolStudentPicker(students) {
+  var sel = document.getElementById("vol-student");
+  if (!sel) return;
+  if (!students.length) {
+    sel.innerHTML = "<option value=''>No students on file</option>";
+    return;
+  }
+  sel.innerHTML = students.map(function(s) {
+    return "<option value='" + esc(s.id) + "'>" + esc(s.first_name) + " " + esc(s.last_name) + "</option>";
+  }).join("");
+}
+
+function selectActivity(id) {
+  var t = (DASH && DASH.activity_types || []).filter(function(x){ return x.id === id; })[0];
+  if (!t) return;
+  selectedActivityId   = t.id;
+  selectedActivityName = t.name;
+  document.getElementById("vol-activity").value = t.name + " (+" + money(t.credit_amount) + ")";
+  if (!document.getElementById("vol-date").value) {
+    document.getElementById("vol-date").value = new Date().toISOString().split("T")[0];
+  }
   document.getElementById("vol-form").classList.add("open");
   document.getElementById("vol-success").classList.remove("show");
 }
 function toggleVolForm() {
-  var f = document.getElementById("vol-form");
-  f.classList.toggle("open");
+  document.getElementById("vol-form").classList.toggle("open");
 }
 function cancelVolForm() {
   document.getElementById("vol-form").classList.remove("open");
+  selectedActivityId = ""; selectedActivityName = "";
+  document.getElementById("vol-activity").value = "";
 }
 async function submitVolLog() {
-  var activity = document.getElementById("vol-activity").value;
-  var date     = document.getElementById("vol-date").value;
-  var hours    = parseFloat(document.getElementById("vol-hours").value);
-  var notes    = document.getElementById("vol-notes").value.trim();
-  var familyId = sessionStorage.getItem("st_family_id");
+  var date      = document.getElementById("vol-date").value;
+  var studentId = document.getElementById("vol-student").value;
+  var notes     = document.getElementById("vol-notes").value.trim();
+  var code      = sessionStorage.getItem("st_family_code");
 
-  if (!activity || !date || !hours || hours <= 0) {
-    alert("Please fill in activity, date, and hours.");
-    return;
-  }
+  if (!selectedActivityId) { alert("Please pick an activity from the list above."); return; }
+  if (!studentId)          { alert("Please choose which student this is for."); return; }
+  if (!date)               { alert("Please enter the date you volunteered."); return; }
+
   var btn = document.getElementById("btn-submit-vol");
   btn.disabled = true; btn.textContent = "Submitting…";
   try {
-    await sbPost("volunteer_logs", {
-      family_id:     familyId,
-      activity_type: selectedActivity,
-      activity_date: date,
-      hours:         hours,
-      credit_amount: parseFloat(selectedCredit) || 0,
-      notes:         notes,
-      status:        "pending"
+    var res = await sbRpc("submit_family_volunteer_log", {
+      p_family_code:      code,
+      p_activity_type_id: selectedActivityId,
+      p_student_id:       studentId,
+      p_activity_date:    date,
+      p_notes:            notes || null
     });
+    if (!res || res.ok !== true) {
+      var msgs = {
+        invalid_activity_type: "That activity is no longer available. Please pick another.",
+        invalid_student: "Please choose a valid student.",
+        invalid_date:  "Please choose a date in the past 6 months, not in the future.",
+        not_found:     "Your session expired. Please sign in with your family code again.",
+        rate_limited:  REASON_TEXT.rate_limited
+      };
+      alert(msgs[res && res.reason] || "Submission failed. Please try again.");
+      return;
+    }
     document.getElementById("vol-success").classList.add("show");
-    document.getElementById("vol-hours").value = "";
     document.getElementById("vol-notes").value = "";
-    setTimeout(function(){ document.getElementById("vol-form").classList.remove("open"); document.getElementById("vol-success").classList.remove("show"); }, 3000);
+    // Pull the log list back so the family sees their pending entry.
+    try {
+      var fresh = await sbRpc("get_family_dashboard", { p_family_code: code });
+      if (fresh && fresh.ok) { DASH = fresh; renderVolunteerHistory(fresh.volunteer_logs || []); }
+    } catch(_) { /* the submit already succeeded; a stale list is cosmetic */ }
+    setTimeout(function() {
+      document.getElementById("vol-form").classList.remove("open");
+      document.getElementById("vol-success").classList.remove("show");
+    }, 3000);
   } catch(e) {
     alert("Submission failed. Please try again.");
   } finally {
     btn.disabled = false; btn.textContent = "Submit for Approval";
   }
+}
+
+/* ── VOLUNTEER HISTORY ──
+   No `hours` field — volunteer_logs doesn't have one; credit is a flat
+   amount per activity type. A denied entry shows its reason instead of
+   leaving the family to wonder or contact the coordinator to find out. */
+function renderVolunteerHistory(logs) {
+  var el = document.getElementById("vol-history");
+  if (!el) return;
+  if (!logs.length) {
+    el.innerHTML = "<div style='font-size:12px;color:var(--text-light);text-align:center;padding:10px 0;'>" +
+      "No volunteer activity submitted yet this season.</div>";
+    return;
+  }
+  var statusCls = { approved: "credit", denied: "charge", pending: "" };
+  el.innerHTML = logs.slice(0, 6).map(function(l) {
+    var who = l.student_first_name ? " · " + esc(l.student_first_name) : "";
+    var reason = (l.status === "denied" && l.denial_reason)
+      ? "<div style='font-size:11px;color:var(--text-light);margin-top:2px;'>" + esc(l.denial_reason) + "</div>"
+      : "";
+    return "<div class='balance-row' style='flex-direction:column;align-items:flex-start;gap:2px;'>" +
+      "<div style='display:flex;justify-content:space-between;width:100%;'>" +
+        "<span class='balance-row-label'>" + esc(l.activity_name || "Activity") +
+          " · " + esc(l.activity_date) + who + "</span>" +
+        "<span class='balance-row-val " + (statusCls[l.status] || "") + "'>" +
+          esc((l.status || "").charAt(0).toUpperCase() + (l.status || "").slice(1)) +
+        "</span>" +
+      "</div>" + reason +
+    "</div>";
+  }).join("");
+}
+
+/* ── BALANCE + LEDGER ──────────────────────────────────────
+   Design Spec v2 §7.1: "Current amount due or zero if surplus. Tap to
+   expand full ledger with all charges, payments, credits and dates."
+   The zero-floor is applied server-side (family_dues_balances
+   .family_balance_display); `owed` carries the true signed figure so a
+   surplus can be acknowledged without showing a negative headline.
+   ───────────────────────────────────────────────────────────── */
+function renderBalance(balance, ledger) {
+  var body   = document.getElementById("balance-body");
+  var action = document.getElementById("balance-ledger-action");
+
+  if (!balance.has_dues_record) {
+    if (action) action.style.display = "none";
+    body.innerHTML =
+      "<div class='placeholder-body'>" +
+        "<div class='placeholder-icon'>&#128179;</div>" +
+        "<div class='placeholder-msg'>No dues on file yet</div>" +
+        "<div class='placeholder-sub'>Your season dues account is created once your student is activated for the " +
+          esc(balance.season || "current") + " season. Nothing is owed until then.</div>" +
+      "</div>";
+    document.getElementById("ledger-panel").innerHTML = "";
+    return;
+  }
+
+  if (action) action.style.display = "";
+  var display = Number(balance.display) || 0;
+  var owed    = Number(balance.owed) || 0;
+  var cls     = display > 0 ? "overdue" : "clear";
+  var label   = display > 0
+    ? "Due for the " + esc(balance.season) + " season"
+    : (owed < 0
+        ? "Paid in full — " + money(Math.abs(owed)) + " credit carried"
+        : "Paid in full — thank you!");
+
+  var charges = 0, credits = 0;
+  ledger.forEach(function(l) {
+    var a = Number(l.amount) || 0;
+    if (a > 0) charges += a; else credits += -a;
+  });
+
+  body.innerHTML =
+    "<div class='balance-amount " + cls + "'>" + money(display) + "</div>" +
+    "<div class='balance-label'>" + label + "</div>" +
+    "<div class='balance-summary'>" +
+      "<div class='balance-row'><span class='balance-row-label'>Total charges</span>" +
+        "<span class='balance-row-val charge'>" + money(charges) + "</span></div>" +
+      "<div class='balance-row'><span class='balance-row-label'>Payments &amp; credits</span>" +
+        "<span class='balance-row-val credit'>&minus;" + money(credits) + "</span></div>" +
+    "</div>" +
+    "<button class='btn-ledger' onclick='toggleLedger()'>View Full Ledger</button>";
+
+  var panel = document.getElementById("ledger-panel");
+  if (!ledger.length) {
+    panel.innerHTML = "<div class='placeholder-sub' style='text-align:center;padding:16px 0;font-style:italic;'>" +
+      "No ledger activity yet.</div>";
+    return;
+  }
+  panel.innerHTML =
+    "<div class='balance-summary' style='margin-bottom:0;'>" +
+    ledger.map(function(l) {
+      var a = Number(l.amount) || 0;
+      return "<div class='balance-row'>" +
+        "<span class='balance-row-label'>" + esc(l.label) +
+          (l.date ? " <span style='color:var(--text-light);'>· " + esc(l.date) + "</span>" : "") +
+        "</span>" +
+        "<span class='balance-row-val " + (a < 0 ? "credit" : "charge") + "'>" +
+          (a < 0 ? "&minus;" : "") + money(Math.abs(a)) +
+        "</span>" +
+      "</div>";
+    }).join("") +
+    "</div>";
+}
+
+/* ── CALENDAR ──────────────────────────────────────────────
+   Was four hardcoded rows, the first of which (Jul 22 tryouts) is
+   already in the past. Now the real events table, filtered
+   server-side to the grade bands of this family's students, with
+   drafts excluded.
+   ───────────────────────────────────────────────────────────── */
+function renderEvents(events) {
+  var el = document.getElementById("calendar-body");
+  if (!events.length) {
+    el.innerHTML = "<div style='text-align:center;padding:16px;font-size:13px;color:var(--text-light);'>" +
+      "No upcoming events scheduled yet.</div>";
+    return;
+  }
+  var MON = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  el.innerHTML = events.map(function(e) {
+    var badge = "TBD";
+    if (e.start_date) {
+      var p = String(e.start_date).split("-");
+      badge = MON[parseInt(p[1], 10) - 1] + " " + parseInt(p[2], 10);
+    }
+    var sub = e.dates_label || "";
+    var where = [e.venue_name, e.venue_city_state].filter(Boolean).join(", ");
+    if (where) sub = sub ? sub + " · " + where : where;
+    return "<div class='mini-event'>" +
+      "<div class='mini-event-date'>" + esc(badge) + "</div>" +
+      "<div><div class='mini-event-name'>" + esc(e.name) + "</div>" +
+      (sub ? "<div class='mini-event-type'>" + esc(sub) + "</div>" : "") + "</div>" +
+    "</div>";
+  }).join("");
 }
 
 /* ── TASKS TOGGLE ── */
@@ -944,7 +1205,8 @@ function toggleLedger() {
 /* ── SIGN OUT ── */
 function signOut() {
   sessionStorage.removeItem("st_family_code");
-  sessionStorage.removeItem("st_family_id");
+  sessionStorage.removeItem("st_family_id"); // legacy key from the pre-RPC flow
+  DASH = null;
   window.location.href = "/";
 }
 
@@ -958,27 +1220,29 @@ function codeKeydown(e) { if (e.key === "Enter") lookupFamily(); }
 
 /* ── LOOKUP FAMILY ── */
 async function lookupFamily() {
-  var code = document.getElementById("code-input").value.trim().toUpperCase();
+  var code  = document.getElementById("code-input").value.trim().toUpperCase();
   var errEl = document.getElementById("code-error");
   var btn   = document.getElementById("btn-lookup");
   errEl.classList.remove("show");
 
   if (!code.match(/^CC-[A-Z0-9]{4}$/)) {
-    errEl.textContent = "Enter a valid family code (CC-XXXX)";
+    errEl.textContent = REASON_TEXT.invalid_format;
     errEl.classList.add("show");
     return;
   }
   btn.disabled = true; btn.textContent = "Looking up…";
   try {
-    var rows = await sbGet("families?family_code=eq." + code + "&select=id,family_code");
-    if (!rows || !rows.length) {
-      errEl.textContent = "Family code not found. Check your confirmation email.";
+    var res = await sbRpc("get_family_dashboard", { p_family_code: code });
+    if (!res || res.ok !== true) {
+      errEl.textContent = REASON_TEXT[res && res.reason] || "Something went wrong. Please try again.";
       errEl.classList.add("show");
-    } else {
-      sessionStorage.setItem("st_family_code", code);
-      sessionStorage.setItem("st_family_id", rows[0].id);
-      loadDashboard(rows[0].id, code);
+      return;
     }
+    // Only the code is persisted. The family id is never trusted from
+    // the client — the RPC re-derives it from the code on every call.
+    sessionStorage.setItem("st_family_code", code);
+    sessionStorage.removeItem("st_family_id");
+    renderDashboard(res, code);
   } catch(e) {
     errEl.textContent = "Connection error — please try again.";
     errEl.classList.add("show");
@@ -988,55 +1252,61 @@ async function lookupFamily() {
 }
 
 /* ── LOAD DASHBOARD ── */
-async function loadDashboard(familyId, familyCode) {
+async function loadDashboard(familyCode) {
   showScreen("screen-loading");
   try {
-    // Fetch family record
-    var families = await sbGet("families?id=eq." + familyId + "&select=id,family_code,parent_1_name,parent_2_name,email,waiver_on_file,medical_on_file,profile_complete,volunteer_profile");
-    if (!families || !families.length) throw new Error("Family not found");
-    var family = families[0];
-
-    // Fetch students
-    var students = await sbGet("students?family_id=eq." + familyId + "&select=id,first_name,last_name,grade,home_school,program,season_status,approved_at,car_number,leadership_role&order=first_name.asc");
-
-    // Fetch registrations with student names joined
-    var registrations = [];
-    if (students && students.length) {
-      var stuIds = students.map(function(s){ return s.id; }).join(",");
-      var regs = await sbGet("registrations?student_id=in.(" + stuIds + ")&select=id,student_id,event_name,event_type,registration_status,submitted_at&order=submitted_at.desc");
-      // Attach student names
-      registrations = (regs || []).map(function(r) {
-        var stu = students.find(function(s){ return s.id === r.student_id; });
-        r.student_first = stu ? stu.first_name : "";
-        r.student_last  = stu ? stu.last_name  : "";
-        return r;
-      });
+    var res = await sbRpc("get_family_dashboard", { p_family_code: familyCode });
+    if (!res || res.ok !== true) {
+      // Stale or now-invalid code in sessionStorage — send them back to
+      // the entry screen with the reason, rather than a dead-end error.
+      sessionStorage.removeItem("st_family_code");
+      showScreen("screen-entry");
+      var errEl = document.getElementById("code-error");
+      errEl.textContent = REASON_TEXT[res && res.reason] || "Please enter your family code again.";
+      errEl.classList.add("show");
+      return;
     }
-
-    // Build welcome name
-    var familyName = family.parent_1_name ? family.parent_1_name.split(" ").slice(-1)[0] + " Family" : "Your Family";
-    document.getElementById("welcome-title").textContent = "Welcome, " + familyName;
-    document.getElementById("header-code").textContent = familyCode;
-
-    // Render
-    renderReadiness(family);
-    renderChecklistCard(family);
-    renderStudentCards(students, registrations);
-    renderRegistrations(registrations);
-
-    showScreen("screen-dashboard");
+    renderDashboard(res, familyCode);
   } catch(e) {
-    document.getElementById("error-msg").textContent = "We could not load your family dashboard. Please try again or contact steam.teams@chambersk12.org.";
+    document.getElementById("error-msg").textContent =
+      "We could not load your family dashboard. Please try again or contact stehos@chambersk12.org.";
     showScreen("screen-error");
   }
+}
+
+/* ── RENDER EVERYTHING FROM ONE PAYLOAD ── */
+function renderDashboard(res, familyCode) {
+  DASH = res;
+  var family = res.family || {};
+
+  var familyName = family.parent_1_name
+    ? family.parent_1_name.split(" ").slice(-1)[0] + " Family"
+    : "Your Family";
+  document.getElementById("welcome-title").textContent = "Welcome, " + familyName;
+  document.getElementById("header-code").textContent = familyCode;
+  if (res.season) {
+    document.getElementById("welcome-sub").textContent =
+      "Season " + res.season + " · Inspire Academy";
+  }
+
+  renderReadiness(family);
+  renderChecklistCard(family);
+  renderStudentCards(res.students || [], res.registrations || []);
+  renderRegistrations(res.registrations || [], res.students || []);
+  renderBalance(res.balance || {}, res.ledger || []);
+  renderActivityTypes(res.activity_types || []);
+  renderVolStudentPicker(res.students || []);
+  renderVolunteerHistory(res.volunteer_logs || []);
+  renderEvents(res.events || []);
+
+  showScreen("screen-dashboard");
 }
 
 /* ── INIT ── */
 (function init() {
   var code = sessionStorage.getItem("st_family_code");
-  var id   = sessionStorage.getItem("st_family_id");
-  if (code && id) {
-    loadDashboard(id, code);
+  if (code) {
+    loadDashboard(code);
   } else {
     showScreen("screen-entry");
   }
