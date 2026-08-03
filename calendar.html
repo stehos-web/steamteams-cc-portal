@@ -18,6 +18,27 @@
   .login-panel.active { display: block; }
   .race-banner { animation: pulseBanner 2.4s ease-in-out infinite; }
   @keyframes pulseBanner { 0%,100% { opacity:1; } 50% { opacity:.85; } }
+
+  /* ── Workstream 11_ — event management UI ──────────────────────────────
+     Only ever visible to the coordinator tier (see canManageEvents()).    */
+  .evt-field label { display:block; font-family:'Archivo Narrow'; font-size:12px;
+    letter-spacing:.05em; text-transform:uppercase; font-weight:700;
+    color:#44474e; margin-bottom:4px; }
+  .evt-field input[type=text], .evt-field input[type=date], .evt-field input[type=time],
+  .evt-field input[type=number], .evt-field select, .evt-field textarea {
+    width:100%; border:2px solid #1A1A1A; padding:8px 10px; font-size:15px;
+    background:#fff; border-radius:0; }
+  .evt-field input:focus, .evt-field select:focus, .evt-field textarea:focus {
+    outline:none; border-color:#B2292E; }
+  .evt-group { border:1px solid rgba(116,119,127,.25); padding:20px; background:#fcf9f8; }
+  .evt-group > legend { font-family:'Archivo Narrow'; font-size:14px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; background:#1C355E; color:#fff;
+    padding:4px 12px; }
+  .evt-check { display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; }
+  .evt-check input { margin-top:3px; width:18px; height:18px; accent-color:#B2292E; flex:none; }
+  .evt-check span { font-size:14px; line-height:1.4; }
+  .evt-hint { font-size:12px; color:#44474e; margin-top:3px; line-height:1.4; }
+  .evt-hidden { display:none !important; }
 </style>
 <script id="tailwind-config">
   tailwind.config = {
@@ -131,12 +152,305 @@
     <span class="font-bold">Staff view:</span> draft events are included below (visible to coordinators/coaches only). Everyone else sees published events only.
   </div>
 
+  <!-- ── Coordinator toolbar (workstream 11_) ──────────────────────────────
+       Shown only when canManageEvents() is true — i.e. an active staff_accounts
+       row whose role is in the coordinator tier. Calendar System Design v2.2 §4:
+       only Coordinator / Asst. Coordinator get create/edit/cancel. Coaches are
+       read + comment, everyone else read-only. This is the UI half of that rule;
+       the enforcing half is the RLS policy set in 11-cal-02. -->
+  <div id="coord-toolbar" class="hidden flex flex-wrap items-center gap-4 bg-deep-navy text-white px-5 py-4">
+    <span class="material-symbols-outlined">edit_calendar</span>
+    <div class="flex-1 min-w-[200px]">
+      <p class="font-label-caps text-label-caps uppercase font-bold">Coordinator tools</p>
+      <p class="text-sm text-white/70">Create, edit, publish, and cancel events without opening Supabase.</p>
+    </div>
+    <button onclick="openEventEditor(null)"
+      class="bg-race-red text-white px-6 py-2 font-label-caps text-label-caps uppercase brutalist-shadow transition-all flex items-center gap-2">
+      <span class="material-symbols-outlined" style="font-size:18px;">add</span> New Event
+    </button>
+  </div>
+
   <!-- Calendar list — rendered by renderCalendarList() -->
   <div id="calendar-list" class="space-y-12">
     <p class="text-on-surface-variant font-label-caps text-label-caps uppercase">Loading calendar…</p>
   </div>
 
 </main>
+
+<!-- ═══════════════════════════════════════════════
+     EVENT EDITOR (workstream 11_) — coordinator tier only
+     Grouped into identity / scheduling / venue / visibility / automation
+     rather than one flat 34-column form, per handoff §2.1.
+═══════════════════════════════════════════════ -->
+<div id="evt-editor" class="hidden fixed inset-0 z-[60] bg-black/60 overflow-y-auto" onclick="evtBackdrop(event)">
+  <div class="bg-background max-w-3xl mx-auto my-8 border-2 border-asphalt-black" onclick="event.stopPropagation()">
+
+    <div class="bg-asphalt-black text-white px-6 py-4 flex items-center gap-3 sticky top-0 z-10">
+      <span class="material-symbols-outlined">edit_calendar</span>
+      <h2 id="evt-editor-title" class="text-headline-md font-headline-md flex-1">New Event</h2>
+      <button onclick="closeEventEditor()" class="text-white/70 hover:text-white" aria-label="Close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div id="evt-error" class="hidden bg-error-container text-on-error-container px-6 py-3 text-body-md"></div>
+
+    <form id="evt-form" onsubmit="return saveEvent(event)" class="p-6 space-y-6">
+
+      <!-- ── IDENTITY ───────────────────────────── -->
+      <fieldset class="evt-group space-y-4">
+        <legend>Identity</legend>
+        <div class="evt-field">
+          <label for="f-name">Event name *</label>
+          <input type="text" id="f-name" required placeholder="KIA Fall Classic">
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="evt-field">
+            <label for="f-cal-type">Calendar event type *</label>
+            <select id="f-cal-type" required onchange="onTypeChange()">
+              <option value="">— Select —</option>
+              <option>Race — Single Day (Away)</option>
+              <option>Race — Multi-Day (Away)</option>
+              <option>Hosted Race</option>
+              <option>Ten80 Nationals</option>
+              <option>Practice</option>
+              <option>Team Meeting</option>
+              <option>Summer Academy</option>
+              <option>Tryouts</option>
+              <option>Leadership Retreat</option>
+            </select>
+          </div>
+          <div class="evt-field">
+            <label for="f-scope">Scope *</label>
+            <select id="f-scope" required>
+              <option>All Programs</option>
+              <option>MS &amp; HS</option>
+              <option>HS Only</option>
+              <option>Goblin</option>
+              <option>MS &amp; HS Leadership</option>
+              <option>MS &amp; HS Select</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="evt-field">
+            <label for="f-grade-min">Grade min *</label>
+            <input type="number" id="f-grade-min" min="1" max="12" required value="4">
+          </div>
+          <div class="evt-field">
+            <label for="f-grade-max">Grade max *</label>
+            <input type="number" id="f-grade-max" min="1" max="12" required value="12">
+          </div>
+          <div class="evt-field">
+            <label for="f-color">Colour</label>
+            <select id="f-color">
+              <option value="blue">Blue</option>
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+              <option value="gold">Gold</option>
+            </select>
+          </div>
+        </div>
+        <p class="evt-hint">Grade min/max are both NOT NULL in the database — every event needs a range even if it is not grade-restricted in practice.</p>
+        <div class="evt-field">
+          <label for="f-desc">Description</label>
+          <textarea id="f-desc" rows="3" placeholder="Shown on the event card and registration screens."></textarea>
+        </div>
+      </fieldset>
+
+      <!-- ── SCHEDULING ─────────────────────────── -->
+      <fieldset class="evt-group space-y-4">
+        <legend>Scheduling</legend>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="evt-field">
+            <label for="f-start-date">Start date</label>
+            <input type="date" id="f-start-date" onchange="onStartDateChange()">
+          </div>
+          <div class="evt-field">
+            <label for="f-end-date">End date</label>
+            <input type="date" id="f-end-date">
+          </div>
+          <div class="evt-field">
+            <label for="f-start-time">Start time</label>
+            <input type="time" id="f-start-time">
+          </div>
+          <div class="evt-field">
+            <label for="f-end-time">End time</label>
+            <input type="time" id="f-end-time">
+          </div>
+        </div>
+        <p class="evt-hint">All times are stored and displayed in Central Time (§3.2). Single-day events: leave end date equal to start date — it is filled in automatically.</p>
+        <div class="evt-field">
+          <label for="f-dates-label">Dates label (free text override)</label>
+          <input type="text" id="f-dates-label" placeholder="e.g. Early June — dates TBD">
+        </div>
+        <div class="evt-check">
+          <input type="checkbox" id="f-recurring" onchange="onRecurringChange()">
+          <span><strong>Recurring event</strong><br><span class="evt-hint">Practice blocks are normally entered once per block at season start (§9) — that is workstream 08_'s job.</span></span>
+        </div>
+        <div class="evt-field evt-hidden" id="wrap-recurrence">
+          <label for="f-recurrence">Recurrence pattern</label>
+          <input type="text" id="f-recurrence" placeholder="e.g. Tue &amp; Thu, Sep 8 – Dec 12">
+        </div>
+      </fieldset>
+
+      <!-- ── VENUE ──────────────────────────────── -->
+      <fieldset class="evt-group space-y-4">
+        <legend>Venue</legend>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="evt-field">
+            <label for="f-venue-name">Venue name</label>
+            <input type="text" id="f-venue-name" placeholder="Barber Motorsports Park">
+          </div>
+          <div class="evt-field">
+            <label for="f-venue-city">City, State</label>
+            <input type="text" id="f-venue-city" placeholder="Birmingham, AL">
+          </div>
+        </div>
+        <div class="evt-field">
+          <label for="f-venue-tz">Venue timezone note</label>
+          <input type="text" id="f-venue-tz" placeholder="Venue is Eastern — schedule below is Central">
+          <p class="evt-hint">Informational only. Never used for system calculations (§3.3).</p>
+        </div>
+        <div class="evt-check">
+          <input type="checkbox" id="f-hosted" onchange="onTypeChange()">
+          <span><strong>We are hosting this event</strong><br><span class="evt-hint">Drives the heavier task template and volunteer slate.</span></span>
+        </div>
+      </fieldset>
+
+      <!-- ── VISIBILITY & STATUS ────────────────── -->
+      <fieldset class="evt-group space-y-4">
+        <legend>Visibility &amp; Status</legend>
+        <div class="evt-field">
+          <label for="f-status">Status *</label>
+          <select id="f-status" required onchange="onStatusChange()">
+            <option value="draft">Draft — staff only, hidden from families and students</option>
+            <option value="published">Published — visible to everyone in scope</option>
+            <option value="cancelled">Cancelled — stays visible with a strikethrough</option>
+          </select>
+          <p class="evt-hint" id="status-hint"></p>
+        </div>
+        <div class="evt-check">
+          <input type="checkbox" id="f-show-cal" checked>
+          <span><strong>Show on calendar</strong><br><span class="evt-hint">Uncheck for registration-only rows that are not real calendar events.</span></span>
+        </div>
+        <div class="evt-field">
+          <label for="f-sort">Sort order</label>
+          <input type="number" id="f-sort" value="0">
+        </div>
+
+        <div class="border-t border-outline/20 pt-4 space-y-3">
+          <div class="evt-check">
+            <input type="checkbox" id="f-reg-open" onchange="onRegOpenChange()">
+            <span><strong>Open this event for registration</strong>
+              <br><span class="evt-hint" style="color:#B2292E;"><strong>Leave this off for races and practices.</strong> register.html lists every row where registration_open is true — it does not filter by event type. Turning this on puts the event straight onto the family registration screen.</span></span>
+          </div>
+          <div id="wrap-reg" class="evt-hidden space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="evt-field">
+                <label for="f-reg-deadline">Registration deadline</label>
+                <input type="date" id="f-reg-deadline">
+              </div>
+              <div class="evt-field">
+                <label for="f-deadline-label">Deadline label</label>
+                <input type="text" id="f-deadline-label" placeholder="Register by May 30">
+              </div>
+            </div>
+            <div class="evt-field">
+              <label for="f-event-type">Registration type key (event_type)</label>
+              <select id="f-event-type">
+                <option value="calendar">calendar — calendar event, not a registration flow</option>
+                <option value="summer_camp">summer_camp</option>
+                <option value="tryout">tryout</option>
+                <option value="team_consideration">team_consideration</option>
+              </select>
+              <p class="evt-hint">Written onto each registration record. Only change this if the event genuinely drives a registration flow in register.html.</p>
+            </div>
+            <div class="evt-check">
+              <input type="checkbox" id="f-requires-reason" onchange="onReasonChange()">
+              <span><strong>Ask for a written reason at registration</strong></span>
+            </div>
+            <div class="evt-field evt-hidden" id="wrap-reason">
+              <label for="f-reason-prompt">Reason prompt</label>
+              <input type="text" id="f-reason-prompt" placeholder="Why do you want to be considered?">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ── AUTOMATION ─────────────────────────── -->
+      <fieldset class="evt-group space-y-4">
+        <legend>Automation</legend>
+        <div class="evt-check">
+          <input type="checkbox" id="f-race-day">
+          <span><strong>Race day mode</strong><br><span class="evt-hint">Activates automatically 7:00am CT on the start date, clears 11:59pm CT on the end date (§5.1). Cancelled events never trigger it.</span></span>
+        </div>
+        <div class="evt-check">
+          <input type="checkbox" id="f-gen-slots">
+          <span><strong>Generate volunteer slots</strong><br><span class="evt-hint">Flag is stored now; the automation that consumes it is Phase 3B and is not built yet.</span></span>
+        </div>
+        <div class="evt-check">
+          <input type="checkbox" id="f-gen-tasks">
+          <span><strong>Generate task checklist</strong><br><span class="evt-hint">Flag is stored now; the automation that consumes it is Phase 3B and is not built yet.</span></span>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="evt-field evt-hidden" id="wrap-heats">
+            <label for="f-heats">Number of heats</label>
+            <input type="number" id="f-heats" min="1" value="4">
+            <p class="evt-hint">Hosted races only. Default 4.</p>
+          </div>
+          <div class="evt-field" id="wrap-pres">
+            <label for="f-pres-offset">Presentation deadline offset (days before)</label>
+            <input type="number" id="f-pres-offset" min="0" value="9">
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" id="evt-save-btn"
+          class="bg-race-red text-white px-8 py-3 font-label-caps text-label-caps uppercase brutalist-shadow transition-all">Save Event</button>
+        <button type="button" onclick="closeEventEditor()"
+          class="border-2 border-asphalt-black px-8 py-3 font-label-caps text-label-caps uppercase">Cancel</button>
+        <button type="button" id="evt-delete-btn" onclick="deleteEvent()"
+          class="hidden ml-auto border-2 border-race-red text-race-red px-6 py-3 font-label-caps text-label-caps uppercase">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     CANCELLATION CONFIRM (workstream 11_)
+     §9: cancelling triggers an immediate notification to all roles. There is
+     no notification table in the database yet (verified live Aug 3, 2026 —
+     notify_list is a pre-launch email signup list, unrelated). Until one
+     exists, Remind stays the fast channel and this dialog is the prompt.
+═══════════════════════════════════════════════ -->
+<div id="cancel-confirm" class="hidden fixed inset-0 z-[70] bg-black/60 flex items-center justify-center px-4">
+  <div class="bg-background max-w-lg w-full border-2 border-race-red">
+    <div class="bg-race-red text-white px-6 py-4 flex items-center gap-3">
+      <span class="material-symbols-outlined">event_busy</span>
+      <h2 class="text-headline-md font-headline-md">Cancel this event?</h2>
+    </div>
+    <div class="p-6 space-y-4">
+      <p class="text-body-md">You are cancelling <strong id="cancel-evt-name"></strong>.</p>
+      <ul class="text-body-md space-y-2 list-disc pl-5 text-on-surface-variant">
+        <li>It stays on every calendar with a strikethrough — it does not disappear.</li>
+        <li>Race day mode will never trigger for it.</li>
+        <li>Its task list is suppressed automatically once the task system is live.</li>
+      </ul>
+      <div class="bg-surface-container border-l-4 border-race-red px-4 py-3">
+        <p class="font-label-caps text-label-caps uppercase font-bold mb-1">Send the Remind message yourself</p>
+        <p class="text-sm text-on-surface-variant">The portal cannot notify families automatically yet — there is no notification system built. For a same-day cancellation, send it through Remind now.</p>
+      </div>
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button onclick="confirmCancelEvent()"
+          class="bg-race-red text-white px-6 py-3 font-label-caps text-label-caps uppercase brutalist-shadow transition-all">Cancel the Event</button>
+        <button onclick="closeCancelConfirm()"
+          class="border-2 border-asphalt-black px-6 py-3 font-label-caps text-label-caps uppercase">Keep It</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════
      FOOTER (matches index_V8.html)
@@ -299,7 +613,9 @@
         <div id="modal-staff-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
         <button onclick="loginStaff('modal')"
           class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Sign In</button>
-        <p class="text-center text-label-caps font-label-caps text-on-surface-variant"><a href="#" class="hover:underline">Forgot password?</a></p>
+        <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
+          Forgot password? Email <a href="mailto:stehos@chambersk12.org" class="text-race-red hover:underline">stehos@chambersk12.org</a> to reset.
+        </p>
       </div>
       <p class="text-center text-label-caps font-label-caps text-on-surface-variant pt-2 border-t border-outline/10">
         <a href="/register" class="hover:underline text-race-red">New family? Register here &rarr;</a>
@@ -458,20 +774,55 @@ async function loginStaff(ctx) {
 // Program-scoped "their program only" filtering for family/student
 // (Section 4 note) is deferred — needs an enrolled-programs lookup that
 // doesn't exist yet as a simple session value; hook point noted below.
+// WORKSTREAM 11_ ADDITION: this function previously returned a flat "staff"
+// for anyone with a staff_accounts row, which was sufficient while the page
+// was read-only. §4 distinguishes Coordinator/Asst. Coordinator (create +
+// edit + cancel) from Coach (read + comment), so the specific role value is
+// now captured into STAFF_ROLE as well. The returned viewer role is
+// deliberately left as "staff" so every existing caller behaves exactly as
+// before — draft visibility is unchanged for all staff, per §4.
+var STAFF_ROLE = null;
+
+// Coordinator tier. Note 'admin' is included deliberately: verified live
+// Aug 3, 2026, both real staff rows (Seth, Trent) are role='admin', and that
+// value is load-bearing in five other RLS policies (families/students delete,
+// dues_accounts, payments, dues_balance_forgiveness_log) so it cannot simply
+// be renamed. 11-cal-02 uses this same list on the events write policies.
+var COORDINATOR_ROLES = ["admin", "coordinator", "asst_coordinator"];
+
 async function getViewerRole() {
   var staffToken = sessionStorage.getItem("st_staff_token");
   if (staffToken) {
     try {
-      var r = await fetch(SB_URL + "/rest/v1/staff_accounts?select=id&limit=1", {
+      var r = await fetch(SB_URL + "/rest/v1/staff_accounts?select=id,role,is_active&limit=1", {
         headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken }
       });
       var rows = await r.json();
-      if (r.ok && rows && rows.length) return "staff";
+      if (r.ok && rows && rows.length) {
+        STAFF_ROLE = rows[0].is_active === false ? null : (rows[0].role || null);
+        return "staff";
+      }
     } catch (e) { /* fall through to lower tiers */ }
   }
   if (sessionStorage.getItem("st_student_id")) return "student";
   if (sessionStorage.getItem("st_family_id")) return "family";
   return "public";
+}
+
+// ── Write authority (§4) ─────────────────────────────
+// UI-side half of the rule only. The authoritative half is the RLS policy
+// installed by migrations/11-cal-02-events-write-policy.sql — a coach token
+// posting directly to /rest/v1/events is rejected by the database regardless
+// of what this function returns. Both layers must agree; do not relax one
+// without the other.
+function canManageEvents() {
+  return VIEWER_ROLE === "staff" && COORDINATOR_ROLES.indexOf(STAFF_ROLE) !== -1;
+}
+
+// The staff auth token, used for every write. Reads by non-staff continue to
+// use the publishable key.
+function staffToken() {
+  return sessionStorage.getItem("st_staff_token");
 }
 
 // ── Calendar type metadata — icon + color per base type name.
@@ -564,7 +915,7 @@ function renderEventCard(ev, today) {
 
   var badges = "";
   if (ev.scope) {
-    badges += '<span class="border border-outline/30 px-2 py-1 text-[11px] font-label-caps uppercase text-on-surface-variant">' + ev.scope + '</span>';
+    badges += '<span class="border border-outline/30 px-2 py-1 text-[11px] font-label-caps uppercase text-on-surface-variant">' + escapeHtml(ev.scope) + '</span>';
   }
   if (ev.is_hosted) {
     badges += '<span class="bg-deep-navy text-white px-2 py-1 text-[11px] font-label-caps uppercase">Hosted</span>';
@@ -590,7 +941,36 @@ function renderEventCard(ev, today) {
   var venue = "";
   if (ev.venue_name) {
     venue = '<div class="flex items-center gap-2 text-on-surface-variant text-sm"><span class="material-symbols-outlined" style="font-size:16px;">location_on</span>' +
-      ev.venue_name + (ev.venue_city_state ? ", " + ev.venue_city_state : "") + '</div>';
+      escapeHtml(ev.venue_name) + (ev.venue_city_state ? ", " + escapeHtml(ev.venue_city_state) : "") + '</div>';
+  }
+
+  // ── Cancellation note (§3.4) ──────────────────────────────
+  // "[Event Name] has been cancelled." There is deliberately NO stored column
+  // for this — it is computed here at render time. Do not add one.
+  var cancelNote = "";
+  if (isCancelled) {
+    cancelNote = '<div class="flex items-start gap-2 bg-error-container text-on-error-container px-3 py-2 text-sm">' +
+      '<span class="material-symbols-outlined" style="font-size:16px;">event_busy</span>' +
+      '<span>' + escapeHtml(ev.name) + ' has been cancelled.</span></div>';
+  }
+
+  // ── Coordinator row (§4) — coordinator tier only ──────────
+  var controls = "";
+  if (canManageEvents()) {
+    controls = '<div class="flex flex-wrap gap-2 pt-3 border-t border-outline/15">' +
+      '<button onclick="openEventEditor(\'' + ev.id + '\')" class="border-2 border-asphalt-black px-4 py-1 font-label-caps text-[12px] uppercase hover:bg-asphalt-black hover:text-white transition-colors">Edit</button>';
+    if (ev.status === "draft") {
+      controls += '<button onclick="quickStatus(\'' + ev.id + '\',\'published\')" class="border-2 border-[#2e7d32] text-[#2e7d32] px-4 py-1 font-label-caps text-[12px] uppercase hover:bg-[#2e7d32] hover:text-white transition-colors">Publish</button>';
+    }
+    if (ev.status === "published") {
+      controls += '<button onclick="quickStatus(\'' + ev.id + '\',\'draft\')" class="border-2 border-[#b26d00] text-[#b26d00] px-4 py-1 font-label-caps text-[12px] uppercase hover:bg-[#b26d00] hover:text-white transition-colors">Unpublish</button>';
+    }
+    if (ev.status !== "cancelled") {
+      controls += '<button onclick="openCancelConfirm(\'' + ev.id + '\')" class="border-2 border-race-red text-race-red px-4 py-1 font-label-caps text-[12px] uppercase hover:bg-race-red hover:text-white transition-colors">Cancel Event</button>';
+    } else {
+      controls += '<button onclick="quickStatus(\'' + ev.id + '\',\'published\')" class="border-2 border-[#2e7d32] text-[#2e7d32] px-4 py-1 font-label-caps text-[12px] uppercase hover:bg-[#2e7d32] hover:text-white transition-colors">Reinstate</button>';
+    }
+    controls += '</div>';
   }
 
   return [
@@ -599,14 +979,22 @@ function renderEventCard(ev, today) {
         '<span class="material-symbols-outlined ' + meta.color + '" style="font-size:28px;">' + meta.icon + '</span>',
         '<div class="flex-1 space-y-1">',
           '<div class="' + meta.color + ' font-label-caps text-label-caps uppercase font-bold">' + fmtDateRange(ev) + '</div>',
-          '<h4 class="' + titleClasses + '">' + ev.name + '</h4>',
+          '<h4 class="' + titleClasses + '">' + escapeHtml(ev.name) + '</h4>',
           venue,
         '</div>',
         countdown,
       '</div>',
+      cancelNote,
       '<div class="flex flex-wrap gap-2 pt-2">' + badges + '</div>',
+      controls,
     '</div>'
   ].join('');
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
 }
 
 // ── Main render ──────────────────────────────────────
@@ -657,6 +1045,356 @@ function updateRaceDayBanner(events, today) {
   banner.classList.remove("hidden");
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// EVENT MANAGEMENT (workstream 11_) — coordinator tier only
+// ═══════════════════════════════════════════════════════════════════════
+
+// Calendar types that are competitions, per §5 / the type list in §2.
+// Used only to pre-suggest race day mode — the coordinator can always override.
+var RACE_TYPES = ["Race — Single Day (Away)", "Race — Multi-Day (Away)", "Hosted Race", "Ten80 Nationals"];
+
+// Types where turning on registration would be a mistake. Drives the
+// registration_open default (handoff §2.1 / Calendar Design v2.2).
+var NEVER_REGISTERABLE = ["Race — Single Day (Away)", "Race — Multi-Day (Away)", "Hosted Race",
+                          "Ten80 Nationals", "Practice", "Team Meeting"];
+
+var EDITING_ID = null;   // null = creating a new event
+var CANCEL_TARGET_ID = null;
+
+function $(id) { return document.getElementById(id); }
+function setVal(id, v) { $(id).value = (v == null ? "" : v); }
+function setChk(id, v) { $(id).checked = !!v; }
+
+function toggle(id, show) { $(id).classList.toggle("evt-hidden", !show); }
+
+// ── Conditional field groups — hide what the chosen type doesn't need ──
+function onTypeChange() {
+  var t = $("f-cal-type").value;
+  toggle("wrap-heats", $("f-hosted").checked || t === "Hosted Race");
+  if (!EDITING_ID) {
+    // Suggested defaults for NEW events only — never overwrite a coordinator's
+    // saved choices when editing an existing row.
+    setChk("f-race-day", RACE_TYPES.indexOf(t) !== -1);
+    if (t === "Hosted Race") setChk("f-hosted", true);
+    if (NEVER_REGISTERABLE.indexOf(t) !== -1) {
+      setChk("f-reg-open", false);
+      onRegOpenChange();
+    }
+  }
+}
+
+function onRecurringChange() { toggle("wrap-recurrence", $("f-recurring").checked); }
+function onReasonChange()    { toggle("wrap-reason", $("f-requires-reason").checked); }
+function onRegOpenChange()   { toggle("wrap-reg", $("f-reg-open").checked); }
+
+function onStartDateChange() {
+  // Single-day convenience: mirror start into end when end is blank or earlier.
+  var s = $("f-start-date").value, e = $("f-end-date").value;
+  if (s && (!e || e < s)) setVal("f-end-date", s);
+}
+
+function onStatusChange() {
+  var s = $("f-status").value;
+  var hint = {
+    draft:     "Staff can see this; families and students cannot. The RESTRICTIVE RLS policy blocks draft rows from the public key entirely.",
+    published: "Visible to everyone in scope. Race day mode can now trigger for this event.",
+    cancelled: "Stays on the calendar with a strikethrough. Race day mode will never trigger."
+  }[s] || "";
+  $("status-hint").textContent = hint;
+}
+
+// ── Open / close ──────────────────────────────────────
+function openEventEditor(id) {
+  if (!canManageEvents()) return;   // defence in depth; RLS is the real gate
+  EDITING_ID = id;
+  $("evt-error").classList.add("hidden");
+  $("evt-form").reset();
+
+  if (id) {
+    var ev = ALL_EVENTS.filter(function(e) { return e.id === id; })[0];
+    if (!ev) return;
+    $("evt-editor-title").textContent = "Edit Event";
+    $("evt-delete-btn").classList.remove("hidden");
+
+    setVal("f-name", ev.name);
+    setVal("f-cal-type", ev.calendar_event_type);
+    setVal("f-scope", ev.scope);
+    setVal("f-grade-min", ev.grade_min);
+    setVal("f-grade-max", ev.grade_max);
+    setVal("f-color", ev.color || "blue");
+    setVal("f-desc", ev.description);
+    setVal("f-start-date", ev.start_date);
+    setVal("f-end-date", ev.end_date);
+    setVal("f-start-time", (ev.start_time || "").slice(0, 5));
+    setVal("f-end-time", (ev.end_time || "").slice(0, 5));
+    setVal("f-dates-label", ev.dates_label);
+    setChk("f-recurring", ev.is_recurring);
+    setVal("f-recurrence", ev.recurrence_pattern);
+    setVal("f-venue-name", ev.venue_name);
+    setVal("f-venue-city", ev.venue_city_state);
+    setVal("f-venue-tz", ev.venue_timezone_note);
+    setChk("f-hosted", ev.is_hosted);
+    setVal("f-status", ev.status || "draft");
+    setChk("f-show-cal", ev.show_on_calendar !== false);
+    setVal("f-sort", ev.sort_order == null ? 0 : ev.sort_order);
+    setChk("f-reg-open", ev.registration_open === true);
+    setVal("f-reg-deadline", ev.registration_deadline);
+    setVal("f-deadline-label", ev.deadline_label);
+    setVal("f-event-type", ev.event_type || "calendar");
+    setChk("f-requires-reason", ev.requires_reason);
+    setVal("f-reason-prompt", ev.reason_prompt);
+    setChk("f-race-day", ev.race_day_mode);
+    setChk("f-gen-slots", ev.generate_volunteer_slots);
+    setChk("f-gen-tasks", ev.generate_task_checklist);
+    setVal("f-heats", ev.number_of_heats == null ? "" : ev.number_of_heats);
+    setVal("f-pres-offset", ev.presentation_deadline_offset_days == null ? "" : ev.presentation_deadline_offset_days);
+
+    // event_type is preserved as-is on edit. If the row carries a registration
+    // vocabulary value (summer_camp / tryout / team_consideration / calendar_test)
+    // that is not in the dropdown, add it so saving cannot silently change it.
+    if (ev.event_type && !$("f-event-type").value) {
+      var o = document.createElement("option");
+      o.value = ev.event_type;
+      o.textContent = ev.event_type + " (existing value)";
+      $("f-event-type").appendChild(o);
+      setVal("f-event-type", ev.event_type);
+    }
+  } else {
+    $("evt-editor-title").textContent = "New Event";
+    $("evt-delete-btn").classList.add("hidden");
+    // NEW EVENT DEFAULTS
+    setVal("f-status", "draft");   // draft → published flow (§2.2)
+    setChk("f-show-cal", true);
+    setChk("f-reg-open", false);   // see saveEvent() — this is the important one
+    setVal("f-grade-min", 4);
+    setVal("f-grade-max", 12);
+    setVal("f-sort", 0);
+    setVal("f-pres-offset", 9);
+    setVal("f-heats", 4);
+    setVal("f-event-type", "calendar");
+  }
+
+  onTypeChange(); onRecurringChange(); onReasonChange(); onRegOpenChange(); onStatusChange();
+  $("evt-editor").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEventEditor() {
+  $("evt-editor").classList.add("hidden");
+  document.body.style.overflow = "";
+  EDITING_ID = null;
+}
+
+function evtBackdrop(e) { if (e.target.id === "evt-editor") closeEventEditor(); }
+
+function evtError(msg) {
+  var el = $("evt-error");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// ── Build the row payload from the form ───────────────
+function collectPayload() {
+  var t = $("f-cal-type").value;
+  var regOpen = $("f-reg-open").checked;
+
+  // ⚠ registration_open — THE important default.
+  // The database default for this column is TRUE, and register.html lists
+  // every row where registration_open is true WITHOUT filtering on event type
+  // (verified live Aug 3, 2026: it queries
+  //   /rest/v1/events?registration_open=eq.true&order=sort_order.asc).
+  // So a new race or practice saved without setting this explicitly would
+  // appear on the family registration screen as a registerable event.
+  // It is therefore always written explicitly, never left to the DB default.
+  var payload = {
+    name: $("f-name").value.trim(),
+    calendar_event_type: t || null,
+    // Preserved as-is when editing; defaults to 'calendar' for new rows. This is
+    // the REGISTRATION vocabulary (summer_camp / tryout / team_consideration),
+    // which is distinct from calendar_event_type (§3.1) and is NOT NULL.
+    event_type: $("f-event-type").value || "calendar",
+    scope: $("f-scope").value || null,
+    grade_min: parseInt($("f-grade-min").value, 10),
+    grade_max: parseInt($("f-grade-max").value, 10),
+    color: $("f-color").value || "blue",
+    description: $("f-desc").value.trim() || null,
+    start_date: $("f-start-date").value || null,
+    end_date: $("f-end-date").value || $("f-start-date").value || null,
+    start_time: $("f-start-time").value || null,
+    end_time: $("f-end-time").value || null,
+    dates_label: $("f-dates-label").value.trim() || null,
+    is_recurring: $("f-recurring").checked,
+    recurrence_pattern: $("f-recurring").checked ? ($("f-recurrence").value.trim() || null) : null,
+    venue_name: $("f-venue-name").value.trim() || null,
+    venue_city_state: $("f-venue-city").value.trim() || null,
+    venue_timezone_note: $("f-venue-tz").value.trim() || null,
+    is_hosted: $("f-hosted").checked,
+    status: $("f-status").value,
+    show_on_calendar: $("f-show-cal").checked,
+    sort_order: parseInt($("f-sort").value, 10) || 0,
+    registration_open: regOpen,
+    registration_deadline: regOpen ? ($("f-reg-deadline").value || null) : null,
+    deadline_label: regOpen ? ($("f-deadline-label").value.trim() || null) : null,
+    requires_reason: regOpen ? $("f-requires-reason").checked : false,
+    reason_prompt: (regOpen && $("f-requires-reason").checked) ? ($("f-reason-prompt").value.trim() || null) : null,
+    // §5.1: a cancelled event must never trigger race day mode. Enforced on
+    // write as well as in isRaceDayActive(), so the stored row is honest.
+    race_day_mode: $("f-status").value === "cancelled" ? false : $("f-race-day").checked,
+    generate_volunteer_slots: $("f-gen-slots").checked,
+    generate_task_checklist: $("f-gen-tasks").checked,
+    number_of_heats: ($("f-hosted").checked || t === "Hosted Race")
+      ? (parseInt($("f-heats").value, 10) || null) : null,
+    presentation_deadline_offset_days: parseInt($("f-pres-offset").value, 10)
+  };
+  if (isNaN(payload.presentation_deadline_offset_days)) payload.presentation_deadline_offset_days = null;
+  return payload;
+}
+
+function validatePayload(p) {
+  if (!p.name) return "Event name is required.";
+  if (!p.calendar_event_type) return "Calendar event type is required.";
+  if (isNaN(p.grade_min) || isNaN(p.grade_max)) return "Grade min and grade max are both required — the database does not allow either to be empty.";
+  if (p.grade_min > p.grade_max) return "Grade min cannot be greater than grade max.";
+  if (p.start_date && p.end_date && p.end_date < p.start_date) return "End date cannot be before the start date.";
+  if (p.registration_open && NEVER_REGISTERABLE.indexOf(p.calendar_event_type) !== -1) {
+    return "Registration cannot be opened on a " + p.calendar_event_type + ". Races and practices are not registerable events — turning this on would list it on the family registration screen.";
+  }
+  return null;
+}
+
+// ── Save (INSERT or UPDATE) ───────────────────────────
+async function saveEvent(e) {
+  e.preventDefault();
+  if (!canManageEvents()) return false;
+
+  var payload = collectPayload();
+  var err = validatePayload(payload);
+  if (err) { evtError(err); return false; }
+
+  var btn = $("evt-save-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    var url = SB_URL + "/rest/v1/events" + (EDITING_ID ? "?id=eq." + encodeURIComponent(EDITING_ID) : "");
+    var res = await fetch(url, {
+      method: EDITING_ID ? "PATCH" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SB_KEY,
+        Authorization: "Bearer " + staffToken(),
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      var body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("The database rejected this write. Your account is not in the coordinator tier, or your session has expired — sign in again.");
+      }
+      throw new Error("Save failed (" + res.status + "). " + body);
+    }
+    closeEventEditor();
+    await loadCalendar();
+  } catch (ex) {
+    evtError(ex.message || "Save failed.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save Event";
+  }
+  return false;
+}
+
+// ── Quick status change (publish / unpublish / reinstate) ──
+async function quickStatus(id, status) {
+  if (!canManageEvents()) return;
+  var patch = { status: status };
+  // §5.1 again — reinstating from cancelled must not silently re-arm race day
+  // mode; the coordinator sets it deliberately in the editor.
+  if (status === "cancelled") patch.race_day_mode = false;
+  await patchEvent(id, patch);
+}
+
+async function patchEvent(id, patch) {
+  try {
+    var res = await fetch(SB_URL + "/rest/v1/events?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SB_KEY,
+        Authorization: "Bearer " + staffToken(),
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify(patch)
+    });
+    if (!res.ok) throw new Error("Update failed (" + res.status + ")");
+    await loadCalendar();
+  } catch (ex) {
+    alert(ex.message || "Update failed.");
+  }
+}
+
+// ── Cancellation (§4, §9) ─────────────────────────────
+function openCancelConfirm(id) {
+  if (!canManageEvents()) return;
+  var ev = ALL_EVENTS.filter(function(e) { return e.id === id; })[0];
+  if (!ev) return;
+  CANCEL_TARGET_ID = id;
+  $("cancel-evt-name").textContent = ev.name;
+  $("cancel-confirm").classList.remove("hidden");
+}
+
+function closeCancelConfirm() {
+  $("cancel-confirm").classList.add("hidden");
+  CANCEL_TARGET_ID = null;
+}
+
+async function confirmCancelEvent() {
+  if (!CANCEL_TARGET_ID) return;
+  var id = CANCEL_TARGET_ID;
+  closeCancelConfirm();
+
+  // The row stays in place — cancellation is a status change, never a delete.
+  // The "[Event Name] has been cancelled" note is computed in renderEventCard();
+  // there is no stored column for it and one must not be added (§3.4).
+  await patchEvent(id, { status: "cancelled", race_day_mode: false });
+
+  // ── HOOK POINT — task suppression (§4) ──────────────────────────────
+  // "Task lists associated with a cancelled event are suppressed automatically."
+  // Verified live Aug 3, 2026: no tasks table exists yet. Workstream 06b_ is
+  // building the task system in this same wave. When it lands, suppress here:
+  //
+  //   await patchTasksForEvent(id, { suppressed: true });
+  //
+  // Shared tasks ("shareable across events", §7.4) must NOT be suppressed —
+  // they survive individual cancellation and their deadline recalculates to
+  // the earliest remaining linked event. That recalculation belongs to 06b_.
+  //
+  // ── HOOK POINT — notification (§9) ──────────────────────────────────
+  // "Cancelling an individual practice triggers an immediate notification to
+  // all roles." Verified live Aug 3, 2026: there is no notification table.
+  // notify_list is a pre-launch email capture list, not an in-portal notifier.
+  // Until a notification system exists, the confirm dialog tells the
+  // coordinator to send via Remind, which §9 names as the fast channel anyway.
+}
+
+async function deleteEvent() {
+  if (!canManageEvents() || !EDITING_ID) return;
+  if (!confirm("Delete this event permanently?\n\nCancelling is almost always the right choice instead — a cancelled event stays visible to families with a strikethrough, which is what the calendar spec asks for. Deleting removes it with no trace and cannot be undone.")) return;
+  try {
+    var res = await fetch(SB_URL + "/rest/v1/events?id=eq." + encodeURIComponent(EDITING_ID), {
+      method: "DELETE",
+      headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken() }
+    });
+    if (!res.ok) throw new Error("Delete failed (" + res.status + ")");
+    closeEventEditor();
+    await loadCalendar();
+  } catch (ex) {
+    evtError(ex.message || "Delete failed.");
+  }
+}
+
 // ── Boot ──────────────────────────────────────────────
 var ALL_EVENTS = [];
 var VIEWER_ROLE = "public"; // upgraded to staff/student/family by loadCalendar() before first render
@@ -674,6 +1412,9 @@ async function loadCalendar() {
     if (VIEWER_ROLE === "staff") {
       document.getElementById("staff-notice").classList.remove("hidden");
     }
+    // Coordinator tools appear only for the coordinator tier (§4). Coaches and
+    // other staff keep the read-only view they have today.
+    document.getElementById("coord-toolbar").classList.toggle("hidden", !canManageEvents());
     updateRaceDayBanner(ALL_EVENTS, today);
     renderCalendarList(ALL_EVENTS, VIEWER_ROLE, today);
   } catch (e) {
