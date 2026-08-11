@@ -10,6 +10,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Archivo+Narrow:ital,wght@0,400;0,500;0,700;1,700&family=Roboto+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <style>
+  /* ── Form field legibility fix — added 2026-08-11 ──────────────────
+     No input, select, or textarea in this portal set an explicit text
+     colour, so every field inherited its container's colour. Inside a
+     light-on-dark section (e.g. the navy hero) that produced white text
+     on a white field: the placeholder showed, but anything typed was
+     invisible. This sets the colour explicitly for every field.
+     Do not remove without giving each field its own colour. */
+  input, select, textarea {
+    color: #1c1f24;
+    background-color: #ffffff;
+  }
+  input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
+  /* Chrome autofill repaints the field; keep it legible too. */
+  input:-webkit-autofill, input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #1c1f24;
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  }
+
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
   .brutalist-shadow:hover { box-shadow: 4px 4px 0px 0px #B2292E; transform: translate(-2px, -2px); }
   .cancelled-strike { text-decoration: line-through; text-decoration-color: #B2292E; text-decoration-thickness: 2px; }

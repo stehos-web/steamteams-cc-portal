@@ -6,6 +6,24 @@
 <title>STEAM Teams CC — Family Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,700&family=Roboto:wght@300;400;500;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* ── Form field legibility fix — added 2026-08-11 ──────────────────
+     No input, select, or textarea in this portal set an explicit text
+     colour, so every field inherited its container's colour. Inside a
+     light-on-dark section (e.g. the navy hero) that produced white text
+     on a white field: the placeholder showed, but anything typed was
+     invisible. This sets the colour explicitly for every field.
+     Do not remove without giving each field its own colour. */
+  input, select, textarea {
+    color: #1c1f24;
+    background-color: #ffffff;
+  }
+  input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
+  /* Chrome autofill repaints the field; keep it legible too. */
+  input:-webkit-autofill, input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #1c1f24;
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  }
+
 :root {
   --slab: Rockwell, "Rockwell Nova", "Zilla Slab", "Roboto Slab", Georgia, serif;
   --sans: "Roboto", "Helvetica Neue", Arial, sans-serif;
