@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/register", "destination": "/register.html" },
+    { "source": "/register", "destination": "/coming-soon.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/family", "destination": "/family-dashboard.html" },
     { "source": "/calendar", "destination": "/calendar.html" },

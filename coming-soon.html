@@ -121,7 +121,7 @@
         class="bg-race-red text-white px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block text-center">
         Back to Home
       </a>
-      <a href="/register"
+      <a href="/register" id="cta-register"
         class="border-2 border-white/30 text-on-primary px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest hover:border-white hover:bg-white/5 transition-all inline-block text-center">
         Register Now
       </a>
@@ -147,12 +147,32 @@ var labels = {
   "calendar":  "Season Calendar",
   "merch":     "Merch Store",
   "sponsors":  "Sponsorship",
-  "student":   "Student Portal"
+  "student":   "Student Portal",
+  "register":  "Registration"
 };
 var path = window.location.pathname.replace(/\//g, "").toLowerCase();
 var label = labels[path] || "Portal Feature";
 var el = document.getElementById("page-label");
 if (el) el.textContent = label;
+
+// /register is routed here deliberately while the registration flow is rebuilt.
+// The "Register Now" CTA would otherwise link to this same page. Point it at the
+// interim Google Form instead, or hide it if no form URL is configured.
+// TODO: replace REGISTER_FORM_URL with the live Google Form link.
+var REGISTER_FORM_URL = "";
+if (path === "register") {
+  var cta = document.getElementById("cta-register");
+  if (cta) {
+    if (REGISTER_FORM_URL) {
+      cta.setAttribute("href", REGISTER_FORM_URL);
+      cta.setAttribute("target", "_blank");
+      cta.setAttribute("rel", "noopener");
+      cta.textContent = "Register — Google Form";
+    } else {
+      cta.style.display = "none";
+    }
+  }
+}
 </script>
 
 </body>
