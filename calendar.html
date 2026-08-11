@@ -17,9 +17,12 @@
      on a white field: the placeholder showed, but anything typed was
      invisible. This sets the colour explicitly for every field.
      Do not remove without giving each field its own colour. */
+  /* !important is required: the Tailwind CDN injects its preflight at runtime,
+     after this block, and preflight sets `color: inherit` on form controls.
+     Without !important the inherited (light) colour wins and typing is invisible. */
   input, select, textarea {
-    color: #1c1f24;
-    background-color: #ffffff;
+    color: #1c1f24 !important;
+    background-color: #ffffff !important;
   }
   input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
   /* Chrome autofill repaints the field; keep it legible too. */

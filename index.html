@@ -18,9 +18,12 @@
      on a white field: the placeholder showed, but anything typed was
      invisible. This sets the colour explicitly for every field.
      Do not remove without giving each field its own colour. */
+  /* !important is required: the Tailwind CDN injects its preflight at runtime,
+     after this block, and preflight sets `color: inherit` on form controls.
+     Without !important the inherited (light) colour wins and typing is invisible. */
   input, select, textarea {
-    color: #1c1f24;
-    background-color: #ffffff;
+    color: #1c1f24 !important;
+    background-color: #ffffff !important;
   }
   input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
   /* Chrome autofill repaints the field; keep it legible too. */
@@ -897,17 +900,22 @@ async function loginFamily(ctx) {
   if (!code.match(/^CC-[A-Z0-9]{4}$/)) { showErr(errId, "Enter a valid family code (CC-XXXX)"); return; }
   var btn = document.getElementById(prefix + "-fam-code").closest(".login-panel").querySelector("button[onclick]");
   btn.disabled = true; btn.textContent = "Looking up…";
-  try {
-    var rows = await sbGet("families?family_code=eq." + code + "&select=id,family_code");
-    if (!rows || !rows.length) {
-      showErr(errId, "Family code not found. Check your confirmation email.");
-    } else {
-      sessionStorage.setItem("st_family_code", code);
-      sessionStorage.setItem("st_family_id", rows[0].id);
-      window.location.href = "/family";
-    }
-  } catch(e) { showErr(errId, "Connection error — please try again."); }
-  finally { btn.disabled = false; btn.textContent = "Check My Status"; }
+  // Hand off to /family. Do NOT look the code up here.
+  //
+  // This previously read `families` directly with the anon key. That read is
+  // blocked by RLS — the policy requires current_setting('app.family_code'),
+  // which a browser client cannot set — so it returned [] for EVERY code,
+  // valid or not, and the page reported "Family code not found." The family
+  // login on this page had been broken since the July 30 RLS remediation.
+  //
+  // The correct entry point is get_family_dashboard(), which family-dashboard.html
+  // already calls, and which logs to family_code_attempts for throttling. That
+  // page also handles a stale or invalid code by returning the visitor to its own
+  // entry form. Validating here would duplicate that logic and re-create the
+  // family-code oracle that 01-family-05 deliberately revoked from anon.
+  sessionStorage.setItem("st_family_code", code);
+  sessionStorage.removeItem("st_family_id"); // legacy key from the pre-RPC flow
+  window.location.href = "/family";
 }
 
 // ── Login: Student ────────────────────────────────
