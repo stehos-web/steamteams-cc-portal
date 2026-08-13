@@ -258,11 +258,21 @@
     </div>
     <!-- Moved here 2026-08-13 (Seth): this button previously sat in the merch
          section beside "Store — Coming Soon", where it read as a merch action.
-         It belongs with the calendar content it actually opens. -->
+         It belongs with the calendar content it actually opens.
+         Relabelled the same day: it is now the PRINTABLE schedule, not a second
+         route into /calendar — "View Full Schedule" above already does that.
+         CONFIG-DRIVEN: the PDF URL lives in portal_config key
+         `home_schedule_pdf_url`. While that key is absent or empty the button
+         renders disabled as "Printable Schedule — Coming Soon". Set the key and
+         it becomes a real download. No redeploy, per the standing config-driven
+         preference. -->
     <div>
-      <a href="/calendar"
-        class="border-2 border-asphalt-black text-asphalt-black px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest hover:bg-asphalt-black hover:text-white transition-all inline-block">
-        Race Schedule
+      <!-- No href while disabled. An <a> without href is not focusable and does
+           nothing on click — unlike href="#", which scrolls to the top of the
+           page and is the dead-link pattern already logged as a defect here. -->
+      <a id="schedule-pdf-link" aria-disabled="true"
+        class="border-2 border-asphalt-black/40 text-asphalt-black/50 px-8 py-4 rounded-none font-label-caps text-label-caps uppercase tracking-widest inline-block cursor-not-allowed">
+        Printable Schedule — Coming Soon
       </a>
     </div>
   </section>
@@ -607,6 +617,25 @@ async function loadHomeConfig() {
       try { cfg[r.key] = JSON.parse(r.value); } catch(e) { cfg[r.key] = r.value; }
     });
     var set = function(id, val) { var el = document.getElementById(id); if (el && val) el.textContent = val; };
+
+    // ── Printable schedule PDF (added 2026-08-13) ───────────────────
+    // Absent or empty key => stays disabled and says "Coming Soon".
+    // Set portal_config.home_schedule_pdf_url to a URL and the button
+    // becomes a live download on next page load. No redeploy needed.
+    (function () {
+      var el  = document.getElementById("schedule-pdf-link");
+      if (!el) return;
+      var url = cfg["home_schedule_pdf_url"];
+      if (!url || typeof url !== "string" || !url.trim()) return;  // leave disabled
+      el.setAttribute("href", url.trim());
+      el.removeAttribute("aria-disabled");
+      el.setAttribute("target", "_blank");
+      el.setAttribute("rel", "noopener");
+      el.textContent = "Printable Schedule";
+      el.className = "border-2 border-asphalt-black text-asphalt-black px-8 py-4 rounded-none " +
+                     "font-label-caps text-label-caps uppercase tracking-widest " +
+                     "hover:bg-asphalt-black hover:text-white transition-all inline-block";
+    })();
     set("stat-programs",            cfg["home_stat_programs"]);
     set("stat-programs-label",      cfg["home_stat_programs_label"]);
     set("stat-students",            cfg["home_stat_students"]);
