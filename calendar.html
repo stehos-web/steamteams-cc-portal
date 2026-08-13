@@ -9,6 +9,8 @@
      deployment, no build step. Upgrade to Tailwind CLI before V2 season launch. -->
 <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Archivo+Narrow:ital,wght@0,400;0,500;0,700;1,700&family=Roboto+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS. -->
+<link href="/assets/css/shell.css" rel="stylesheet">
 <style>
   /* ── Form field legibility fix — added 2026-08-11 ──────────────────
      No input, select, or textarea in this portal set an explicit text
@@ -109,28 +111,13 @@
 <body class="bg-background text-on-background font-body-md overflow-x-hidden">
 
 <!-- ═══════════════════════════════════════════════
-     TOP NAVIGATION BAR (matches index_V8.html)
+     PUBLIC SHELL — header, mobile drawer, login modal.
+     Rendered by /assets/js/shell.js. Design Spec v4 §10,
+     including the Aug 13 §10.4.5 amendment (contextual
+     chip + visible Sign Out — no chevron, no account menu).
+     Do not hand-write a <header> here. Do not fork shell.js/shell.css.
 ═══════════════════════════════════════════════ -->
-<header class="bg-primary flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 z-50 border-b border-outline/20 sticky top-0">
-  <div class="h-8 flex items-center">
-    <a href="/" class="text-headline-md font-headline-md font-black text-on-primary italic uppercase tracking-wide">
-      <em class="text-race-red not-italic">STEAM</em>Teams CC
-    </a>
-  </div>
-  <div class="flex items-center gap-6">
-    <nav class="hidden md:flex items-center gap-8">
-      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/">Home</a>
-      <a class="text-race-red font-bold border-b-2 border-race-red pb-1 text-label-caps font-label-caps" href="/calendar">Calendar</a>
-      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/merch">Merch Store</a>
-      <a class="text-on-primary-fixed-variant font-medium hover:text-secondary-fixed-dim transition-colors duration-200 text-label-caps font-label-caps" href="/sponsors">Sponsor Us</a>
-    </nav>
-    <button onclick="openModal()"
-      class="bg-race-red text-white px-6 py-2 rounded-none font-label-caps text-label-caps brutalist-shadow transition-all uppercase flex items-center gap-2">
-      <span class="material-symbols-outlined" style="font-size:18px;">account_circle</span>
-      Member Login
-    </button>
-  </div>
-</header>
+<div id="shell-root"></div>
 
 <!-- ═══════════════════════════════════════════════
      RACE DAY MODE BANNER (hidden unless an event is active)
@@ -504,179 +491,16 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     FOOTER (matches index_V8.html)
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8.
+     No Register link. Never sticky. No nav items.
 ═══════════════════════════════════════════════ -->
-<footer class="bg-asphalt-black text-white pt-20 pb-10">
-  <div class="container mx-auto px-margin-mobile md:px-margin-desktop grid md:grid-cols-4 gap-12 border-b border-white/10 pb-16">
-    <div class="space-y-6">
-      <div class="text-headline-md font-headline-md font-black text-race-red italic uppercase">STEAM Teams CC</div>
-      <p class="text-surface-variant/60 text-body-md">Driving engineering innovation through the spirit of competition.
-        Empowering future leaders in technology and design. Powered by Inspire Academy &amp; Chambers County Schools since 2013.</p>
-      <div class="flex gap-4">
-        <a href="https://facebook.com/SteamTeamsCC" target="_blank"
-          class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all"
-          aria-label="STEAM Teams CC on Facebook">
-          <span class="material-symbols-outlined">share</span>
-        </a>
-        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="STEAM Teams CC on Instagram">
-          <span class="material-symbols-outlined">photo_camera</span>
-        </a>
-        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="STEAM Teams CC on LinkedIn">
-          <span class="material-symbols-outlined">business</span>
-        </a>
-        <a href="/coming-soon.html" class="w-10 h-10 border border-white/20 flex items-center justify-center hover:bg-race-red hover:border-race-red transition-all" aria-label="Email STEAM Teams CC">
-          <span class="material-symbols-outlined">mail</span>
-        </a>
-      </div>
-    </div>
-    <div class="space-y-6">
-      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Portal</h5>
-      <ul class="space-y-3 text-surface-variant">
-        <li><a href="/register" class="hover:text-white transition-colors">Register</a></li>
-        <li><a href="/dashboard" class="hover:text-white transition-colors">Staff Dashboard</a></li>
-        <li><a href="/family" class="hover:text-white transition-colors">Family Portal</a></li>
-      </ul>
-    </div>
-    <div class="space-y-6">
-      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Program</h5>
-      <ul class="space-y-3 text-surface-variant">
-        <li><a href="/calendar" class="hover:text-white transition-colors">Season Calendar</a></li>
-        <li><a href="/merch" class="hover:text-white transition-colors">Merch Store</a></li>
-        <li><a href="/sponsors" class="hover:text-white transition-colors">Sponsorship</a></li>
-        <li><a href="/coming-soon.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
-      </ul>
-    </div>
-    <div class="space-y-6">
-      <h5 class="font-label-caps text-label-caps uppercase font-bold text-race-red">Connect</h5>
-      <p class="text-surface-variant/60 text-body-md">
-        Get race-day alerts via the <strong class="text-white">Remind App</strong>.<br>
-        Or email us directly.
-      </p>
-      <div class="space-y-2">
-        <a href="mailto:steam.teams@chambersk12.org" class="flex items-center gap-2 text-surface-variant hover:text-white transition-colors">
-          <span class="material-symbols-outlined text-race-red" style="font-size:18px;">mail</span>
-          steam.teams@chambersk12.org
-        </a>
-        <a href="tel:+13347488665" class="flex items-center gap-2 text-surface-variant hover:text-white transition-colors">
-          <span class="material-symbols-outlined text-race-red" style="font-size:18px;">phone</span>
-          (334) 748-8665
-        </a>
-      </div>
-    </div>
-  </div>
-  <div class="container mx-auto px-margin-mobile md:px-margin-desktop pt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-surface-variant/40 text-label-caps font-label-caps">
-    <p>&copy; <span id="footer-year">2026</span> STEAM Teams Chambers County. All Rights Reserved.</p>
-    <p>Greenpower USA &middot; Ten80 Education &middot; Founded 2013</p>
-  </div>
-</footer>
+<div id="shell-footer"></div>
 
-<!-- ═══════════════════════════════════════════════
-     MOBILE BOTTOM NAV (matches index_V8.html)
-═══════════════════════════════════════════════ -->
-<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-2 md:hidden bg-primary z-50 border-t-2 border-race-red">
-  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/">
-    <span class="material-symbols-outlined">home</span>
-    <span class="text-[10px] font-label-caps">HOME</span>
-  </a>
-  <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg px-3 py-1" href="/calendar">
-    <span class="material-symbols-outlined">calendar_month</span>
-    <span class="text-[10px] font-label-caps">CALENDAR</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/merch">
-    <span class="material-symbols-outlined">shopping_cart</span>
-    <span class="text-[10px] font-label-caps">MERCH</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/sponsors">
-    <span class="material-symbols-outlined">handshake</span>
-    <span class="text-[10px] font-label-caps">SPONSOR</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-primary-fixed-variant px-3 py-1" href="/register">
-    <span class="material-symbols-outlined">edit_document</span>
-    <span class="text-[10px] font-label-caps">REGISTER</span>
-  </a>
-</nav>
-
-<!-- ═══════════════════════════════════════════════
-     PORTAL LOGIN MODAL (identical markup/logic to index_V8.html —
-     kept in sync so "Member Login" behaves the same on every page)
-═══════════════════════════════════════════════ -->
-<div id="login-modal" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-6"
-  style="background:rgba(1,31,72,0.88);backdrop-filter:blur(8px);"
-  onclick="backdropClose(event)">
-  <div class="bg-white w-full max-w-sm relative shadow-2xl" style="clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%);">
-    <div class="absolute -bottom-3 -right-3 w-full h-full bg-race-red -z-10 opacity-10" style="clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%);"></div>
-    <div class="p-8 space-y-6">
-      <button onclick="closeModal()"
-        class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-surface hover:bg-race-red hover:text-white transition-all text-on-surface">
-        <span class="material-symbols-outlined" style="font-size:18px;">close</span>
-      </button>
-      <h2 class="text-headline-md font-headline-md uppercase">Portal Login</h2>
-      <p class="text-label-caps font-label-caps text-on-surface-variant uppercase">Select your role to sign in</p>
-      <div class="flex border-b border-outline/10">
-        <button id="modal-tab-family" onclick="switchTab('modal','family',this)"
-          class="flex-1 py-3 text-label-caps font-label-caps border-b-2 border-race-red text-race-red uppercase">Family</button>
-        <button id="modal-tab-student" onclick="switchTab('modal','student',this)"
-          class="flex-1 py-3 text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase">Student</button>
-        <button id="modal-tab-staff" onclick="switchTab('modal','staff',this)"
-          class="flex-1 py-3 text-label-caps font-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase">Staff</button>
-      </div>
-      <div id="modal-panel-family" class="login-panel active space-y-4">
-        <div>
-          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Family Code</label>
-          <input id="modal-fam-code" type="text" maxlength="7" oninput="fmtCode(this)" placeholder="CC-XXXX"
-            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
-          <p class="mt-1 text-xs text-on-surface-variant">From your registration confirmation</p>
-        </div>
-        <div id="modal-fam-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
-        <button onclick="loginFamily('modal')"
-          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Check My Status</button>
-        <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
-          <a href="#" onclick="goEmailLogin('modal',event)" class="hover:underline">Sign in with email instead &rarr;</a>
-        </p>
-      </div>
-      <div id="modal-panel-student" class="login-panel space-y-4">
-        <div>
-          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Username</label>
-          <input id="modal-stu-user" type="text" placeholder="e.g. chrodriguez"
-            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
-        </div>
-        <div>
-          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Code</label>
-          <input id="modal-stu-code" type="text" maxlength="6" placeholder="e.g. CR491"
-            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
-          <p class="mt-1 text-xs text-on-surface-variant">Provided by your coach on approval</p>
-        </div>
-        <div id="modal-stu-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
-        <button onclick="loginStudent('modal')"
-          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Sign In</button>
-      </div>
-      <div id="modal-panel-staff" class="login-panel space-y-4">
-        <div>
-          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Email</label>
-          <input id="modal-staff-email" type="email" placeholder="your@chambersk12.org"
-            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
-        </div>
-        <div>
-          <label class="block text-label-caps font-label-caps text-on-surface-variant mb-2 uppercase">Password</label>
-          <input id="modal-staff-pass" type="password" placeholder="••••••••"
-            class="w-full border border-outline/30 px-4 py-3 rounded-none focus:border-race-red focus:ring-0 transition-all font-body-md">
-        </div>
-        <div id="modal-staff-err" class="hidden text-sm text-error bg-error-container px-3 py-2"></div>
-        <button onclick="loginStaff('modal')"
-          class="w-full bg-asphalt-black text-white py-4 font-label-caps text-label-caps uppercase tracking-widest hover:bg-race-red transition-all">Sign In</button>
-        <p class="text-center text-label-caps font-label-caps text-on-surface-variant">
-          Forgot password? Email <a href="mailto:stehos@chambersk12.org" class="text-race-red hover:underline">stehos@chambersk12.org</a> to reset.
-        </p>
-      </div>
-      <p class="text-center text-label-caps font-label-caps text-on-surface-variant pt-2 border-t border-outline/10">
-        <a href="/register" class="hover:underline text-race-red">New family? Register here &rarr;</a>
-      </p>
-    </div>
-  </div>
-</div>
+<!-- Public Shell — one shared script, every surface. Design Spec v4 §10.2.1. -->
+<script src="/assets/js/shell.js" defer></script>
 
 <script>
-// ── Supabase credentials (same publishable key as index_V8.html) ──
+// ── Supabase credentials (page-content reads only) ──
 const SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
 const SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
@@ -691,122 +515,6 @@ async function sbGet(p, token) {
     headers: { apikey: SB_KEY, Authorization: "Bearer " + (token || SB_KEY) }
   });
   return r.json();
-}
-async function sbAuth(b) {
-  const r = await fetch(SB_URL + "/auth/v1/token?grant_type=password", {
-    method: "POST",
-    headers: { apikey: SB_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(b)
-  });
-  return r.json();
-}
-
-// ── Login modal — identical behavior to index_V8.html ──
-function openModal() {
-  document.getElementById("login-modal").classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-}
-function closeModal() {
-  document.getElementById("login-modal").classList.add("hidden");
-  document.body.style.overflow = "";
-}
-function backdropClose(e) {
-  if (e.target.id === "login-modal") closeModal();
-}
-document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeModal(); });
-
-function switchTab(ctx, role, btn) {
-  const prefix = "modal";
-  ["family","student","staff"].forEach(function(t) {
-    const panel = document.getElementById(prefix + "-panel-" + t);
-    const tabBtn = document.getElementById("modal-tab-" + t);
-    if (panel) { panel.classList.remove("active"); }
-    if (tabBtn) {
-      tabBtn.classList.remove("border-b-2","border-race-red","text-race-red");
-      tabBtn.classList.add("text-on-surface-variant");
-    }
-  });
-  const activePanel = document.getElementById(prefix + "-panel-" + role);
-  if (activePanel) activePanel.classList.add("active");
-  btn.classList.add("border-b-2","border-race-red","text-race-red");
-  btn.classList.remove("text-on-surface-variant");
-}
-function goEmailLogin(ctx, e) {
-  e.preventDefault();
-  const staffBtn = document.getElementById("modal-tab-staff");
-  if (staffBtn) switchTab(ctx, "staff", staffBtn);
-}
-function fmtCode(el) {
-  var v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 6);
-  el.value = v.slice(0, 7);
-}
-function showErr(id, msg) {
-  var el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.remove("hidden");
-}
-function hideErr(id) {
-  var el = document.getElementById(id);
-  if (el) el.classList.add("hidden");
-}
-async function loginFamily(ctx) {
-  var code = document.getElementById("modal-fam-code").value.trim().toUpperCase();
-  var errId = "modal-fam-err";
-  hideErr(errId);
-  if (!code.match(/^CC-[A-Z0-9]{4}$/)) { showErr(errId, "Enter a valid family code (CC-XXXX)"); return; }
-  var btn = document.getElementById("modal-fam-code").closest(".login-panel").querySelector("button[onclick]");
-  btn.disabled = true; btn.textContent = "Looking up…";
-  try {
-    var rows = await sbGet("families?family_code=eq." + code + "&select=id,family_code");
-    if (!rows || !rows.length) {
-      showErr(errId, "Family code not found. Check your confirmation email.");
-    } else {
-      sessionStorage.setItem("st_family_code", code);
-      sessionStorage.setItem("st_family_id", rows[0].id);
-      window.location.href = "/family";
-    }
-  } catch(e) { showErr(errId, "Connection error — please try again."); }
-  finally { btn.disabled = false; btn.textContent = "Check My Status"; }
-}
-async function loginStudent(ctx) {
-  var user = document.getElementById("modal-stu-user").value.trim().toLowerCase();
-  var code = document.getElementById("modal-stu-code").value.trim().toUpperCase();
-  var errId = "modal-stu-err";
-  hideErr(errId);
-  if (!user || !code) { showErr(errId, "Please enter both username and code."); return; }
-  var btn = document.getElementById("modal-stu-code").closest(".login-panel").querySelector("button[onclick]");
-  btn.disabled = true; btn.textContent = "Signing in…";
-  try {
-    var rows = await sbGet("students?username=eq." + user + "&login_code=eq." + code + "&select=id,first_name,last_name");
-    if (!rows || !rows.length) {
-      showErr(errId, "Username or code not recognized.");
-    } else {
-      sessionStorage.setItem("st_student_id", rows[0].id);
-      sessionStorage.setItem("st_student_name", rows[0].first_name + " " + rows[0].last_name);
-      window.location.href = "/student";
-    }
-  } catch(e) { showErr(errId, "Connection error — please try again."); }
-  finally { btn.disabled = false; btn.textContent = "Sign In"; }
-}
-async function loginStaff(ctx) {
-  var email = document.getElementById("modal-staff-email").value.trim();
-  var pass = document.getElementById("modal-staff-pass").value;
-  var errId = "modal-staff-err";
-  hideErr(errId);
-  if (!email || !pass) { showErr(errId, "Please enter your email and password."); return; }
-  var btn = document.getElementById("modal-staff-pass").closest(".login-panel").querySelector("button[onclick]");
-  btn.disabled = true; btn.textContent = "Signing in…";
-  try {
-    var data = await sbAuth({ email: email, password: pass });
-    if (!data.access_token) {
-      showErr(errId, "Invalid email or password.");
-    } else {
-      sessionStorage.setItem("st_staff_token", data.access_token);
-      window.location.href = "/dashboard";
-    }
-  } catch(e) { showErr(errId, "Connection error — please try again."); }
-  finally { btn.disabled = false; btn.textContent = "Sign In"; }
 }
 
 // ── Viewer role ────────────────────────────────────
@@ -1567,10 +1275,6 @@ document.getElementById("filter-row").addEventListener("click", function(e) {
 });
 
 loadCalendar();
-(function() {
-  var el = document.getElementById("footer-year");
-  if (el) el.textContent = new Date().getFullYear();
-})();
 </script>
 </body>
 </html>
