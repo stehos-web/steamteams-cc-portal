@@ -5,28 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STEAM Teams CC — Family Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,700&family=Roboto:wght@300;400;500;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<!-- Public Shell needs Tailwind + Material Symbols at runtime — shell.js's header,
+     drawer, and login modal are built from Tailwind utility classes. -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS.
+     Carries the form-field legibility fix too — the copy that used to live here moved
+     to shell.css August 13 so every page shares one source instead of five copies. -->
+<link href="/assets/css/shell.css" rel="stylesheet">
 <style>
-  /* ── Form field legibility fix — added 2026-08-11 ──────────────────
-     No input, select, or textarea in this portal set an explicit text
-     colour, so every field inherited its container's colour. Inside a
-     light-on-dark section (e.g. the navy hero) that produced white text
-     on a white field: the placeholder showed, but anything typed was
-     invisible. This sets the colour explicitly for every field.
-     Do not remove without giving each field its own colour. */
-  /* !important is required: the Tailwind CDN injects its preflight at runtime,
-     after this block, and preflight sets `color: inherit` on form controls.
-     Without !important the inherited (light) colour wins and typing is invisible. */
-  input, select, textarea {
-    color: #1c1f24 !important;
-    background-color: #ffffff !important;
-  }
-  input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
-  /* Chrome autofill repaints the field; keep it legible too. */
-  input:-webkit-autofill, input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #1c1f24;
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
-  }
-
 :root {
   --slab: Rockwell, "Rockwell Nova", "Zilla Slab", "Roboto Slab", Georgia, serif;
   --sans: "Roboto", "Helvetica Neue", Arial, sans-serif;
@@ -438,37 +425,22 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 </head>
 <body>
 
-<!-- ── SITE HEADER ── -->
-<header class="site-header">
-  <div class="header-inner">
-    <a href="/" class="header-logo">
-      <div class="header-logo-title"><em>STEAM</em> Teams CC</div>
-      <div class="header-logo-sub">Family Portal</div>
-    </a>
-    <div class="header-right">
-      <span class="header-family-code" id="header-code"></span>
-      <button class="btn-signout" onclick="signOut()">Sign Out</button>
-    </div>
-  </div>
-</header>
+<!-- ═══════════════════════════════════════════════
+     PUBLIC SHELL — header, mobile drawer, login modal.
+     Rendered by /assets/js/shell.js. Design Spec v4 §10.
+     Do not hand-write a <header> here. Do not fork shell.js/shell.css.
+     shell.js guards this route on mount (§10.4.8): with no session it
+     hides everything below except this mount and the footer, shows its
+     own "Sign in to continue" panel, and opens the login modal. There is
+     no separate family-code entry form on this page any more — the
+     shared modal (§10.5) is the only login entry point, closing the
+     duplicate-login defect this page used to carry.
+═══════════════════════════════════════════════ -->
+<div id="shell-root"></div>
 
-<!-- ── CODE ENTRY SCREEN (shown when no code in session) ── -->
-<div id="screen-entry" style="display:none;">
-  <div class="code-entry-screen">
-    <div class="code-entry-card">
-      <div class="code-entry-title">Family Check-In</div>
-      <div class="code-entry-sub">Enter your family code to view your registration status, balance, and program updates.</div>
-      <input class="code-input" type="text" id="code-input" placeholder="CC-XXXX" maxlength="7" oninput="fmtCode(this)" onkeydown="codeKeydown(event)"/>
-      <div class="code-hint">Your CC-XXXX code is on your registration confirmation</div>
-      <div class="code-error" id="code-error"></div>
-      <button class="btn-lookup" id="btn-lookup" onclick="lookupFamily()">Check My Status</button>
-      <div class="code-entry-foot">
-        <a href="/register">Need to register? Start here &rarr;</a><br><br>
-        <a href="/">Back to home</a>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- All page content below is one wrapper so the shell's private-route
+     guard (§10.4.8) can hide/show it as a single unit. -->
+<div id="family-content">
 
 <!-- ── LOADING SCREEN ── -->
 <div id="screen-loading" style="display:none;">
@@ -675,17 +647,21 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 
     </div><!-- /dashboard-grid -->
 
-    <footer class="site-footer">
-      <div class="footer-copy">&copy; 2026 STEAM Teams CC &middot; Inspire Academy &middot; Chambers County Schools</div>
-      <div class="footer-links-row">
-        <a href="mailto:steam.teams@chambersk12.org" class="footer-link">Contact Us</a>
-        <a href="/" class="footer-link">Home</a>
-        <a href="/register" class="footer-link">Register</a>
-      </div>
-    </footer>
-
   </div>
 </div><!-- /screen-dashboard -->
+
+</div><!-- /family-content -->
+
+<!-- ═══════════════════════════════════════════════
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8. Replaces this
+     page's own site-footer (which duplicated a Register CTA outside
+     §10.6's budget and repeated contact info the shell footer already
+     carries).
+═══════════════════════════════════════════════ -->
+<div id="shell-footer"></div>
+
+<!-- Public Shell — one shared script, every surface. Design Spec v4 §10.2.1. -->
+<script src="/assets/js/shell.js" defer></script>
 
 <script>
 var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
@@ -736,12 +712,17 @@ function esc(s) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/* ── SCREENS ── */
+/* ── SCREENS ──
+   §10.5: no more "screen-entry" — the shared login modal is the only
+   login entry point, so this page only ever shows loading, error, or
+   the real dashboard. */
 function showScreen(id) {
-  ["screen-entry","screen-loading","screen-error","screen-dashboard"].forEach(function(s) {
-    document.getElementById(s).style.display = "none";
+  ["screen-loading","screen-error","screen-dashboard"].forEach(function(s) {
+    var el = document.getElementById(s);
+    if (el) el.style.display = "none";
   });
-  document.getElementById(id).style.display = "block";
+  var target = document.getElementById(id);
+  if (target) target.style.display = "block";
 }
 
 /* ── STATUS LABEL LOGIC ── */
@@ -1223,54 +1204,16 @@ function toggleLedger() {
   p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
-/* ── SIGN OUT ── */
-function signOut() {
-  sessionStorage.removeItem("st_family_code");
-  sessionStorage.removeItem("st_family_id"); // legacy key from the pre-RPC flow
-  DASH = null;
-  window.location.href = "/";
-}
+/* ── SIGN OUT ──
+   No longer this page's job. §10.4.5's shell-rendered Sign Out button
+   (#shell-signout-btn) is wired by shell.js: it clears the shared
+   session AND st_family_code/st_staff_token, then — because /family is
+   a private route — navigates to /. Nothing here to duplicate. */
 
-/* ── FORMAT CODE ── */
-function fmtCode(el) {
-  var v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 6);
-  el.value = v.slice(0, 7);
-}
-function codeKeydown(e) { if (e.key === "Enter") lookupFamily(); }
-
-/* ── LOOKUP FAMILY ── */
-async function lookupFamily() {
-  var code  = document.getElementById("code-input").value.trim().toUpperCase();
-  var errEl = document.getElementById("code-error");
-  var btn   = document.getElementById("btn-lookup");
-  errEl.classList.remove("show");
-
-  if (!code.match(/^CC-[A-Z0-9]{4}$/)) {
-    errEl.textContent = REASON_TEXT.invalid_format;
-    errEl.classList.add("show");
-    return;
-  }
-  btn.disabled = true; btn.textContent = "Looking up…";
-  try {
-    var res = await sbRpc("get_family_dashboard", { p_family_code: code });
-    if (!res || res.ok !== true) {
-      errEl.textContent = REASON_TEXT[res && res.reason] || "Something went wrong. Please try again.";
-      errEl.classList.add("show");
-      return;
-    }
-    // Only the code is persisted. The family id is never trusted from
-    // the client — the RPC re-derives it from the code on every call.
-    sessionStorage.setItem("st_family_code", code);
-    sessionStorage.removeItem("st_family_id");
-    renderDashboard(res, code);
-  } catch(e) {
-    errEl.textContent = "Connection error — please try again.";
-    errEl.classList.add("show");
-  } finally {
-    btn.disabled = false; btn.textContent = "Check My Status";
-  }
-}
+/* Code entry, format-on-input, and the Enter-key handler are gone too —
+   §10.5 makes the shared login modal the only login entry point. A
+   second family-code form on this page was exactly the kind of
+   duplicate login markup that section exists to close. */
 
 /* ── LOAD DASHBOARD ── */
 async function loadDashboard(familyCode) {
@@ -1278,13 +1221,17 @@ async function loadDashboard(familyCode) {
   try {
     var res = await sbRpc("get_family_dashboard", { p_family_code: familyCode });
     if (!res || res.ok !== true) {
-      // Stale or now-invalid code in sessionStorage — send them back to
-      // the entry screen with the reason, rather than a dead-end error.
+      // Stale or now-invalid code — there is no entry screen to send them
+      // back to any more (§10.5: the shared modal is the only login entry
+      // point). Clear both session records so the header goes anonymous
+      // too, and land on the error screen, which already links home.
       sessionStorage.removeItem("st_family_code");
-      showScreen("screen-entry");
-      var errEl = document.getElementById("code-error");
-      errEl.textContent = REASON_TEXT[res && res.reason] || "Please enter your family code again.";
-      errEl.classList.add("show");
+      sessionStorage.removeItem("st_family_id");
+      try { localStorage.removeItem("steamteams_session"); } catch (e) {}
+      document.getElementById("error-msg").textContent =
+        (REASON_TEXT[res && res.reason] || "Please sign in again.") +
+        " Use Member Login in the header to try again.";
+      showScreen("screen-error");
       return;
     }
     renderDashboard(res, familyCode);
@@ -1304,7 +1251,9 @@ function renderDashboard(res, familyCode) {
     ? family.parent_1_name.split(" ").slice(-1)[0] + " Family"
     : "Your Family";
   document.getElementById("welcome-title").textContent = "Welcome, " + familyName;
-  document.getElementById("header-code").textContent = familyCode;
+  // §10.4.4: the family code is a login credential and is never displayed
+  // in the header. The old #header-code span was deleted with the rest of
+  // this page's hand-written header; nothing here writes it any more.
   if (res.season) {
     document.getElementById("welcome-sub").textContent =
       "Season " + res.season + " · Inspire Academy";
@@ -1328,9 +1277,33 @@ function renderDashboard(res, familyCode) {
   var code = sessionStorage.getItem("st_family_code");
   if (code) {
     loadDashboard(code);
-  } else {
-    showScreen("screen-entry");
+    return;
   }
+  // No code yet. shell.js runs after this script (it's loaded with
+  // `defer`) and, finding no session on this private route, hides
+  // #family-content, shows its own "Sign in to continue" panel, and
+  // opens the login modal — §10.4.8. That covers the no-session case
+  // without any markup duplicated here.
+  //
+  // KNOWN GAP, not a fork: shell.js's login handlers write the session
+  // and re-render the header, but they don't know this page hid its own
+  // body and don't restore it or remove the guard panel — that plumbing
+  // doesn't exist between a private page and the shell today. Rather
+  // than invent a fix inside shell.js (out of scope — 3.9b owns it, and
+  // "do not fork" applies), this page watches for its own session key to
+  // appear and recovers on its own once the family signs in through the
+  // shared modal. Flagged in the wave card for 3.9b/shell.js to consider
+  // owning properly.
+  var recover = setInterval(function () {
+    var c = sessionStorage.getItem("st_family_code");
+    if (!c) return;
+    clearInterval(recover);
+    var guardPanel = document.getElementById("shell-signin-panel");
+    if (guardPanel) guardPanel.remove();
+    var content = document.getElementById("family-content");
+    if (content) content.style.display = "";
+    loadDashboard(c);
+  }, 400);
 })();
 </script>
 </body>

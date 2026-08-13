@@ -8,28 +8,9 @@
 <!-- NOTE: Tailwind CDN is intentional. Static HTML/Vercel deployment. Upgrade to CLI before v2. -->
 <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;600;700&family=Archivo+Narrow:ital,wght@0,400;0,500;0,700;1,700&family=Roboto+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS. -->
+<link href="/assets/css/shell.css" rel="stylesheet">
 <style>
-  /* ── Form field legibility fix — added 2026-08-11 ──────────────────
-     No input, select, or textarea in this portal set an explicit text
-     colour, so every field inherited its container's colour. Inside a
-     light-on-dark section (e.g. the navy hero) that produced white text
-     on a white field: the placeholder showed, but anything typed was
-     invisible. This sets the colour explicitly for every field.
-     Do not remove without giving each field its own colour. */
-  /* !important is required: the Tailwind CDN injects its preflight at runtime,
-     after this block, and preflight sets `color: inherit` on form controls.
-     Without !important the inherited (light) colour wins and typing is invisible. */
-  input, select, textarea {
-    color: #1c1f24 !important;
-    background-color: #ffffff !important;
-  }
-  input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
-  /* Chrome autofill repaints the field; keep it legible too. */
-  input:-webkit-autofill, input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #1c1f24;
-    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
-  }
-
   .diagonal-stripe {
     background-image: repeating-linear-gradient(
       45deg,
@@ -39,11 +20,7 @@
       transparent 20px
     );
   }
-  .angled-cut-card { clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%); }
-  .brutalist-shadow:hover { box-shadow: 4px 4px 0px 0px #B2292E; transform: translate(-2px, -2px); }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  /* Page label derived from URL path */
-  #page-label { text-transform: uppercase; }
 </style>
 <script>
   tailwind.config = {
@@ -52,23 +29,15 @@
       extend: {
         colors: {
           "race-red":"#B2292E","deep-navy":"#1C355E","track-white":"#F8F8F6",
-          "asphalt-black":"#1A1A1A","primary":"#011f48","on-primary":"#ffffff",
-          "on-primary-fixed-variant":"#2f4771","secondary-fixed-dim":"#ffb3af",
-          "outline":"#74777f","on-surface":"#1c1b1b","on-surface-variant":"#44474e",
-          "surface":"#fcf9f8","surface-variant":"#e5e2e1","secondary-container":"#fe615f",
-          "on-secondary-container":"#65000c","error":"#ba1a1a","error-container":"#ffdad6"
+          "asphalt-black":"#1A1A1A","primary":"#011f48","on-primary":"#ffffff"
         },
         fontFamily: {
-          "headline-lg":["Domine"],"headline-md":["Domine"],
-          "display-lg":["Domine"],"label-caps":["Archivo Narrow"],
-          "body-md":["Roboto Flex"],"body-lg":["Roboto Flex"]
+          "headline-lg":["Domine"],"display-lg":["Domine"],
+          "label-caps":["Archivo Narrow"],"body-lg":["Roboto Flex"]
         },
         fontSize: {
           "display-lg":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}],
-          "headline-lg":["32px",{lineHeight:"40px",fontWeight:"700"}],
-          "headline-md":["24px",{lineHeight:"32px",fontWeight:"600"}],
           "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
-          "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
           "label-caps":["14px",{lineHeight:"20px",letterSpacing:"0.05em",fontWeight:"700"}]
         },
         spacing: { "margin-desktop":"48px","margin-mobile":"16px" }
@@ -79,121 +48,137 @@
 </head>
 <body class="bg-primary text-on-primary min-h-screen flex flex-col overflow-x-hidden diagonal-stripe">
 
-<!-- ── HEADER ─────────────────────────────────────────── -->
-<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 border-b border-white/10 flex-shrink-0">
-  <a href="/" class="font-headline-md font-black italic uppercase tracking-wide text-on-primary">
-    <em class="text-race-red not-italic">STEAM</em>Teams CC
-  </a>
-  <a href="/"
-    class="flex items-center gap-2 font-label-caps text-label-caps uppercase text-on-primary/50 hover:text-on-primary transition-colors">
-    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
-    Back to Home
-  </a>
-</header>
+<!-- ═══════════════════════════════════════════════
+     PUBLIC SHELL — header, mobile drawer, login modal.
+     Rendered by /assets/js/shell.js. Design Spec v4 §10.
+     Do not hand-write a <header> here. Do not fork shell.js/shell.css.
+═══════════════════════════════════════════════ -->
+<div id="shell-root"></div>
 
-<!-- ── MAIN ───────────────────────────────────────────── -->
+<!-- ── MAIN — §10.7.1 route-aware placeholder content ──────────── -->
 <main class="flex-1 flex items-center justify-center px-margin-mobile md:px-margin-desktop py-20">
   <div class="w-full max-w-lg text-center space-y-8">
 
-    <!-- Red accent bar -->
     <div class="flex justify-center">
       <div class="w-16 h-1 bg-race-red"></div>
     </div>
 
-    <!-- Page label — set dynamically from URL path -->
-    <div id="page-label"
-      class="font-label-caps text-label-caps text-race-red tracking-widest">
-      <!-- filled by JS -->
+    <h1 id="cs-heading" class="font-display-lg text-display-lg leading-tight">Not open yet</h1>
+
+    <div class="space-y-3 max-w-sm mx-auto">
+      <p id="cs-line1" class="font-body-lg text-body-lg text-on-primary/70">This part of the portal is still being built.</p>
+      <p id="cs-line2" class="font-body-lg text-body-lg text-on-primary/70">It isn't open yet.</p>
+      <p id="cs-line3" class="font-body-lg text-body-lg text-on-primary/60">For anything you need right now, message us on Remind, email <a href="mailto:stehos@chambersk12.org" class="text-on-primary underline">stehos@chambersk12.org</a>, or call <a href="tel:+13347488665" class="text-on-primary underline">(334) 748-8665</a>.</p>
     </div>
 
-    <!-- Headline -->
-    <h1 class="font-display-lg text-display-lg leading-tight">
-      Coming<br>
-      <em class="text-race-red">Soon</em>
-    </h1>
-
-    <!-- Supporting copy -->
-    <p class="font-body-lg text-body-lg text-on-primary/60 max-w-sm mx-auto">
-      This section of the portal is being built right now and will be ready before the
-      <strong class="text-on-primary">2026&ndash;2027 season</strong> kicks off.
-    </p>
-
-    <!-- Angled card with info -->
-    <div class="bg-white/5 border border-white/10 p-8 angled-cut-card text-left space-y-4">
-      <div class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-race-red flex-shrink-0" style="font-size:20px;">calendar_month</span>
-        <div>
-          <p class="font-label-caps text-label-caps uppercase text-race-red text-xs tracking-widest mb-1">Season Calendar</p>
-          <p class="font-body-md text-body-md text-on-primary/70 text-sm">Full event calendar, race schedules, and practice dates will live here.</p>
-        </div>
-      </div>
-      <div class="border-t border-white/10 pt-4 flex items-start gap-3">
-        <span class="material-symbols-outlined text-race-red flex-shrink-0" style="font-size:20px;">notifications</span>
-        <div>
-          <p class="font-label-caps text-label-caps uppercase text-race-red text-xs tracking-widest mb-1">Race Day Alerts</p>
-          <p class="font-body-md text-body-md text-on-primary/70 text-sm">Get same-day cancellation alerts via the <strong class="text-on-primary">Remind App</strong> — ask your coordinator to add you.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTAs -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a href="/"
-        class="bg-race-red text-white px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest brutalist-shadow transition-all inline-block text-center">
-        Back to Home
-      </a>
-      <a href="/register" id="cta-register"
-        class="border-2 border-white/30 text-on-primary px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest hover:border-white hover:bg-white/5 transition-all inline-block text-center">
-        Register Now
+    <!-- §10.7.1: rendered only when cta is non-null and cta.url is non-empty. Hidden by default. -->
+    <div id="cs-cta-wrap" class="hidden pt-2">
+      <a id="cs-cta" href="#"
+        class="bg-race-red text-white px-8 py-4 font-label-caps text-label-caps uppercase tracking-widest inline-block text-center hover:brightness-110 transition-all">
+        <span id="cs-cta-label"></span>
       </a>
     </div>
 
   </div>
 </main>
 
-<!-- ── FOOTER ─────────────────────────────────────────── -->
-<footer class="border-t border-white/10 px-margin-mobile md:px-margin-desktop py-6 flex flex-col sm:flex-row justify-between items-center gap-3 flex-shrink-0">
-  <p class="font-label-caps text-label-caps text-on-primary/25 text-xs">
-    &copy; 2026 STEAM Teams CC &middot; Inspire Academy &middot; Chambers County Schools
-  </p>
-  <p class="font-label-caps text-label-caps text-on-primary/20 text-xs">
-    Greenpower USA &middot; Ten80 Education &middot; Founded 2013
-  </p>
-</footer>
+<!-- ═══════════════════════════════════════════════
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8.
+═══════════════════════════════════════════════ -->
+<div id="shell-footer"></div>
+
+<!-- Public Shell — one shared script, every surface. Design Spec v4 §10.2.1. -->
+<script src="/assets/js/shell.js" defer></script>
 
 <script>
-// Set the page label from the URL path
-// /calendar → "Season Calendar"  /merch → "Merch Store"  /sponsors → "Sponsorship"
-var labels = {
-  "calendar":  "Season Calendar",
-  "merch":     "Merch Store",
-  "sponsors":  "Sponsorship",
-  "student":   "Student Portal",
-  "register":  "Registration"
+// ── §10.7.1 Route-aware content, config-driven with a compiled fallback ──
+// The portal's most-visited page must not depend on a network call succeeding,
+// so every route below renders correct copy immediately from this fallback,
+// then config (portal_config.coming_soon_routes) overwrites it if it arrives
+// and differs. No date, month, season, or timeframe anywhere — §10.7.2.
+var FALLBACK = {
+  "/register": {
+    heading: "Register",
+    line1: "Registration for the 2026-2027 season is open.",
+    line2: "Registration is by invitation link — we send the form by email and hand out a QR code at events.",
+    line3: "Need the link? Message us on Remind or email <a href=\"mailto:stehos@chambersk12.org\" class=\"text-on-primary underline\">stehos@chambersk12.org</a>.",
+    cta: null
+  },
+  "/merch": {
+    heading: "Merch Store",
+    line1: "Official STEAM Teams gear — tees, hats, and race day accessories.",
+    line2: "The store isn't open yet.",
+    line3: "For anything you need right now, message us on Remind or email <a href=\"mailto:stehos@chambersk12.org\" class=\"text-on-primary underline\">stehos@chambersk12.org</a>.",
+    cta: null
+  },
+  "/sponsors": {
+    heading: "Sponsor Us",
+    line1: "Partner with STEAM Teams CC and connect your organization to 70+ students and their families.",
+    line2: "This page isn't open yet — sponsorship inquiries go through the form on the home page for now.",
+    line3: "Ready to talk? Email <a href=\"mailto:stehos@chambersk12.org\" class=\"text-on-primary underline\">stehos@chambersk12.org</a> or call <a href=\"tel:+13347488665\" class=\"text-on-primary underline\">(334) 748-8665</a>.",
+    cta: null
+  },
+  "/student": {
+    heading: "Student Portal",
+    line1: "Student logins for schedules, tasks, and car assignments.",
+    line2: "Student accounts haven't been issued yet.",
+    line3: "Ask your coach if you have questions about your team assignment.",
+    cta: null
+  }
 };
-var path = window.location.pathname.replace(/\//g, "").toLowerCase();
-var label = labels[path] || "Portal Feature";
-var el = document.getElementById("page-label");
-if (el) el.textContent = label;
+var GENERIC = {
+  heading: "Not open yet",
+  line1: "This part of the portal is still being built.",
+  line2: "It isn't open yet.",
+  line3: "For anything you need right now, message us on Remind, email <a href=\"mailto:stehos@chambersk12.org\" class=\"text-on-primary underline\">stehos@chambersk12.org</a>, or call <a href=\"tel:+13347488665\" class=\"text-on-primary underline\">(334) 748-8665</a>."
+};
 
-// /register is routed here deliberately while the registration flow is rebuilt.
-// The "Register Now" CTA would otherwise link to this same page. Point it at the
-// interim Google Form instead, or hide it if no form URL is configured.
-// TODO: replace REGISTER_FORM_URL with the live Google Form link.
-var REGISTER_FORM_URL = "";
-if (path === "register") {
-  var cta = document.getElementById("cta-register");
-  if (cta) {
-    if (REGISTER_FORM_URL) {
-      cta.setAttribute("href", REGISTER_FORM_URL);
-      cta.setAttribute("target", "_blank");
-      cta.setAttribute("rel", "noopener");
-      cta.textContent = "Register — Google Form";
-    } else {
-      cta.style.display = "none";
-    }
+function currentPathname() {
+  var p = window.location.pathname;
+  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+  return p || "/";
+}
+
+function renderContent(entry) {
+  if (!entry) return;
+  var h = document.getElementById("cs-heading"); if (h && entry.heading) h.textContent = entry.heading;
+  var l1 = document.getElementById("cs-line1"); if (l1 && entry.line1) l1.textContent = entry.line1;
+  var l2 = document.getElementById("cs-line2"); if (l2 && entry.line2) l2.textContent = entry.line2;
+  var l3 = document.getElementById("cs-line3"); if (l3 && entry.line3) l3.innerHTML = entry.line3;
+  var ctaWrap = document.getElementById("cs-cta-wrap");
+  var cta = entry.cta;
+  if (cta && cta.url) {
+    document.getElementById("cs-cta-label").textContent = cta.label || "Learn more";
+    var a = document.getElementById("cs-cta");
+    a.setAttribute("href", cta.url);
+    var offsite = /^https?:\/\//i.test(cta.url) && cta.url.indexOf(window.location.host) === -1;
+    if (offsite) { a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener"); }
+    else { a.removeAttribute("target"); a.removeAttribute("rel"); }
+    ctaWrap.classList.remove("hidden");
+  } else {
+    ctaWrap.classList.add("hidden");
   }
 }
+
+var path = currentPathname();
+// Immediate render from the compiled fallback — never depends on the network.
+renderContent(path === "/coming-soon.html" ? GENERIC : (FALLBACK[path] || GENERIC));
+
+// ── Config overwrite (§10.7.1) ────────────────────────────────────
+var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
+var SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
+
+fetch(SB_URL + "/rest/v1/portal_config?key=eq.coming_soon_routes&select=value", {
+  headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }
+}).then(function (r) { return r.json(); }).then(function (rows) {
+  if (!rows || !rows.length) return; // Config missing — fallback already rendered.
+  var routes = rows[0].value;
+  if (typeof routes === "string") { try { routes = JSON.parse(routes); } catch (e) { return; } }
+  if (routes && routes[path]) renderContent(routes[path]);
+}).catch(function (e) {
+  // Fetch failed — fallback already rendered, nothing further to do.
+  console.warn("coming-soon: could not reach portal_config", e);
+});
 </script>
 
 </body>
