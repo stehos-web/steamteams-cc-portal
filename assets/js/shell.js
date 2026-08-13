@@ -122,14 +122,29 @@
       var onPortalSurface = PRIVATE_ROUTES.indexOf(path) !== -1;
       var chipLabel = onPortalSurface ? "Home" : "Portal";
       var chipHref = onPortalSurface ? "/" : (PORTAL_ROUTE[state.identity] || "/");
+      // Amended 2026-08-13 (Seth, after the first live pass): these were two
+      // bare text links sitting side by side and read as words, not controls —
+      // especially jarring next to the anonymous state, which is a solid button.
+      // Both are now buttons, and deliberately DIFFERENT ones: the chip is
+      // filled and primary, matching the weight and position of the Member
+      // Login button it replaces; Sign Out is outlined and secondary. Each
+      // carries an icon so they are distinguishable at a glance and without
+      // reading — the icon changes with the chip's context.
+      var chipIcon = onPortalSurface ? "home" : "account_circle";
       identityHtml =
-        '<a id="shell-portal-chip" href="' + chipHref + '" class="text-[15px] text-white/[.92] hover:text-white ' +
-        'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-white">' +
+        '<a id="shell-portal-chip" href="' + chipHref + '" ' +
+        'class="inline-flex items-center gap-1.5 rounded bg-[#B2292E] px-4 py-2 text-[15px] font-medium ' +
+        'text-white hover:brightness-110 focus-visible:outline focus-visible:outline-[3px] ' +
+        'focus-visible:outline-offset-2 focus-visible:outline-white">' +
+          '<span class="material-symbols-outlined" style="font-size:18px;" aria-hidden="true">' + chipIcon + "</span>" +
           esc(chipLabel) +
         "</a>" +
-        '<button id="shell-signout-btn" class="text-[14px] text-white/[.82] hover:text-white ' +
-        'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-white">' +
-        "Sign Out</button>";
+        '<button id="shell-signout-btn" ' +
+        'class="inline-flex items-center gap-1.5 rounded border border-white/40 px-4 py-2 text-[15px] ' +
+        'font-medium text-white/90 hover:bg-white/10 hover:text-white focus-visible:outline ' +
+        'focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-white">' +
+          '<span class="material-symbols-outlined" style="font-size:18px;" aria-hidden="true">logout</span>' +
+          "Sign Out</button>";
     }
 
     var burgerHtml =
