@@ -293,6 +293,12 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 }
 .mini-event-name {font-size:13px;font-weight:500;color:var(--text);}
 .mini-event-type {font-size:11px;color:var(--text-muted);}
+.mini-event-name.cancelled {color:var(--red);text-decoration:line-through;}
+.mini-event-cancelled-tag {
+  display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;
+  background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;text-decoration:none;
+}
 
 /* ── READINESS CHECKLIST CARD ── */
 .checklist-items {display:flex;flex-direction:column;gap:8px;}
@@ -1165,10 +1171,17 @@ function renderBalance(balance, ledger) {
    drafts excluded.
    ───────────────────────────────────────────────────────────── */
 function renderEvents(events) {
+  // Design intent (Seth, 2026-08-13): this card shows competitions and
+  // special events. Routine practice occurrences are deliberately absent
+  // from what get_family_dashboard() returns (01-family-06) — a practice
+  // only ever appears here when that specific occurrence is cancelled,
+  // which is the one time a family needs to hear about it. Cancelled
+  // rows are rendered struck through with a CANCELLED tag rather than
+  // looking like a normal upcoming event.
   var el = document.getElementById("calendar-body");
   if (!events.length) {
     el.innerHTML = "<div style='text-align:center;padding:16px;font-size:13px;color:var(--text-light);'>" +
-      "No upcoming events scheduled yet.</div>";
+      "No upcoming races or special events scheduled yet.</div>";
     return;
   }
   var MON = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -1181,9 +1194,12 @@ function renderEvents(events) {
     var sub = e.dates_label || "";
     var where = [e.venue_name, e.venue_city_state].filter(Boolean).join(", ");
     if (where) sub = sub ? sub + " · " + where : where;
+    var cancelled = e.status === "cancelled";
+    var nameHtml = "<span class='mini-event-name" + (cancelled ? " cancelled" : "") + "'>" + esc(e.name) + "</span>" +
+      (cancelled ? " <span class='mini-event-cancelled-tag'>Cancelled</span>" : "");
     return "<div class='mini-event'>" +
       "<div class='mini-event-date'>" + esc(badge) + "</div>" +
-      "<div><div class='mini-event-name'>" + esc(e.name) + "</div>" +
+      "<div><div>" + nameHtml + "</div>" +
       (sub ? "<div class='mini-event-type'>" + esc(sub) + "</div>" : "") + "</div>" +
     "</div>";
   }).join("");
