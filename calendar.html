@@ -457,7 +457,7 @@
       <ul class="text-body-md space-y-2 list-disc pl-5 text-on-surface-variant">
         <li>It stays on every calendar with a strikethrough — it does not disappear.</li>
         <li>Race day mode will never trigger for it.</li>
-        <li>Its task list should suppress automatically — not built yet, see the build status doc.</li>
+        <li>Its task list suppresses automatically. Shared tasks linked to other events are not affected.</li>
       </ul>
       <div class="bg-surface-container border-l-4 border-race-red px-4 py-3">
         <p class="font-label-caps text-label-caps uppercase font-bold mb-1">Send the Remind message yourself</p>
@@ -1368,11 +1368,51 @@ async function saveEvent(e) {
 // ── Quick status change (publish / unpublish / reinstate) ──
 async function quickStatus(id, status) {
   if (!canManageEvents()) return;
+  var ev = ALL_EVENTS.filter(function(e) { return e.id === id; })[0];
+  var wasCancelled = ev && ev.status === "cancelled";
   var patch = { status: status };
   // §5.1 again — reinstating from cancelled must not silently re-arm race day
   // mode; the coordinator sets it deliberately in the editor.
   if (status === "cancelled") patch.race_day_mode = false;
   await patchEvent(id, patch);
+
+  // Reinstatement: un-cancelling restores any tasks suppressed by
+  // confirmCancelEvent() (see HOOK POINT below). suppressed_at is documented
+  // as reversible if the event is un-cancelled — 06-task-10 §1 comment on
+  // tasks.suppressed_at. This only fires on an actual cancelled -> non-cancelled
+  // transition, not on ordinary publish/unpublish of a non-cancelled event.
+  if (wasCancelled && status !== "cancelled") {
+    await callTaskRpc("restore_tasks_for_event", { p_event_id: id });
+  }
+}
+
+// ── RPC helper for the task-suppression functions (06-task-10) ──────
+// Uses the staff bearer token, not the anon key: both functions are
+// SECURITY DEFINER and gate on task_actor_can_override(), which reads
+// the calling actor's role — an anon-keyed call would be rejected.
+// Non-fatal by design: a suppression/restore failure must not block the
+// event status change that already succeeded, but the coordinator needs
+// to know the task list is out of sync so they can fix it by hand.
+async function callTaskRpc(fn, body) {
+  try {
+    var r = await fetch(SB_URL + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SB_KEY,
+        Authorization: "Bearer " + staffToken()
+      },
+      body: JSON.stringify(body || {})
+    });
+    if (!r.ok) {
+      var body_ = await r.text();
+      throw new Error(fn + " failed (" + r.status + "). " + body_);
+    }
+    return r.json();
+  } catch (ex) {
+    alert("Event status was updated, but " + fn + " did not run: " + (ex.message || ex) + ". The task list may be out of sync — check it manually.");
+    return null;
+  }
 }
 
 async function patchEvent(id, patch) {
@@ -1422,20 +1462,14 @@ async function confirmCancelEvent() {
   // ── HOOK POINT — task suppression (§4) ──────────────────────────────
   // "Task lists associated with a cancelled event are suppressed automatically."
   //
-  // STATUS: unblocked, NOT implemented. When this was first written the tasks
-  // table did not exist; workstream 06b_ applied the task system later the same
-  // day (Aug 3, 2026), so it does now and `tasks.event_id` is the join.
-  //
-  // Two things to get right before implementing:
-  //  1. Shared tasks ("shareable across events", Task System Design §7.4) must
-  //     NOT be suppressed — they survive individual cancellation and their
-  //     deadline recalculates to the earliest remaining linked event. Filter on
-  //     tasks.shareable_across_events = false.
-  //  2. tasks.status is CHECK-constrained to not_started / in_progress /
-  //     complete — there is no 'suppressed' value. Suppression needs a
-  //     deliberate representation (new column, or a derived read that joins
-  //     events.status), not a status write. That is a 06b_ schema decision.
-  //
+  // Implemented (Wave 3.8, this session). The database half — tasks.suppressed_at,
+  // tasks.suppressed_reason, and suppress_tasks_for_event() — has been live since
+  // Aug 3, 2026 (06-task-10-suppression-and-coach-profile.sql). This call is the
+  // browser half that was missing. Shared tasks (shareable_across_events = true,
+  // Task System Design v5 §7.4) are excluded by the function itself — the browser
+  // does not filter them again.
+  await callTaskRpc("suppress_tasks_for_event", { p_event_id: id, p_reason: "event cancelled" });
+
   // ── HOOK POINT — notification (§9) ──────────────────────────────────
   // "Cancelling an individual practice triggers an immediate notification to
   // all roles." Verified live Aug 3, 2026: there is no notification table.
