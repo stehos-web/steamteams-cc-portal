@@ -329,7 +329,12 @@
   }
 
   // ── §10.4.8 Private route sign-in panel ─────────────────────────
+  // Set when the guard has hidden a page's own body, so a later successful
+  // sign-in knows there is something to restore. See restoreGuardedPage().
+  var guardHidPage = false;
+
   function renderSignInPanel(reason) {
+    guardHidPage = true;
     var panel = document.createElement("div");
     panel.id = "shell-signin-panel";
     panel.className = "mx-auto max-w-[480px] py-24 px-6 text-center space-y-4";
@@ -361,6 +366,28 @@
     if (PRIVATE_ROUTES.indexOf(path) !== -1) guardPrivateRoute(path);
     var params = new URLSearchParams(window.location.search);
     if (params.get("login") === "1") openModal();
+  }
+
+  // ── §10.4.8, completion — restore the page after a guard-panel sign-in ──
+  // The guard hides a private page's body and opens the modal. Signing in from
+  // that modal wrote the session and re-rendered the HEADER, but nothing ever
+  // put the page back: the header said signed-in while the body still said
+  // "Sign in to continue". Every private page was left to compensate for itself
+  // (family-dashboard.html polled sessionStorage on a 400ms interval), which is
+  // three copies of one fix the moment /student and /dashboard exist — the same
+  // mechanism that produced four different headers.
+  //
+  // Reloading is the restore: the URL is preserved, so §10.5.3's "no redirect,
+  // the user stays where they were" still holds, and the page re-runs its own
+  // init with a session present. No page needs any recovery code of its own.
+  function restoreGuardedPage() {
+    if (!guardHidPage) return;
+    var sess = readSession();
+    if (!sess) return;
+    var path = currentPathname();
+    var okFor = { "/family": "family", "/student": "student", "/dashboard": "staff", "/tasks-export": "staff" };
+    if (okFor[path] && okFor[path] !== sess.identity) return; // still the wrong identity — leave the panel up
+    window.location.reload();
   }
 
   function rerenderShell() {
@@ -500,6 +527,7 @@
     closeModal();
     state.identity = "family"; state.initials = ""; state.displayName = code; state.staffRole = null;
     rerenderShell();
+    restoreGuardedPage();
   }
 
   function loginStaff() {
@@ -525,6 +553,7 @@
       closeModal();
       state.identity = "staff"; state.initials = initials; state.displayName = first; state.staffRole = role;
       rerenderShell();
+      restoreGuardedPage();
     }).catch(function () {
       btn.disabled = false; btn.textContent = "Sign In";
       showErr("shell-staff-err", "We couldn’t reach the portal just now. Try again in a moment.");
@@ -578,6 +607,7 @@
     if (e.key !== SESSION_KEY) return;
     resolveIdentity();
     rerenderShell();
+    restoreGuardedPage();
   });
 
   document.addEventListener("DOMContentLoaded", function () {

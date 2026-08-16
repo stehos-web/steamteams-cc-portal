@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STEAM Teams — Coordinator Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Public Shell needs Tailwind + Material Symbols at runtime — shell.js's header,
+     drawer, and login modal are built from Tailwind utility classes. -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS.
+     W3.9d: this page is the fifth of six surfaces onto the shared shell. -->
+<link href="/assets/css/shell.css" rel="stylesheet">
+<script src="/assets/js/shell.js" defer></script>
 <style>
   /* ── Form field legibility fix — added 2026-08-11 ──────────────────
      No input, select, or textarea in this portal set an explicit text
@@ -43,28 +51,33 @@
 }
 body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var(--gray-50);line-height:1.5;min-height:100vh}
 
-/* AUTH SCREEN */
-#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--gray-100)}
-.auth-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem 2rem;width:360px;max-width:90vw}
-.auth-logo{font-size:11px;font-family:var(--mono);letter-spacing:0.1em;color:var(--gray-400);text-transform:uppercase;margin-bottom:1.5rem}
-.auth-logo span{color:var(--brand);font-weight:500}
-.auth-card h1{font-size:20px;font-weight:600;color:var(--gray-900);margin-bottom:0.25rem}
-.auth-card p{font-size:13px;color:var(--gray-400);margin-bottom:1.5rem}
+/* AUTH SCREEN — DELETED W3.9d.
+   This page no longer carries a login form of its own. §10.5 makes the shell's
+   #shell-login-modal the only login entry point in the portal, and §10.4.8 makes
+   shell.js guard /dashboard on mount: no session and it replaces the body with
+   "Sign in to continue" and opens the shared modal. Two credential forms on one
+   property is Gate row D11; staff logging in twice is Gate row D8. Both were this
+   block. Do not re-add it — see the session boot at the bottom of this file. */
 .field{margin-bottom:1rem}
 .field label{display:block;font-size:12px;font-weight:500;color:var(--gray-600);margin-bottom:4px;letter-spacing:0.03em}
 .field input{width:100%;padding:8px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font);font-size:14px;color:var(--gray-800);background:#fff;outline:none;transition:border-color 0.15s}
 .field input:focus{border-color:var(--brand)}
 .btn-primary{width:100%;padding:9px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:background 0.15s;margin-top:0.5rem}
 .btn-primary:hover{background:var(--brand-dark)}
-.auth-error{font-size:12px;color:var(--red);margin-top:0.75rem;display:none}
 
-/* LAYOUT */
+/* LAYOUT — §10.2.6.
+   The shell header sits above this page like every other surface, and the left
+   rail renders BELOW it. The rail was `position:fixed; top:0` and would have sat
+   over the header; §10.2.6 specifies `position:sticky; top:64px` and says the
+   dashboard body must scroll in normal document flow, never in its own scroll
+   container, because a nested scroll container breaks sticky on the header.
+   One breakpoint only (768px), per §10.2.5 — the header is 56px below it. */
 #app{display:none;min-height:100vh}
-.sidebar{position:fixed;top:0;left:0;width:var(--sidebar);height:100vh;background:var(--gray-900);display:flex;flex-direction:column;overflow-y:auto;z-index:100}
+#app.ready{display:flex}
+.sidebar{position:sticky;top:64px;align-self:flex-start;width:var(--sidebar);flex:0 0 var(--sidebar);
+         height:calc(100vh - 64px);background:var(--gray-900);display:flex;flex-direction:column;
+         overflow-y:auto;z-index:10}
 .sidebar-header{padding:1.25rem 1rem 1rem;border-bottom:1px solid rgba(255,255,255,0.08)}
-.sidebar-brand{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.35);text-transform:uppercase}
-.sidebar-brand span{color:#e87568}
-.sidebar-season{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
 .sidebar-nav{padding:0.75rem 0;flex:1}
 .nav-section{padding:0.5rem 1rem 0.25rem;font-size:10px;font-family:var(--mono);letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-transform:uppercase}
 .nav-item{display:flex;align-items:center;gap:8px;padding:7px 1rem;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.1s;font-size:13px;border-left:2px solid transparent;text-decoration:none}
@@ -76,10 +89,13 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 .sidebar-footer{padding:0.75rem 1rem;border-top:1px solid rgba(255,255,255,0.08)}
 .sidebar-user{font-size:12px;color:rgba(255,255,255,0.4)}
 .sidebar-user strong{display:block;color:rgba(255,255,255,0.7);font-weight:500}
-.btn-signout{margin-top:8px;font-size:11px;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font);transition:color 0.15s}
-.btn-signout:hover{color:rgba(255,255,255,0.7)}
-.main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
-.topbar{padding:1rem 1.5rem;border-bottom:1px solid var(--gray-200);background:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+/* .btn-signout DELETED W3.9d — §10.4.5 puts Sign Out in the shell, beside the
+   chip, on every surface, and says "do not restyle these per page". A second
+   Sign Out in the sidebar is exactly the divergence D13 counts. */
+.main{flex:1;min-width:0;min-height:100vh;display:flex;flex-direction:column}
+/* Sticks below the shell header rather than at the viewport top, and sits under
+   the shell's z-40 floor (§10.2.3: any page element above z-40 is a defect). */
+.topbar{padding:1rem 1.5rem;border-bottom:1px solid var(--gray-200);background:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:64px;z-index:20}
 .page-title{font-size:16px;font-weight:600;color:var(--gray-900)}
 .page-title span{font-weight:400;color:var(--gray-400);font-size:13px;margin-left:8px}
 .topbar-meta{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
@@ -186,7 +202,12 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 .btn-danger:hover{background:var(--red);color:#fff}
 
 /* TOASTS */
-#toast-container{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;flex-direction:column;gap:8px;z-index:9999}
+/* z-index 9999 -> 35. §10.2.3 fixes the whole stack numerically — header 40,
+   drawer 50, account menu 55, login modal 60 — and states that any page element
+   above z-40 is a defect. At 9999 this container rendered over the shell's login
+   modal; at 500 the modal overlay below did the same. Page chrome now lives
+   entirely under the 40 floor. */
+#toast-container{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;flex-direction:column;gap:8px;z-index:35}
 .toast{background:var(--gray-900);color:#fff;padding:10px 14px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn 0.2s ease;max-width:300px}
 .toast.success{border-left:3px solid #22c55e}
 .toast.error{border-left:3px solid #ef4444}
@@ -194,7 +215,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:30;display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:var(--radius-lg);padding:1.5rem;width:460px;max-width:90vw;max-height:80vh;overflow-y:auto}
 .modal h2{font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--gray-200)}
@@ -215,41 +236,43 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 /* RESPONSIVE */
 @media(max-width:768px){
   :root{--sidebar:0px}
-  .sidebar{transform:translateX(-220px);transition:transform 0.2s}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
+  /* Was `transform:translateX(-220px)`, which worked while the rail was
+     position:fixed. Now that it is sticky it occupies flow, so a transform would
+     leave a 220px gutter. `display:none` reproduces the shipped behaviour (the
+     rail has never had a mobile toggle on this page) without the gutter.
+     REPORTED, NOT INVENTED: §10.2.6 specifies the rail's desktop sticky offset
+     and says nothing about its mobile state. Below 768px the shell drawer covers
+     the five public routes; the dashboard's own four tabs have no mobile
+     affordance and did not before this wave either. Flagged in the wave card. */
+  .sidebar{display:none}
+  .topbar{top:56px}
 }
 </style>
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo"><span>STEAM Teams</span> CC</div>
-    <h1>Coordinator Login</h1>
-    <p>Staff access only — Inspire Academy</p>
-    <div class="field">
-      <label>Email</label>
-      <input type="email" id="auth-email" placeholder="you@chambersk12.org" autocomplete="email">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-primary" id="btn-login">Sign in</button>
-    <div class="auth-error" id="auth-error"></div>
-  </div>
-</div>
+<!-- ══════════════════════════════════════════════════════════════════════
+     PUBLIC SHELL MOUNT — Design Spec v4 §10.2.1.
+     Rendered by /assets/js/shell.js. Do not hand-write a <header> here and do
+     not fork shell.js/shell.css. This page ships the same four lines as every
+     other surface: shell.css link, shell.js script, #shell-root, #shell-footer.
+
+     shell.js guards /dashboard on mount (§10.4.8): with no staff session it
+     hides this page's body, renders "Sign in to continue", and opens the shared
+     login modal. That is why this file no longer carries an auth screen.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="shell-root"></div>
 
 <!-- APP -->
 <div id="app">
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR — §10.2.6: renders BELOW the shell header, never instead of it.
+       The brand block that sat here ("STEAM Teams CC" + "2025–2026 Season") is
+       deleted: the wordmark duplicated the shell's one line above it, which is
+       the fifth-wordmark pattern §10.2.4 retires, and the season string was
+       hardcoded to the WRONG season — the 2026-2027 season began August 7, 2026.
+       Not replaced with a corrected literal: season-variable content belongs in
+       portal_config and no key exists for it yet. Recommended in the wave card. -->
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-brand"><span>STEAM Teams</span> CC</div>
-      <div class="sidebar-season">2025–2026 Season</div>
-    </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Main</div>
       <a class="nav-item active" data-page="home" href="#">
@@ -276,7 +299,8 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <strong id="sidebar-name">Loading…</strong>
         Coordinator
       </div>
-      <button class="btn-signout" id="btn-signout">Sign out</button>
+      <!-- Sign Out button deleted W3.9d — §10.4.5. The shell renders the only
+           Sign Out in the portal, beside the chip, on every surface. -->
     </div>
   </aside>
 
@@ -542,6 +566,12 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
+<!-- ══════════════════════════════════════════════════════════════════════
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8. Last element in
+     <body>, per the four-line page contract in §10.2.1.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="shell-footer"></div>
+
 <script>
 const SB_URL = 'https://avbogkupsoeraivbyypu.supabase.co';
 const SB_KEY = 'sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f';
@@ -609,46 +639,95 @@ document.querySelectorAll('.nav-tile[data-nav]').forEach(el => {
 
 document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
 
-// AUTH
-document.getElementById('btn-login').addEventListener('click', async () => {
-  const email = document.getElementById('auth-email').value.trim();
-  const pass = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-error');
-  errEl.style.display = 'none';
-  if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
-  document.getElementById('btn-login').textContent = 'Signing in…';
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION — §10.4.7, "one session, one source". THIS IS THE D8 FIX.
+
+   What was here before: a full login form, a call to /auth/v1/token, and a
+   session held in a bare in-memory `SESSION` variable. Staff who had already
+   signed in through the shell's modal on the homepage were asked for their
+   password a second time on arrival here (Gate row D8), and a page refresh
+   logged them out again because nothing was ever persisted.
+
+   §10.4.7 is explicit that this is a shell defect, not a dashboard defect, and
+   that it "is fixed by having dashboard.html read steamteams_session plus the
+   Supabase session, not by adding a second login screen." So:
+
+     - localStorage `steamteams_session` is the rendering record (identity/name).
+     - The Supabase auth session is the AUTHORITY. shell.js parks its access
+       token at sessionStorage `st_staff_token`; every REST call below is
+       authorised with that token, exactly as before.
+     - No session, or a non-staff session? Do nothing. shell.js's §10.4.8 guard
+       has already hidden this body and opened the shared modal.
+     - Token present but rejected by PostgREST? §10.4.7 requires the record be
+       discarded "regardless of issuedAt". We clear both keys and reload so the
+       guard renders the sign-in panel rather than an app full of empty cards.
+
+   Sign Out is not wired here — shell.js owns the only Sign Out in the portal
+   (§10.4.5) and clears both keys.
+   ══════════════════════════════════════════════════════════════════════ */
+function readShellSession() {
+  var raw;
+  try { raw = localStorage.getItem('steamteams_session'); } catch (e) { return null; }
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
+}
+
+/* Clearing both keys means the reload lands on shell.js's §10.4.8 guard with no
+   session, so it renders the sign-in panel — one reload, then it stops, because
+   readShellSession() returns null on the way back through.
+   The one-shot marker is belt-and-braces: if anything ever re-populates the
+   session between the clear and the reload, this bounds the damage at a single
+   extra load instead of pinning the browser in a reload loop. It is cleared on
+   every successful boot. */
+function discardSessionAndReload() {
+  try { localStorage.removeItem('steamteams_session'); } catch (e) {}
+  try { sessionStorage.removeItem('st_staff_token'); } catch (e) {}
+  if (sessionStorage.getItem('st_dash_reauth') === '1') return;
+  sessionStorage.setItem('st_dash_reauth', '1');
+  window.location.reload();
+}
+
+async function bootDashboard() {
+  const sess = readShellSession();
+  const token = sessionStorage.getItem('st_staff_token');
+
+  // Not staff, or no Supabase session. shell.js's guard owns this case entirely
+  // (§10.4.8) — it hides #app, renders "Sign in to continue", opens the modal.
+  // This page adds nothing: no panel of its own, no polling, no compensation.
+  if (!sess || sess.identity !== 'staff' || !token) return;
+
+  SESSION = { access_token: token };
+
+  let staff;
   try {
-    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-      body: JSON.stringify({ email, password: pass })
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error_description || d.msg || 'Login failed');
-    SESSION = d;
-    const staff = await sbGet('/rest/v1/staff_accounts?select=*&limit=1', d.access_token);
-    if (!staff.length) throw new Error('No staff account found for this email. Access denied.');
-    document.getElementById('sidebar-name').textContent = staff[0].full_name || email.split('@')[0];
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    loadHomeStats();
-  } catch(e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
-    document.getElementById('btn-login').textContent = 'Sign in';
+    staff = await sbGet('/rest/v1/staff_accounts?select=*&limit=1', token);
+  } catch (e) {
+    // Expired or revoked token. §10.4.7: discard the record and re-render.
+    discardSessionAndReload();
+    return;
   }
-});
+  if (!staff.length) {
+    // Authenticated, but no staff_accounts row — RLS or a non-staff auth user.
+    discardSessionAndReload();
+    return;
+  }
 
-document.getElementById('auth-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-login').click();
-});
+  sessionStorage.removeItem('st_dash_reauth');
+  document.getElementById('sidebar-name').textContent =
+    staff[0].full_name || sess.displayName || 'Staff';
+  document.getElementById('app').classList.add('ready');
+  loadHomeStats();
+}
 
-document.getElementById('btn-signout').addEventListener('click', () => {
-  SESSION = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'flex';
-  document.getElementById('auth-password').value = '';
-  document.getElementById('btn-login').textContent = 'Sign in';
+document.addEventListener('DOMContentLoaded', bootDashboard);
+
+// Cross-tab: §10.4.7 requires every surface to re-render on a change to the
+// shared record. Signing out in another tab must not leave this one showing a
+// live dashboard. shell.js re-renders its own header; the page body is ours.
+window.addEventListener('storage', function (e) {
+  if (e.key !== 'steamteams_session') return;
+  const sess = readShellSession();
+  if (!sess || sess.identity !== 'staff') window.location.reload();
 });
 
 // HOME STATS

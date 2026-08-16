@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register — STEAM Teams CC Portal</title>
+<title>Register — STEAM Teams CC</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Public Shell needs Tailwind + Material Symbols at runtime — shell.js's header,
+     drawer, and login modal are built from Tailwind utility classes. -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS.
+     W3.9d: this page is the sixth and last surface onto the shared shell. -->
+<link href="/assets/css/shell.css" rel="stylesheet">
+<script src="/assets/js/shell.js" defer></script>
 <style>
   :root {
     --red:#b2292e;--red-dark:#8f1f23;--red-light:#f5e8e8;
@@ -17,13 +25,15 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;}
   body{font-family:'Roboto',sans-serif;background:var(--gray-light);color:var(--text);min-height:100vh;}
-  header{background:var(--blue);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.2);position:sticky;top:0;z-index:100;}
-  .logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .logo-title{font-family:'Roboto Slab',serif;font-weight:800;font-size:16px;color:white;text-transform:uppercase;letter-spacing:0.5px;}
-  .logo-title em{color:var(--red);font-style:normal;}
-  .logo-sub{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1.5px;text-transform:uppercase;}
-  .back-link{font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;}
-  .back-link:hover{color:white;}
+  /* HEADER RULES DELETED W3.9d — §10.2 / §10.2.4.
+     This page carried its own sticky navy bar at z-index:100, with the fourth
+     competing wordmark in the portal ("STEAM TEAMS / CC PORTAL") and a
+     "← Back to Home" link. §10.2.4 retires that wordmark by name; §10.3.3 says
+     every back-link is deleted rather than restyled, because there is now
+     navigation; §10.2.3 sets the shell header at z-40 and makes any page element
+     above it a defect. All three are resolved by the same deletion: the header
+     is rendered by shell.js into #shell-root, identically to every other
+     surface. Do not re-add a header, a wordmark, or a back-link here. */
   .progress-wrap{background:var(--blue-dark);padding:14px 40px;}
   .progress-inner{max-width:680px;margin:0 auto;}
   .progress-steps{display:flex;align-items:center;}
@@ -149,17 +159,26 @@
   .screen.active{display:block;}
   .form-foot{text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted);}
   .form-foot a{color:var(--blue);text-decoration:none;font-weight:500;}
-  @media(max-width:500px){header{padding:0 20px;}.cb{padding:20px;}.progress-wrap{padding:10px 20px;}.prog-label{display:none;}}
+  /* `header{padding:0 20px}` dropped from this query W3.9d — the page no longer
+     has a header of its own to pad, and the shell's own responsive behaviour is
+     shell.css's business at its single 768px breakpoint (§10.2.5). */
+  @media(max-width:500px){.cb{padding:20px;}.progress-wrap{padding:10px 20px;}.prog-label{display:none;}}
 </style>
 </head>
 <body>
 
-<header>
-  <a href="/" class="logo">
-    <div><div class="logo-title"><em>STEAM</em> Teams</div><div class="logo-sub">CC Portal</div></div>
-  </a>
-  <a href="/" class="back-link">&#8592; Back to Home</a>
-</header>
+<!-- ══════════════════════════════════════════════════════════════════════
+     PUBLIC SHELL MOUNT — Design Spec v4 §10.2.1.
+     Rendered by /assets/js/shell.js. Do not hand-write a <header> here and do
+     not fork shell.js/shell.css. This page ships the same four lines as every
+     other surface: shell.css link, shell.js script, #shell-root, #shell-footer.
+
+     /register is NOT routed to this file. vercel.json points /register at
+     coming-soon.html and stays that way until the Google Form is retired
+     (Seth, 2026-08-13). W3.9d put this page on the shell; it did not change
+     the route, the registration flow, or anything in Registration Module v6.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="shell-root"></div>
 
 <div class="progress-wrap">
   <div class="progress-inner">
@@ -707,5 +726,12 @@ function regAnother(){
 
 loadConfig();
 </script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8. Last element in
+     <body>, per the four-line page contract in §10.2.1. This page had no
+     footer at all before W3.9d.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div id="shell-footer"></div>
 </body>
 </html>
