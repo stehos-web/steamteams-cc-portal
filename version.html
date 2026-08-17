@@ -7,7 +7,7 @@
 </head>
 <body>
 <pre>wave:   3.9h
-commit: (pending — see follow-up commit that removes the losing candidate)
+commit: c1a9b8f
 date:   2026-08-17
 
 STEAM Teams CC Portal — deploy marker
@@ -36,12 +36,23 @@ Three failures, all silent, all in the same week:
    committed, pushed, and documented — and never once exercised against the
    live system in anger.
 
-This file is one of two candidate markers deployed by Wave 3.9h to find a
-path this deployment actually serves. The other candidate is
-/assets/version.txt. After both are live, whichever one returns 200 is kept;
-the other is deleted. After any future push, fetch the surviving marker and
-confirm the wave line matches what was just pushed. If it does not, the
-deploy did not land, whatever the commit history says.
+This file replaces /version.txt as the deploy check. W3.9h deployed two
+candidates at once rather than assuming the cause — this file at the repo
+root, and /assets/version.txt — and fetched both live. Both returned 200:
+root-level exclusion applies to non-HTML files specifically, not to
+everything outside /assets/, so a root .html file and an /assets/*.txt file
+both serve. This one was kept because it matches every real page in this
+repo (root-level .html) and does not sit inside /assets/, a path more likely
+to pick up long-lived cache headers in a future optimization pass — the
+wrong property for a file that must read as fresh on every fetch. The
+/assets/version.txt candidate was deleted in the same commit that added this
+paragraph.
+
+After any push, fetch this file and confirm the wave line matches what was
+just pushed. If it does not, the deploy did not land, whatever the commit
+history says.
+
+  curl -s https://steamteams-cc-portal.vercel.app/version.html
 
 Working Standards v2, section 2: "delivered means committed, pushed, and seen
 live." Update the wave and commit lines with every deploy.

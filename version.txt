@@ -1,3 +1,16 @@
+⚠ THIS PATH IS NOT SERVED BY VERCEL — root-level non-HTML files 404 on this
+deployment. Confirmed 2026-08-17 (W3.9h): this file, /README.md, /robots.txt
+and /vercel.json all return the same 79-byte 404, and always have. The
+working deploy check is now /version.html — fetch that instead:
+
+  curl -s https://steamteams-cc-portal.vercel.app/version.html
+
+Left in place, unmodified below, as the historical record of the first two
+silent-deploy failures this project hit. Do not use this path for anything
+going forward — it can never return a match.
+
+--------------------------------------------------------------------------
+
 STEAM Teams CC Portal — deploy marker
 wave:   W3.9d-f
 commit: contain cross-tab session destruction; staffRole from staff_accounts (10.4.3 labels)
