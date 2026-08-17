@@ -36,7 +36,23 @@
 
   // §10.4 — portal route per identity (destination the chip points at)
   var PORTAL_ROUTE = { family: "/family", student: "/student", staff: "/dashboard" };
-  var PRIVATE_ROUTES = ["/family", "/student", "/dashboard", "/tasks-export"];
+  // W3.9d-d, 2026-08-16: "/student" REMOVED from this list, by Seth's decision.
+  //
+  // §10 contradicts itself here. §10.3 row 5 and §10.7.1 both make /student a
+  // route that coming-soon.html serves, with its own placeholder copy, and
+  // §10.4.5's amendment table lists "/student placeholder" explicitly under
+  // PUBLIC surfaces. But §10.4.8 lists it as private, and this array is what
+  // the code obeyed — so the guard hid the placeholder on every visit.
+  //
+  // What a student actually got: "Sign in to continue" -> open the modal ->
+  // the Student tab, whose submit does not exist because student credentials
+  // are unbuilt (§10.9 Open Item 1, Gate row C7). A dead end, with the correct
+  // copy — "Student accounts have not been issued yet. Ask your coach…" —
+  // sitting in the DOM at display:none.
+  //
+  // Guarding a route whose portal does not exist protects nothing. Put it back
+  // in this array in W6, in the same change that builds the student dashboard.
+  var PRIVATE_ROUTES = ["/family", "/dashboard", "/tasks-export"];
 
   // §10.4.3 — role display map (fixed; unmapped renders nothing, never the raw enum)
   var ROLE_LABELS = {
