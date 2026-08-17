@@ -297,7 +297,12 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <strong id="sidebar-name">Loading…</strong>
-        Coordinator
+        <!-- W3.9d-f: was the hardcoded literal "Coordinator", which told every
+             identity they were a coordinator — including volunteer coaches and
+             the volunteer coordinator, who is a volunteer, not coordinator-tier.
+             Now filled from §10.4.3's display map. Empty until resolved: §10.4.3
+             says an unmapped value renders nothing rather than the raw enum. -->
+        <span id="sidebar-role"></span>
       </div>
       <!-- Sign Out button deleted W3.9d — §10.4.5. The shell renders the only
            Sign Out in the portal, beside the chip, on every surface. -->
@@ -792,6 +797,23 @@ async function bootDashboard() {
   try { sessionStorage.removeItem('st_dash_reauth'); } catch (e) {}
   document.getElementById('sidebar-name').textContent =
     staff[0].full_name || sess.displayName || 'Staff';
+
+  /* §10.4.3 role display map, verbatim. "Role labels never render raw enum
+     values... An unmapped value renders nothing rather than the enum."
+     Read from staff_accounts.role — the authority — with the session record as
+     a fallback, since W3.9d-f now puts the real role there too. */
+  var ROLE_LABELS = {
+    admin: 'Coordinator',
+    coordinator: 'Coordinator',
+    asst_coordinator: 'Asst. Coordinator',
+    paid_coach: 'Coach',
+    volunteer_coach: 'Coach',
+    volunteer_coordinator: 'Volunteer Coordinator'
+  };
+  var role = staff[0].role || sess.staffRole || null;
+  var roleEl = document.getElementById('sidebar-role');
+  if (roleEl) roleEl.textContent = ROLE_LABELS[role] || '';
+
   document.getElementById('app').classList.add('ready');
   loadHomeStats();
 }

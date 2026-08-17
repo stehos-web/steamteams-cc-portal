@@ -588,19 +588,66 @@
         return;
       }
       sessionStorage.setItem("st_staff_token", data.access_token);
-      var meta = (data.user && data.user.user_metadata) || {};
-      var first = meta.first_name || email.split("@")[0];
-      var last = meta.last_name || "";
-      var initials = ((first[0] || "") + (last[0] || first[1] || "")).toUpperCase();
-      var role = meta.role || null;
-      writeSession({ identity: "staff", initials: initials, displayName: first, familyCode: null, studentUsername: null, staffRole: role });
-      closeModal();
-      state.identity = "staff"; state.initials = initials; state.displayName = first; state.staffRole = role;
-      rerenderShell();
-      restoreGuardedPage();
+
+      // ── W3.9d-f — role and name come from staff_accounts, not user_metadata ──
+      // `user_metadata.role` is EMPTY on every account in this project, so every
+      // session carried staffRole: null. Walked live 2026-08-16 across all six
+      // roles: admin, coordinator, asst_coordinator, paid_coach, volunteer_coach
+      // and volunteer_coordinator ALL rendered "Coordinator", because nothing
+      // downstream could tell them apart. That is what failed Gate row D14, and
+      // it is why no coordinator-tier UI gate can be built (§10.4.2's Task
+      // Export, §10.9).
+      //
+      // The authority is `staff_accounts.role`. RLS policy "Staff can read own
+      // account" is `auth.uid() = id`, so this returns exactly the caller's own
+      // row — limit=1 is the whole result, not a slice of a larger set.
+      finishStaffLogin(data.access_token, email);
     }).catch(function () {
       btn.disabled = false; btn.textContent = "Sign In";
       showErr("shell-staff-err", "We couldn’t reach the portal just now. Try again in a moment.");
+    });
+  }
+
+  // Completes a staff sign-in once the token is held. Split out so the profile
+  // read cannot leave the login half-done: whether it succeeds, fails, or is
+  // refused, this always writes a session and always re-renders. A failed
+  // profile read degrades the LABEL, never the login — the alternative is
+  // stranding someone whose credentials were accepted, which is the class of
+  // silent failure that cost this project a weekend.
+  function finishStaffLogin(token, email) {
+    var fallbackName = email.split("@")[0];
+
+    function complete(fullName, role) {
+      var name = fullName || fallbackName;
+      var parts = String(name).trim().split(/\s+/);
+      var initials = ((parts[0] || "")[0] || "") + ((parts[1] || "")[0] || (parts[0] || "")[1] || "");
+      initials = initials.toUpperCase();
+      var displayName = parts[0] || fallbackName;
+      writeSession({
+        identity: "staff", initials: initials, displayName: displayName,
+        familyCode: null, studentUsername: null, staffRole: role || null
+      });
+      closeModal();
+      state.identity = "staff";
+      state.initials = initials;
+      state.displayName = displayName;
+      state.staffRole = role || null;
+      rerenderShell();
+      restoreGuardedPage();
+    }
+
+    fetch(SB_URL + "/rest/v1/staff_accounts?select=full_name,role&limit=1", {
+      headers: { apikey: SB_KEY, Authorization: "Bearer " + token }
+    }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).then(function (rows) {
+      var row = (rows && rows.length) ? rows[0] : null;
+      // No readable row is not a reason to refuse a login Supabase already
+      // accepted — dashboard.html handles that case with a visible message
+      // (§10.4.7). Here it only means the label falls back.
+      complete(row && row.full_name, row && row.role);
+    }).catch(function () {
+      complete(null, null);
     });
   }
 
@@ -635,11 +682,32 @@
     var sess = readSession();
     if (!sess) { state.identity = "anonymous"; return; }
     if (sess.identity === "staff") {
-      // Staff revalidation authority is the Supabase auth session. This wave
-      // mirrors the sessionStorage token dashboard.html already reads (D8
-      // fix is out of scope here) rather than inventing a second check.
+      // Staff revalidation authority is the Supabase auth session, mirrored by
+      // the sessionStorage token dashboard.html reads.
       var tok = sessionStorage.getItem("st_staff_token");
-      if (!tok) { clearSession(); state.identity = "anonymous"; return; }
+      if (!tok) {
+        // ── W3.9d-f — DO NOT call clearSession() here. ──────────────────
+        // This ran clearSession() until 2026-08-17 and it was a launch
+        // blocker: `st_staff_token` lives in sessionStorage, which is
+        // PER-TAB, while the record it was deleting lives in localStorage,
+        // which is SHARED. So tab A signed in, tab B received the `storage`
+        // event, tab B looked for a token it could never have, concluded the
+        // session was dead, and deleted the record for every tab. Tab A
+        // re-rendered anonymous milliseconds after a successful 200 from
+        // /auth/v1/token. Staff with two tabs open could not sign in at all,
+        // and nothing surfaced because writeSession() swallows its errors.
+        //
+        // A tab must never clear SHARED state on evidence that is LOCAL to
+        // itself. Render anonymous here and leave the record alone: the cost
+        // is a cosmetic per-tab difference instead of silent data loss.
+        //
+        // This is containment, not the cure. The cure is moving the staff
+        // token into localStorage so it is genuinely shared — W4.5, because
+        // it needs a decision on token lifetime and whether a staff session
+        // should survive a browser restart.
+        state.identity = "anonymous";
+        return;
+      }
     }
     state.identity = sess.identity;
     state.initials = sess.initials || "";
