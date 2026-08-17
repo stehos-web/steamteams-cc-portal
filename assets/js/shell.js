@@ -443,6 +443,34 @@
     var staffSubmit = document.getElementById("shell-staff-submit");
     if (staffSubmit) staffSubmit.addEventListener("click", loginStaff);
 
+    // ── W3.9d-e — Enter submits the panel you are on. ──────────────
+    // §10.5.1 fixes the modal's fields and behaviour but never says how a
+    // submission is triggered, and nothing here bound the keyboard: the modal
+    // has no <form>, so pressing Enter did literally nothing — no submit, no
+    // error, no feedback. Every credential path in the portal was affected.
+    // A parent typing CC-ZZ01 and hitting Go on a phone keyboard got silence
+    // and no way to tell they had done nothing wrong. Found 2026-08-16 during
+    // the walkthrough, reported as "I tried my login and nothing happens".
+    //
+    // Bound to the modal element, which rerenderShell() recreates each time,
+    // so this cannot accumulate duplicate listeners.
+    var SUBMIT_FOR = { family: "shell-fam-submit", staff: "shell-staff-submit" };
+    if (modal) modal.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      var field = e.target;
+      if (!field || field.tagName !== "INPUT") return;
+      var panel = field.closest(".shell-login-panel");
+      if (!panel) return;
+      var role = (panel.id || "").replace("shell-panel-", "");
+      // Resolved by id, never "the first button in the panel" — the panel also
+      // carries the Forgot-your-login link, and the student panel ships with a
+      // permanently disabled submit (§10.9 open item 1) that must stay inert.
+      var btn = document.getElementById(SUBMIT_FOR[role] || "");
+      if (!btn || btn.disabled) return;   // disabled also means a request is in flight
+      e.preventDefault();
+      btn.click();
+    });
+
     var famCode = document.getElementById("shell-fam-code");
     if (famCode) famCode.addEventListener("input", function () {
       var v = famCode.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
