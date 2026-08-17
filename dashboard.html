@@ -672,18 +672,79 @@ function readShellSession() {
   try { return JSON.parse(raw); } catch (e) { return null; }
 }
 
-/* Clearing both keys means the reload lands on shell.js's §10.4.8 guard with no
-   session, so it renders the sign-in panel — one reload, then it stops, because
-   readShellSession() returns null on the way back through.
-   The one-shot marker is belt-and-braces: if anything ever re-populates the
-   session between the clear and the reload, this bounds the damage at a single
-   extra load instead of pinning the browser in a reload loop. It is cleared on
-   every successful boot. */
-function discardSessionAndReload() {
+/* ── W3.9d-c — failure handling. Read this before changing any of it. ──
+   The first cut of this treated EVERY failure as "your session is invalid":
+   it cleared both keys and reloaded, guarded by a one-shot `st_dash_reauth`
+   marker that was cleared only on a SUCCESSFUL boot. That was wrong twice.
+
+   1. A network blip or a slow response is not a dead token. Signing a
+      coordinator out because one request failed is a worse outcome than
+      showing them a retry.
+   2. Because the marker only cleared on success, one failure latched it. The
+      next attempt cleared the session and returned WITHOUT reloading, so the
+      tab was stuck: signed out every time, self-heal disabled, unrecoverable
+      short of clearing site data. It presented as "it keeps asking me to sign
+      in" — a silent wedge, which is worse than the reload loop the marker was
+      added to prevent, because a loop is at least visible.
+
+   The rule now: ONLY an explicit 401/403 clears the session. Everything else
+   leaves it alone and shows an actionable panel. No path ends in silence, and
+   every path has a visible way forward. */
+
+function clearShellSession() {
   try { localStorage.removeItem('steamteams_session'); } catch (e) {}
   try { sessionStorage.removeItem('st_staff_token'); } catch (e) {}
-  if (sessionStorage.getItem('st_dash_reauth') === '1') return;
-  sessionStorage.setItem('st_dash_reauth', '1');
+}
+
+/* The app body, replaced by a message and a way out. Uses this page's own
+   existing classes — no new styling introduced. */
+function showBootProblem(message, opts) {
+  opts = opts || {};
+  var app = document.getElementById('app');
+  if (app) app.classList.remove('ready');
+  var old = document.getElementById('dash-boot-problem');
+  if (old) old.remove();
+  var box = document.createElement('div');
+  box.id = 'dash-boot-problem';
+  box.style.cssText = 'max-width:420px;margin:18vh auto;padding:2rem;text-align:center;' +
+                      'background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg)';
+  var p = document.createElement('p');
+  p.style.cssText = 'font-size:14px;color:var(--gray-800);margin-bottom:1.25rem';
+  p.textContent = message;
+  box.appendChild(p);
+  if (opts.retry !== false) {
+    var again = document.createElement('button');
+    again.className = 'btn-primary';
+    again.textContent = 'Try again';
+    again.addEventListener('click', function () { window.location.reload(); });
+    box.appendChild(again);
+  }
+  var fresh = document.createElement('button');
+  fresh.className = 'btn-secondary';
+  fresh.style.cssText = 'margin-top:0.75rem;width:100%';
+  fresh.textContent = 'Sign in again';
+  // The escape hatch. Clears the session AND the marker, so the next load lands
+  // on shell.js's guard with a working modal no matter what state we were in.
+  fresh.addEventListener('click', function () {
+    clearShellSession();
+    try { sessionStorage.removeItem('st_dash_reauth'); } catch (e) {}
+    window.location.reload();
+  });
+  box.appendChild(fresh);
+  document.body.appendChild(box);
+}
+
+/* A genuine auth rejection: clear and reload once into the shell's guard.
+   No loop is possible — the session is gone, so the next boot returns early at
+   the `!sess` check. The marker is a backstop only, and if it is already set we
+   show the panel instead of failing silently. */
+function rejectSession() {
+  clearShellSession();
+  if (sessionStorage.getItem('st_dash_reauth') === '1') {
+    showBootProblem('We couldn’t finish signing you in. Try signing in again.', { retry: false });
+    return;
+  }
+  try { sessionStorage.setItem('st_dash_reauth', '1'); } catch (e) {}
   window.location.reload();
 }
 
@@ -698,21 +759,37 @@ async function bootDashboard() {
 
   SESSION = { access_token: token };
 
-  let staff;
+  let r;
   try {
-    staff = await sbGet('/rest/v1/staff_accounts?select=*&limit=1', token);
+    r = await fetch(SB_URL + '/rest/v1/staff_accounts?select=*&limit=1', { headers: headers(token) });
   } catch (e) {
-    // Expired or revoked token. §10.4.7: discard the record and re-render.
-    discardSessionAndReload();
-    return;
-  }
-  if (!staff.length) {
-    // Authenticated, but no staff_accounts row — RLS or a non-staff auth user.
-    discardSessionAndReload();
+    // Network failure. NOT an auth failure — the session stays untouched.
+    // Copy is §10.5.2's network-error string, reused rather than invented.
+    showBootProblem('We couldn’t reach the portal just now. Try again in a moment.');
     return;
   }
 
-  sessionStorage.removeItem('st_dash_reauth');
+  // The only condition that means "this token is dead" (§10.4.7).
+  if (r.status === 401 || r.status === 403) { rejectSession(); return; }
+
+  if (!r.ok) {
+    showBootProblem('We couldn’t reach the portal just now. Try again in a moment.');
+    return;
+  }
+
+  let staff;
+  try { staff = await r.json(); } catch (e) { staff = null; }
+
+  if (!Array.isArray(staff) || !staff.length) {
+    // Authenticated, but no readable staff_accounts row. The token is valid, so
+    // clearing the session would be wrong and would teach the user to re-enter
+    // a password that will not help. Existing shipped wording, kept.
+    showBootProblem('No staff account found for this email. Access denied.', { retry: false });
+    return;
+  }
+
+  // Boot succeeded — retire the backstop marker.
+  try { sessionStorage.removeItem('st_dash_reauth'); } catch (e) {}
   document.getElementById('sidebar-name').textContent =
     staff[0].full_name || sess.displayName || 'Staff';
   document.getElementById('app').classList.add('ready');

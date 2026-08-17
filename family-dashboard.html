@@ -462,7 +462,13 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
     <div class="error-icon">&#128683;</div>
     <div class="error-title">Something went wrong</div>
     <div class="error-msg" id="error-msg">We could not load your family dashboard. Please try again.</div>
-    <a href="/" class="btn-back">Back to Home</a>
+    <!-- "Back to Home" link deleted W3.9d-c — §10.3.3: "Every '← Back to Home'
+         link in the portal is deleted, not restyled. A back-link is what you
+         build when there is no navigation; there is now navigation."
+         It survived 3.9c because it only renders on this page's error path, so
+         no walkthrough ever saw it — found 2026-08-16 by enumerating anchors on
+         every surface rather than by looking at the page. The shell header is
+         present on this screen like every other, so Home is one click away. -->
   </div>
 </div>
 
