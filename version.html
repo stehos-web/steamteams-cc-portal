@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>STEAM Teams CC Portal — deploy marker</title>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<pre>wave:   3.9h
+commit: (pending — see follow-up commit that removes the losing candidate)
+date:   2026-08-17
+
+STEAM Teams CC Portal — deploy marker
+--------------------------------------
+
+Why this file exists
+---------------------
+Three failures, all silent, all in the same week:
+
+1. 2026-08-16 — a push landed in the wrong repo. The build was correct and the
+   record said shipped, but the files went to steamteams-cc-ops instead of
+   steamteams-cc-portal, so nothing reached the live site.
+
+2. 2026-08-17 (earlier) — a correct push sat undeployed. Vercel's GitHub
+   webhook did not fire, production stayed on the previous build, and
+   x-vercel-cache: HIT with a stale last-modified was the only tell.
+
+3. 2026-08-17 (this failure) — the check adopted to catch the first two was
+   itself broken for about a day and nobody noticed, because nobody fetched
+   it. It lived at /version.txt, a root-level non-HTML file. This deployment
+   does not serve root-level non-HTML files at all — /README.md, /robots.txt
+   and /vercel.json all return the same 79-byte 404, and always have.
+   /README.md has been committed since the initial commit and was never once
+   reachable. A wave following the old rule literally would have declared
+   every correct deploy a failure. Root cause: a safeguard was written,
+   committed, pushed, and documented — and never once exercised against the
+   live system in anger.
+
+This file is one of two candidate markers deployed by Wave 3.9h to find a
+path this deployment actually serves. The other candidate is
+/assets/version.txt. After both are live, whichever one returns 200 is kept;
+the other is deleted. After any future push, fetch the surviving marker and
+confirm the wave line matches what was just pushed. If it does not, the
+deploy did not land, whatever the commit history says.
+
+Working Standards v2, section 2: "delivered means committed, pushed, and seen
+live." Update the wave and commit lines with every deploy.
+</pre>
+</body>
+</html>
