@@ -1,0 +1,20 @@
+STEAM Teams CC Portal — deploy marker
+wave:   W3.9d-f
+commit: contain cross-tab session destruction; staffRole from staff_accounts (10.4.3 labels)
+date:   2026-08-17
+
+Why this file exists
+--------------------
+Twice on 2026-08-16/17 the code was correct and the record said shipped, but the
+site was serving something older: once because the push went to the docs repo
+instead of this one, and once because Vercel's GitHub webhook did not fire and
+production stayed on the previous build. Both failed quietly.
+
+This file is the cheap check. After any push, fetch /version.txt and confirm the
+wave line matches what you just pushed. If it does not, the deploy did not land,
+whatever the commit history says.
+
+  curl -s https://steamteams-cc-portal.vercel.app/version.txt
+
+Update the wave and commit lines with each deploy. Working Standards section 2:
+"delivered means committed, pushed, and seen live."
