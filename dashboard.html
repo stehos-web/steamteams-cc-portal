@@ -610,7 +610,38 @@ async function sbPatch(path, body, tok) {
     body: JSON.stringify(body)
   });
   if (!r.ok) throw new Error(await r.text());
-  return r.json();
+
+  /* ─── W9c, finding N1(b) ──────────────────────────────────────────────
+     A PATCH that RLS matches to ZERO rows is not an error to PostgREST. It
+     answers HTTP 200 with `[]` — the write was correctly refused and the
+     status code says nothing about it. Returning here on `r.ok` alone is
+     what let a coach open Settings, flip the registration toggle, see a
+     green "Registration window opened" toast, and change nothing.
+
+     `Prefer: return=representation` is already sent above, so the body IS
+     the set of rows actually written. Count them instead of trusting the
+     status. Standing rule: no silent no-ops — a refused write has to say so.
+
+     Known limitation, recorded rather than hidden: this treats "wrote rows
+     but cannot SELECT them back" as a failure too, because representation
+     comes back empty in that case as well (that is finding N7's shape in
+     register.html). Both PATCH call sites on this page — `registrations`
+     and `portal_config` — sit under coordinator-tier policies whose USING
+     and WITH CHECK are the same predicate, so a caller who can write can
+     always read back. A future call site under a write-only policy would
+     need a different check.                                              */
+  let rows;
+  try {
+    rows = await r.json();
+  } catch (e) {
+    // 204, or a body that is not JSON. Representation was requested and did
+    // not arrive, so we cannot claim the write landed.
+    throw new Error('The portal could not confirm that change was saved. Nothing was changed.');
+  }
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error('That change was not saved — your account does not have permission to make it. Nothing was changed.');
+  }
+  return rows;
 }
 
 function toast(msg, type = 'info') {
@@ -813,6 +844,34 @@ async function bootDashboard() {
   var role = staff[0].role || sess.staffRole || null;
   var roleEl = document.getElementById('sidebar-role');
   if (roleEl) roleEl.textContent = ROLE_LABELS[role] || '';
+
+  /* ─── W9c, finding N1(a) ──────────────────────────────────────────────
+     Settings writes `portal_config`, and RLS restricts that to coordinator
+     tier: admin, coordinator, asst_coordinator (Design Spec v5 §10.4.2 n.1).
+     `volunteer_coordinator` is a VOLUNTEER role with its own dashboard in
+     §8.1 — it is NOT coordinator tier and is deliberately excluded here.
+
+     Hidden, not disabled. A disabled control still advertises a capability
+     the account does not have; §10.4.2 already rules that "a menu item the
+     database will refuse is a promise the UI should not make."
+
+     This is the polish, not the fix. A stale tab, a bookmark or the next
+     role added to the enum can still reach the panel, which is why the real
+     repair is in sbPatch() above. An unknown or missing role falls through
+     to hidden — the safe direction.                                       */
+  var COORDINATOR_TIER = ['admin', 'coordinator', 'asst_coordinator'];
+  if (COORDINATOR_TIER.indexOf(role) === -1) {
+    var settingsNav = document.querySelector('.nav-item[data-page="settings"]');
+    if (settingsNav) {
+      // Take the "Config" section label with it — an orphan heading over an
+      // empty section reads as a page that half-failed to load.
+      var navSection = settingsNav.previousElementSibling;
+      if (navSection && navSection.classList.contains('nav-section')) {
+        navSection.style.display = 'none';
+      }
+      settingsNav.style.display = 'none';
+    }
+  }
 
   document.getElementById('app').classList.add('ready');
   loadHomeStats();
