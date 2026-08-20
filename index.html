@@ -442,6 +442,21 @@
           <p class="font-headline-md font-headline-md uppercase text-deep-navy">Thank you!</p>
           <p class="text-on-surface-variant text-body-md">Seth will be in touch within a few business days.</p>
         </div>
+        <!-- W3.9j, 2026-08-20: the failure path this form has never had. If the
+             insert fails, the sponsor is told and given a way to reach us that
+             works today — a form that fails silently gets no follow-up email. -->
+        <div id="sf-failure" class="hidden text-center py-8 space-y-3">
+          <div class="text-4xl">⚠️</div>
+          <p class="font-headline-md font-headline-md uppercase text-race-red">That didn't go through</p>
+          <p class="text-on-surface-variant text-body-md">
+            Something went wrong on our end and your inquiry was not recorded. Please reach out directly and we'll follow up right away:
+          </p>
+          <p class="text-on-surface-variant text-body-md font-bold">
+            <a href="mailto:stehos@chambersk12.org" class="text-race-red hover:underline">stehos@chambersk12.org</a>
+            &nbsp;&middot;&nbsp;
+            <a href="tel:+13347488665" class="text-race-red hover:underline">(334) 748-8665</a>
+          </p>
+        </div>
       </div>
     </div>
   </section>
@@ -466,18 +481,36 @@
 const SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
 const SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
+// W3.9j, 2026-08-20 (F-W9c-1 / F-W9c-1b): both helpers used to return the raw
+// Response/JSON without ever checking r.ok — a 400 from PostgREST read as success
+// to every caller, which is exactly how the sponsor form thanked people it had
+// just failed to record. Both now throw on a non-2xx response, so a caller's
+// try/catch actually catches something. Only call site for sbPost on this page
+// is submitSponsor() below; sbGet's only call site is loadHomeConfig() below —
+// confirmed by search, nothing else on this page relies on the old silent shape.
 async function sbGet(p) {
   const r = await fetch(SB_URL + "/rest/v1/" + p, {
     headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }
   });
+  if (!r.ok) {
+    let detail = "";
+    try { detail = await r.text(); } catch (e) {}
+    throw new Error("sbGet " + p + " failed: " + r.status + " " + detail);
+  }
   return r.json();
 }
 async function sbPost(p, b) {
-  return fetch(SB_URL + "/rest/v1/" + p, {
+  const r = await fetch(SB_URL + "/rest/v1/" + p, {
     method: "POST",
     headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
     body: JSON.stringify(b)
   });
+  if (!r.ok) {
+    let detail = "";
+    try { detail = await r.text(); } catch (e) {}
+    throw new Error("sbPost " + p + " failed: " + r.status + " " + detail);
+  }
+  return r;
 }
 
 // ── Calendar events ────────────────────────────────
@@ -529,6 +562,14 @@ function renderCalendar() {
 }
 
 // ── Sponsor form submission ───────────────────────
+// W3.9j, 2026-08-20 (F-W9c-1b): this used to POST {email, notes} to notify_list,
+// which has no notes column — every submission 400'd, the empty catch(e){} below
+// swallowed it, and the success screen showed unconditionally. No sponsor inquiry
+// from this form has ever been recorded. Seth's ruling: a dedicated table
+// (sponsor_inquiries, migration 09b_pub_01), not a notes column bolted onto
+// notify_list — that table is real families waiting to hear from the program.
+// The success screen now renders only after a confirmed insert; a failure shows
+// the direct contact info instead of a silent thank-you.
 async function submitSponsor() {
   var tier  = document.getElementById("sf-tier").value.trim();
   var name  = document.getElementById("sf-name").value.trim();
@@ -539,14 +580,37 @@ async function submitSponsor() {
   if (!name || !email) { alert("Please enter your name and email."); return; }
   var btn = document.getElementById("sf-btn");
   btn.disabled = true; btn.textContent = "Sending…";
+
+  // sponsor_inquiries.tier_interest is constrained by the database to
+  // Platinum / Gold / Silver / Bronze / Legacy Partners / undecided (Marketing
+  // Strategy v3 tier vocabulary). The form's "Other / Let's talk" option and an
+  // unset tier both map to "undecided" — the original choice is kept in the
+  // message rather than silently dropped.
+  var legalTiers = ["Platinum", "Gold", "Silver", "Bronze"];
+  var tierInterest = legalTiers.indexOf(tier) !== -1 ? tier : "undecided";
+  var finalMessage = msg;
+  if (tier === "Other") {
+    finalMessage = (msg ? msg + "\n\n" : "") + "(Selected “Other / Let’s talk” for sponsorship level.)";
+  }
+
   try {
-    await sbPost("notify_list", {
+    await sbPost("sponsor_inquiries", {
+      organization: org,
+      contact_name: name,
       email: email,
-      notes: "SPONSOR | Tier:" + (tier||"Not specified") + " | Name:" + name + " | Org:" + org + " | Phone:" + phone + " | Msg:" + msg
+      phone: phone || null,
+      tier_interest: tierInterest,
+      message: finalMessage || null
     });
-  } catch(e) {}
+  } catch (e) {
+    console.error("submitSponsor: insert failed, showing failure state", e);
+    btn.disabled = false; btn.textContent = "Send Inquiry";
+    document.getElementById("sf-failure").classList.remove("hidden");
+    return;
+  }
   document.getElementById("sf-form-body").classList.add("hidden");
   document.getElementById("sf-tier").classList.add("hidden");
+  document.getElementById("sf-failure").classList.add("hidden");
   document.getElementById("sf-success").classList.remove("hidden");
 }
 
@@ -610,7 +674,11 @@ function renderSponsors(sponsors) {
 // Phase 3: coordinator dashboard Settings writes these rows.
 async function loadHomeConfig() {
   try {
-    var rows = await sbGet("portal_config?key=like.home_%&select=key,value");
+    // W3.9j, 2026-08-20 (F-W9c-1): the unencoded "%" here made this URL invalid —
+    // fetch rejected with TypeError before a request ever left the browser, so
+    // every one of the 32 home_* keys was unreachable and this page ran entirely
+    // on its hardcoded fallbacks. "%25" is the correct percent-encoding of "%".
+    var rows = await sbGet("portal_config?key=like.home_%25&select=key,value");
     if (!rows || !rows.length) return;
     var cfg = {};
     rows.forEach(function(r) {
