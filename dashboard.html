@@ -597,18 +597,50 @@ function headers(tok) {
   };
 }
 
+// ── W4.5 — always use a currently-valid token, never a boot-time snapshot. ──
+// `SESSION.access_token` (set once, in bootDashboard) is passed in below by
+// every call site unchanged, but both functions now fetch a live token from
+// shell.js first and prefer THAT — refreshing it first if it is expired or
+// close to it (window.SteamTeamsAuth.getValidAccessToken(), "on demand,
+// before the call"). The passed-in `tok` is only a fallback for the case
+// window.SteamTeamsAuth is somehow unavailable, so a shell.js load failure
+// degrades rather than throwing here.
+async function freshToken(fallbackTok) {
+  if (!window.SteamTeamsAuth) return fallbackTok;
+  try {
+    const t = await window.SteamTeamsAuth.getValidAccessToken();
+    return t || fallbackTok;
+  } catch (e) {
+    return fallbackTok;
+  }
+}
+
+// A 401 here means a token we (or shell.js, on our behalf) believed was valid
+// got refused outright — a slipped-through rejection, not the ordinary "wrong
+// permission" case sbPatch already handles below. End the session VISIBLY,
+// the same way an expired window or a failed refresh does, rather than
+// surfacing a raw error toast on top of a dashboard that is no longer really
+// signed in.
+function handleSlippedThrough401() {
+  if (window.SteamTeamsAuth) window.SteamTeamsAuth.endSessionVisibly('rejected');
+}
+
 async function sbGet(path, tok) {
-  const r = await fetch(SB_URL + path, { headers: headers(tok) });
+  const useTok = await freshToken(tok);
+  const r = await fetch(SB_URL + path, { headers: headers(useTok) });
+  if (r.status === 401) { handleSlippedThrough401(); throw new Error('Your session ended. Please sign in again.'); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function sbPatch(path, body, tok) {
+  const useTok = await freshToken(tok);
   const r = await fetch(SB_URL + path, {
     method: 'PATCH',
-    headers: { ...headers(tok), 'Prefer': 'return=representation' },
+    headers: { ...headers(useTok), 'Prefer': 'return=representation' },
     body: JSON.stringify(body)
   });
+  if (r.status === 401) { handleSlippedThrough401(); throw new Error('Your session ended. Please sign in again.'); }
   if (!r.ok) throw new Error(await r.text());
 
   /* ─── W9c, finding N1(b) ──────────────────────────────────────────────
@@ -689,17 +721,41 @@ document.getElementById('topbar-date').textContent = new Date().toLocaleDateStri
    Supabase session, not by adding a second login screen." So:
 
      - localStorage `steamteams_session` is the rendering record (identity/name).
-     - The Supabase auth session is the AUTHORITY. shell.js parks its access
-       token at sessionStorage `st_staff_token`; every REST call below is
-       authorised with that token, exactly as before.
+     - The Supabase auth session is the AUTHORITY.
      - No session, or a non-staff session? Do nothing. shell.js's §10.4.8 guard
        has already hidden this body and opened the shared modal.
-     - Token present but rejected by PostgREST? §10.4.7 requires the record be
-       discarded "regardless of issuedAt". We clear both keys and reload so the
-       guard renders the sign-in panel rather than an app full of empty cards.
+
+   ── W4.5, 2026-08-24 — the token moved, and so did who refreshes it. ──
+   Before this wave the access token lived at sessionStorage `st_staff_token`
+   — PER TAB — which was the direct cause of the cross-tab blocker (a second
+   tab could never have it) and made the 24-hour session ruling impossible to
+   honour honestly (no refresh token was kept at all, so the real session
+   ended when the ~1-hour Supabase JWT expired regardless of what a
+   localStorage record claimed).
+
+   As of this wave the token, its refresh token, and its own expiry live
+   INSIDE `steamteams_session` itself (written by shell.js's finishStaffLogin,
+   read by shell.js's readSession) — shared, not per-tab. shell.js owns
+   refreshing it and exposes `window.SteamTeamsAuth` as the only way any page
+   should get a token:
+
+     - `getValidAccessToken()` — returns a token guaranteed fresh right now,
+       exchanging the refresh token first if the current one is expired or
+       within a minute of it. sbGet()/sbPatch() above call this before every
+       request; nothing on this page reads `sess.accessToken` directly.
+     - `endSessionVisibly(reason)` — ends the session AND shows the person why
+       (expired / a refresh was rejected / a request was rejected outright),
+       instead of a bare 401 or a dashboard that just goes quiet.
 
    Sign Out is not wired here — shell.js owns the only Sign Out in the portal
-   (§10.4.5) and clears both keys.
+   (§10.4.5) and clears the whole record, token included.
+
+   A NOTE ON WHAT THE 24-HOUR WINDOW IS: it is a policy boundary (a stamp
+   checked in JS), not a security control — anyone with the console can edit
+   it. The security boundary is the Supabase JWT's own short lifetime plus the
+   fact that the refresh token can be revoked server-side. Recorded here, not
+   just in the wave card, so a later session reading this file does not
+   mistake the stamp for protection.
    ══════════════════════════════════════════════════════════════════════ */
 function readShellSession() {
   var raw;
@@ -728,8 +784,10 @@ function readShellSession() {
    every path has a visible way forward. */
 
 function clearShellSession() {
+  // `st_staff_token` (sessionStorage, per-tab) no longer exists as of W4.5 —
+  // the token now lives inside `steamteams_session` itself and is removed
+  // with it, in one place, in every tab.
   try { localStorage.removeItem('steamteams_session'); } catch (e) {}
-  try { sessionStorage.removeItem('st_staff_token'); } catch (e) {}
 }
 
 /* The app body, replaced by a message and a way out. Uses this page's own
@@ -770,28 +828,48 @@ function showBootProblem(message, opts) {
   document.body.appendChild(box);
 }
 
-/* A genuine auth rejection: clear and reload once into the shell's guard.
-   No loop is possible — the session is gone, so the next boot returns early at
-   the `!sess` check. The marker is a backstop only, and if it is already set we
-   show the panel instead of failing silently. */
+/* ── W4.5 — a genuine auth rejection no longer reloads at all. ──────────
+   Before this wave this cleared the session and reloaded ONCE, guarded by
+   `st_dash_reauth` so a repeat failure would show a panel instead of looping
+   silently (W3.9d-c, Finding #11 — a stuck tab that read as "it keeps asking
+   me to sign in" with no way out short of clearing site data).
+
+   That marker existed to catch a loop AFTER the fact. This wave removes the
+   reload that could loop in the first place: window.SteamTeamsAuth
+   .endSessionVisibly() clears the session, records why, and re-renders the
+   shell IN PLACE — no navigation, so there is nothing to repeat. The
+   `st_dash_reauth` marker is left in place only for the "Sign in again"
+   button's explicit, one-shot, user-initiated reload above; it is no longer
+   set or checked on this automatic path, because there is no automatic
+   reload left for it to guard. */
 function rejectSession() {
-  clearShellSession();
-  if (sessionStorage.getItem('st_dash_reauth') === '1') {
-    showBootProblem('We couldn’t finish signing you in. Try signing in again.', { retry: false });
-    return;
-  }
-  try { sessionStorage.setItem('st_dash_reauth', '1'); } catch (e) {}
-  window.location.reload();
+  if (window.SteamTeamsAuth) window.SteamTeamsAuth.endSessionVisibly('rejected');
+  else clearShellSession(); // shell.js failed to load — fall back to a bare clear
 }
 
 async function bootDashboard() {
   const sess = readShellSession();
-  const token = sessionStorage.getItem('st_staff_token');
 
-  // Not staff, or no Supabase session. shell.js's guard owns this case entirely
-  // (§10.4.8) — it hides #app, renders "Sign in to continue", opens the modal.
-  // This page adds nothing: no panel of its own, no polling, no compensation.
-  if (!sess || sess.identity !== 'staff' || !token) return;
+  // Not staff, or no session at all. shell.js's guard owns this case entirely
+  // (§10.4.8) — it hides #app, renders "Sign in to continue" (or the specific
+  // reason — expired, a refresh failed — W4.5), opens the modal. This page
+  // adds nothing: no panel of its own, no polling, no compensation.
+  if (!sess || sess.identity !== 'staff') return;
+
+  // ── W4.5 — refresh on demand, before the call, not after a failure. ──
+  // A token guaranteed valid right now: shell.js exchanges the refresh token
+  // first if the one on record is expired or within a minute of it. If
+  // window.SteamTeamsAuth is missing (shell.js failed to load), there is no
+  // safe way to vouch for a token, so this fails toward "please sign in
+  // again" rather than trying one anyway.
+  const token = window.SteamTeamsAuth ? await window.SteamTeamsAuth.getValidAccessToken() : null;
+  if (!token) {
+    // No usable token — no session, the 24-hour window closed, or a refresh
+    // was rejected. Every one of those already cleared the session and
+    // recorded why; shell.js's own guard shows the matching message. Nothing
+    // further to do here.
+    return;
+  }
 
   SESSION = { access_token: token };
 
@@ -805,7 +883,9 @@ async function bootDashboard() {
     return;
   }
 
-  // The only condition that means "this token is dead" (§10.4.7).
+  // A token we just confirmed was fresh, rejected outright, is a genuine
+  // "this session is gone" signal — end it visibly, the same way an expired
+  // window or a failed refresh does (§10.4.7).
   if (r.status === 401 || r.status === 403) { rejectSession(); return; }
 
   if (!r.ok) {
@@ -882,6 +962,17 @@ document.addEventListener('DOMContentLoaded', bootDashboard);
 // Cross-tab: §10.4.7 requires every surface to re-render on a change to the
 // shared record. Signing out in another tab must not leave this one showing a
 // live dashboard. shell.js re-renders its own header; the page body is ours.
+//
+// ── W4.5 — unchanged in mechanism, now correct for staff for the first time. ──
+// This already reacted to any loss of a valid staff session by reloading, so
+// it needed no rewrite — only the record it is watching changed shape (the
+// token moved inside `steamteams_session`; there is no separate `st_staff_token`
+// key to also watch). It was previously untestable for staff, because a second
+// tab could never HAVE a staff session to lose (the cross-tab blocker); it is
+// exercised for real for the first time in this wave. It now also correctly
+// covers a session ending for any reason in another tab — explicit sign-out,
+// the 24-hour window closing, or a failed token refresh — since all three
+// clear this same record, firing this same event.
 window.addEventListener('storage', function (e) {
   if (e.key !== 'steamteams_session') return;
   const sess = readShellSession();

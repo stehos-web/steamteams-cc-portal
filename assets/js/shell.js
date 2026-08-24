@@ -65,27 +65,181 @@
   };
 
   // ── §10.4.7 Session — one record, one source ────────────────────
+  // ── W4.5, 2026-08-24 — staff token moved into this record; see below. ──
   var SESSION_KEY = "steamteams_session";
+  // Family/student lifetime — UNCHANGED, Design Spec v5 §10.4.7. Out of this
+  // wave's scope (Touches: shell.js session logic for STAFF; family/student
+  // credential paths are explicitly untouched).
   var SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+  // Staff lifetime — Seth's ruling, 2026-08-21: a FIXED 24-hour window from
+  // sign-in, never extended by activity. This is a policy boundary, not a
+  // security control — anyone with the console can edit the stamp. The real
+  // security boundary is the Supabase JWT's own short lifetime (read live,
+  // per-response, below) plus server-side revocation of the refresh token.
+  var STAFF_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  // Set when a session ends for a reason worth telling the person about
+  // (expired / a refresh was rejected / a request was rejected outright).
+  // Read by guardPrivateRoute() and endSessionVisibly() to choose the
+  // message. Cleared by writeSession() the next time a sign-in succeeds —
+  // never "consumed" on a single read, so two render passes in the same
+  // failure (e.g. an early check during boot, then the shell's own mount)
+  // show the same message instead of one specific and one generic.
+  var SESSION_END_REASON_KEY = "st_session_end_reason";
+
+  function sessionEndMessage(reason) {
+    if (reason === "expired") {
+      return "Your session expired 24 hours after you signed in. Please sign in again.";
+    }
+    if (reason === "refresh_failed" || reason === "rejected") {
+      return "We couldn’t keep you signed in. Please sign in again.";
+    }
+    return "This part of the portal is for signed-in families, students, or staff.";
+  }
+
+  // A failed localStorage write must surface, not vanish — Project Instructions,
+  // "no empty catch blocks, no silent no-ops": *"writeSession() swallowing its
+  // errors is what let a launch blocker hide behind a successful login for a
+  // weekend."* This wave fixes that literally, in the three functions named.
+  // shell.js has no toast system of its own (that lives page-side, e.g.
+  // dashboard.html's toast()), so this is a minimal, self-contained banner —
+  // visible on every surface, since every surface loads this file.
+  function surfaceStorageError(action) {
+    try {
+      var el = document.getElementById("shell-storage-error");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "shell-storage-error";
+        el.setAttribute("role", "alert");
+        el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:70;" +
+          "background:#B2292E;color:#fff;text-align:center;padding:10px 16px;" +
+          "font-size:14px;font-weight:500;";
+        document.body.appendChild(el);
+      }
+      el.textContent = "Your browser blocked " + action + ". Check your privacy/cookie " +
+        "settings, or try a different browser — the portal can’t sign you in reliably like this.";
+    } catch (e2) { /* nothing further we can do without storage or a DOM */ }
+  }
 
   function readSession() {
     var raw;
-    try { raw = localStorage.getItem(SESSION_KEY); } catch (e) { return null; }
+    try { raw = localStorage.getItem(SESSION_KEY); }
+    catch (e) { surfaceStorageError("reading your saved sign-in"); return null; }
     if (!raw) return null;
     var rec;
     try { rec = JSON.parse(raw); } catch (e) { return null; }
-    if (!rec || !rec.issuedAt || (Date.now() - rec.issuedAt) > SESSION_TTL_MS) {
+    if (!rec || !rec.signedInAt) {
+      // No timestamp at all — either corrupt, or a pre-W4.5 record (the shape
+      // changed: `issuedAt` -> `signedInAt`, and staff records now carry their
+      // tokens here instead of a per-tab sessionStorage key). Either way it
+      // cannot be trusted; discard rather than guess.
       clearSession();
+      return null;
+    }
+    var ttl = rec.identity === "staff" ? STAFF_SESSION_TTL_MS : SESSION_TTL_MS;
+    if ((Date.now() - rec.signedInAt) > ttl) {
+      endSession(rec.identity === "staff" ? "expired" : null);
       return null;
     }
     return rec;
   }
   function writeSession(rec) {
-    rec.issuedAt = Date.now();
-    try { localStorage.setItem(SESSION_KEY, JSON.stringify(rec)); } catch (e) {}
+    // Stamped once, at first write, and preserved on every later write for the
+    // same sign-in (e.g. a token refresh calls writeSession() again with the
+    // same object) — that is what makes the 24-hour window FIXED rather than
+    // rolling. Do not reset this on every write; that would silently turn a
+    // fixed window back into an inactivity timer.
+    if (!rec.signedInAt) rec.signedInAt = Date.now();
+    try { sessionStorage.removeItem(SESSION_END_REASON_KEY); } catch (e) {}
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(rec)); }
+    catch (e) { surfaceStorageError("saving your sign-in"); }
   }
   function clearSession() {
-    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    try { localStorage.removeItem(SESSION_KEY); }
+    catch (e) { surfaceStorageError("signing you out completely"); }
+  }
+  // Ends the session for a specific, recorded reason, without touching the UI —
+  // used from low-level checks (readSession's own TTL check, a rejected
+  // refresh) that may run before the shell has mounted anything to re-render.
+  function endSession(reason) {
+    if (reason) { try { sessionStorage.setItem(SESSION_END_REASON_KEY, reason); } catch (e) {} }
+    clearSession();
+  }
+  // Ends the session AND reflects it on screen immediately — for a failure
+  // discovered mid-session, after the page has already rendered as signed in.
+  // (A failure discovered during the initial mount does not need this: mount()
+  // calls guardPrivateRoute() right after resolveIdentity(), and that already
+  // reads the session-end reason and renders the right message on its own.)
+  function endSessionVisibly(reason) {
+    endSession(reason);
+    state.identity = "anonymous"; state.initials = ""; state.displayName = ""; state.staffRole = null;
+    if (!mounted) return;
+    rerenderShell();
+    if (PRIVATE_ROUTES.indexOf(currentPathname()) !== -1) {
+      renderSignInPanel(sessionEndMessage(reason));
+      openModal();
+    }
+  }
+
+  // ── W4.5 — refresh on demand ─────────────────────────────────────
+  // Exchanges the refresh token for a new access token BEFORE a caller uses
+  // it, when the current one is expired or within REFRESH_SKEW_MS of expiring
+  // — "before the call rather than after a failure" per the wave brief.
+  // dashboard.html (and anything else that needs an authorised REST call)
+  // gets a token through window.SteamTeamsAuth.getValidAccessToken(), never
+  // by reading the session record's accessToken directly, so this check
+  // always runs first.
+  var REFRESH_SKEW_MS = 60 * 1000;
+  var refreshInFlight = null; // dedupe concurrent refreshes within one tab
+
+  function getValidAccessToken() {
+    var sess = readSession();
+    if (!sess || sess.identity !== "staff" || !sess.accessToken) return Promise.resolve(null);
+    var msLeft = (sess.accessTokenExpiresAt || 0) - Date.now();
+    if (msLeft > REFRESH_SKEW_MS) return Promise.resolve(sess.accessToken);
+    if (refreshInFlight) return refreshInFlight;
+    refreshInFlight = refreshAccessToken(sess).then(function (tok) {
+      refreshInFlight = null;
+      return tok;
+    }, function () {
+      refreshInFlight = null;
+      return null;
+    });
+    return refreshInFlight;
+  }
+
+  function refreshAccessToken(sess) {
+    if (!sess.refreshToken) {
+      endSessionVisibly("refresh_failed");
+      return Promise.resolve(null);
+    }
+    return fetch(SB_URL + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: SB_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: sess.refreshToken })
+    }).then(function (r) {
+      // A refresh Supabase actually answers (even with a rejection) is
+      // conclusive: the refresh token is dead. End the session visibly —
+      // never retry silently, never leave a record claiming a session that
+      // is gone.
+      if (!r.ok) { endSessionVisibly("refresh_failed"); return null; }
+      return r.json();
+    }).then(function (data) {
+      if (!data || !data.access_token) { endSessionVisibly("refresh_failed"); return null; }
+      sess.accessToken = data.access_token;
+      sess.refreshToken = data.refresh_token || sess.refreshToken;
+      // Read live off the response every time — do not assume 3600.
+      sess.accessTokenExpiresAt = Date.now() + (Number(data.expires_in) || 3600) * 1000;
+      writeSession(sess); // signedInAt is already set on `sess`; preserved, not reset
+      return sess.accessToken;
+    }).catch(function () {
+      // A NETWORK failure mid-refresh is not the same as Supabase rejecting the
+      // refresh token. Ending the session on a network blip would be the same
+      // silent-overreaction bug §10.4.7's `resolveIdentity()` fix exists to
+      // prevent. Leave the session alone; the caller's own request fails and
+      // can be retried, and the next attempt will try the refresh again.
+      return null;
+    });
   }
 
   // ── State ────────────────────────────────────────────────────────
@@ -351,16 +505,24 @@
 
   function renderSignInPanel(reason) {
     guardHidPage = true;
-    var panel = document.createElement("div");
-    panel.id = "shell-signin-panel";
-    panel.className = "mx-auto max-w-[480px] py-24 px-6 text-center space-y-4";
+    // ── W4.5 — idempotent. ──────────────────────────────────────────
+    // A session can now end mid-visit (a refresh rejected, a request 401s)
+    // as well as at initial load, and both paths call this. Appending a
+    // second panel on the second call would stack two "Sign in to continue"
+    // boxes; update the existing one in place instead.
+    var panel = document.getElementById("shell-signin-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "shell-signin-panel";
+      panel.className = "mx-auto max-w-[480px] py-24 px-6 text-center space-y-4";
+      var existing = document.querySelectorAll("body > *:not(#shell-root):not(#shell-footer):not(script):not(link)");
+      existing.forEach(function (el) { if (el !== panel) el.style.display = "none"; });
+      document.body.appendChild(panel);
+    }
     panel.innerHTML =
       '<h1 class="text-[24px] font-semibold uppercase">Sign in to continue</h1>' +
       "<p>" + esc(reason) + "</p>" +
       '<button id="shell-signin-btn" class="bg-[#B2292E] text-white px-6 py-3 font-bold uppercase">Sign In</button>';
-    var existing = document.querySelectorAll("body > *:not(#shell-root):not(#shell-footer):not(script):not(link)");
-    existing.forEach(function (el) { el.style.display = "none"; });
-    document.body.appendChild(panel);
     document.getElementById("shell-signin-btn").addEventListener("click", openModal);
   }
 
@@ -587,7 +749,6 @@
         showErr("shell-staff-err", "Email or password is incorrect.");
         return;
       }
-      sessionStorage.setItem("st_staff_token", data.access_token);
 
       // ── W3.9d-f — role and name come from staff_accounts, not user_metadata ──
       // `user_metadata.role` is EMPTY on every account in this project, so every
@@ -601,20 +762,29 @@
       // The authority is `staff_accounts.role`. RLS policy "Staff can read own
       // account" is `auth.uid() = id`, so this returns exactly the caller's own
       // row — limit=1 is the whole result, not a slice of a larger set.
-      finishStaffLogin(data.access_token, email);
+      finishStaffLogin(data, email);
     }).catch(function () {
       btn.disabled = false; btn.textContent = "Sign In";
       showErr("shell-staff-err", "We couldn’t reach the portal just now. Try again in a moment.");
     });
   }
 
-  // Completes a staff sign-in once the token is held. Split out so the profile
-  // read cannot leave the login half-done: whether it succeeds, fails, or is
-  // refused, this always writes a session and always re-renders. A failed
-  // profile read degrades the LABEL, never the login — the alternative is
-  // stranding someone whose credentials were accepted, which is the class of
-  // silent failure that cost this project a weekend.
-  function finishStaffLogin(token, email) {
+  // Completes a staff sign-in once Supabase has accepted the credentials.
+  // Split out so the profile read cannot leave the login half-done: whether it
+  // succeeds, fails, or is refused, this always writes a session and always
+  // re-renders. A failed profile read degrades the LABEL, never the login —
+  // the alternative is stranding someone whose credentials were accepted,
+  // which is the class of silent failure that cost this project a weekend.
+  //
+  // ── W4.5, 2026-08-24 — `data` (the full /auth/v1/token response), not just
+  // the access token. Ruling: keep `refresh_token` and refresh on demand,
+  // rather than raising the Supabase JWT lifetime to 24h (a stolen token would
+  // then be valid a full day with no revocation — the opposite direction from
+  // W9b/W9c) or shortening the app's 24h window to match the JWT (would force
+  // an hourly re-sign-in on a race day). `expires_in` is read live off this
+  // response, never assumed — see getValidAccessToken()/refreshAccessToken().
+  function finishStaffLogin(data, email) {
+    var token = data.access_token;
     var fallbackName = email.split("@")[0];
 
     function complete(fullName, role) {
@@ -625,7 +795,13 @@
       var displayName = parts[0] || fallbackName;
       writeSession({
         identity: "staff", initials: initials, displayName: displayName,
-        familyCode: null, studentUsername: null, staffRole: role || null
+        familyCode: null, studentUsername: null, staffRole: role || null,
+        // The record IS the session now — shared via localStorage, so every
+        // open tab sees the same token without waiting on a `storage` event
+        // race. See resolveIdentity() below for what this replaces.
+        accessToken: token,
+        refreshToken: data.refresh_token || null,
+        accessTokenExpiresAt: Date.now() + (Number(data.expires_in) || 3600) * 1000
       });
       closeModal();
       state.identity = "staff";
@@ -655,7 +831,11 @@
     var wasPrivate = PRIVATE_ROUTES.indexOf(currentPathname()) !== -1;
     clearSession();
     sessionStorage.removeItem("st_family_code");
-    sessionStorage.removeItem("st_staff_token");
+    // `st_staff_token` (sessionStorage, per-tab) no longer exists as of W4.5 —
+    // the staff token now lives inside the shared `steamteams_session` record
+    // and clearSession() above already removed it, in every tab, via the
+    // `storage` event.
+    try { sessionStorage.removeItem(SESSION_END_REASON_KEY); } catch (e) {}
     state.identity = "anonymous"; state.initials = ""; state.displayName = ""; state.staffRole = null;
     rerenderShell();
     if (wasPrivate) window.location.href = "/";
@@ -665,7 +845,9 @@
   function guardPrivateRoute(path) {
     var sess = readSession();
     if (!sess) {
-      renderSignInPanel("This part of the portal is for signed-in families, students, or staff.");
+      var reason = null;
+      try { reason = sessionStorage.getItem(SESSION_END_REASON_KEY); } catch (e) {}
+      renderSignInPanel(sessionEndMessage(reason));
       openModal();
       return;
     }
@@ -678,37 +860,27 @@
   }
 
   // ── §10.4.6 Optimistic render + session resolution ───────────────
+  // ── W4.5, 2026-08-24 — the cross-tab blocker is CURED here, not contained. ──
+  // Until this wave, staff identity depended on `sessionStorage.st_staff_token`
+  // (PER-TAB) alongside the shared `localStorage` record — so a second tab
+  // could never have the token, and the W3.9d-f containment fix (2026-08-17)
+  // had to stop this function from deleting the shared record on that
+  // per-tab absence, turning silent data loss into a cosmetic difference
+  // instead of curing it. The invariant that fix protected — "a tab must
+  // never clear shared state on evidence local to itself" — still holds, and
+  // now holds trivially: the token lives INSIDE the shared record (see
+  // finishStaffLogin()), so there is no separate per-tab fact left to check
+  // against it. Every tab reads the same token from the same place. A second
+  // open tab shows signed in the instant this function runs, no `storage`
+  // event required to fix a mistake, because there is no longer a mistake to
+  // fix — see the wave card for the live two-tab proof.
+  //
+  // Whether the record itself is still valid (24-hour window, or an already-
+  // dead refresh token) is readSession()'s job, not this function's — it
+  // already discarded an expired or unwritable record before returning it.
   function resolveIdentity() {
     var sess = readSession();
-    if (!sess) { state.identity = "anonymous"; return; }
-    if (sess.identity === "staff") {
-      // Staff revalidation authority is the Supabase auth session, mirrored by
-      // the sessionStorage token dashboard.html reads.
-      var tok = sessionStorage.getItem("st_staff_token");
-      if (!tok) {
-        // ── W3.9d-f — DO NOT call clearSession() here. ──────────────────
-        // This ran clearSession() until 2026-08-17 and it was a launch
-        // blocker: `st_staff_token` lives in sessionStorage, which is
-        // PER-TAB, while the record it was deleting lives in localStorage,
-        // which is SHARED. So tab A signed in, tab B received the `storage`
-        // event, tab B looked for a token it could never have, concluded the
-        // session was dead, and deleted the record for every tab. Tab A
-        // re-rendered anonymous milliseconds after a successful 200 from
-        // /auth/v1/token. Staff with two tabs open could not sign in at all,
-        // and nothing surfaced because writeSession() swallows its errors.
-        //
-        // A tab must never clear SHARED state on evidence that is LOCAL to
-        // itself. Render anonymous here and leave the record alone: the cost
-        // is a cosmetic per-tab difference instead of silent data loss.
-        //
-        // This is containment, not the cure. The cure is moving the staff
-        // token into localStorage so it is genuinely shared — W4.5, because
-        // it needs a decision on token lifetime and whether a staff session
-        // should survive a browser restart.
-        state.identity = "anonymous";
-        return;
-      }
-    }
+    if (!sess) { state.identity = "anonymous"; state.initials = ""; state.displayName = ""; state.staffRole = null; return; }
     state.identity = sess.identity;
     state.initials = sess.initials || "";
     state.displayName = sess.displayName || "";
@@ -733,4 +905,18 @@
     if (!h) return;
     h.classList.toggle("shell-scrolled", window.scrollY > 0);
   }, { passive: true });
+
+  // ── W4.5 — minimal public API for pages that make authorised REST calls. ──
+  // shell.js is the single owner of the session record (§10.4.7) and, as of
+  // this wave, of the staff access/refresh token inside it. A page like
+  // dashboard.html needs a currently-valid token before every call, not the
+  // one it happened to get at boot — that is what "refresh on demand" means.
+  // Two separate script files can't share a JS module here (no build step),
+  // so this is the deliberate seam: read-only outside this file.
+  window.SteamTeamsAuth = {
+    getSession: readSession,
+    getValidAccessToken: getValidAccessToken,
+    endSessionVisibly: endSessionVisibly,
+    signOut: doSignOut
+  };
 })();
