@@ -178,14 +178,17 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
   font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
   padding:5px 12px;border-radius:2px;white-space:nowrap;
 }
-.status-approved-new  {background:#e8f5e9;color:var(--green);border:1px solid rgba(46,125,50,0.3);}
 .status-active        {background:var(--blue-light);color:var(--blue);}
-.status-alternate     {background:#fff3e0;color:var(--amber);}
 .status-pending       {background:var(--surface);color:var(--text-muted);border:1px solid var(--border);}
-.status-waitlist      {background:#f3e5f5;color:#6a1b9a;}
-.status-declined      {background:var(--red-light);color:var(--red);}
-.status-interested    {background:var(--blue-faint);color:var(--blue-mid);}
-.status-priority      {background:#e8f5e9;color:var(--green);}
+/* Wave 4.7 (D1) — the four remaining legal students.season_status values.
+   .status-approved-new/-alternate/-waitlist/-declined/-interested/-priority
+   were removed with the dead branches they existed to serve (see
+   statusLabel() below) — those values live on registration_status /
+   pipeline_status, not season_status, and never reach this function. */
+.status-inactive      {background:var(--surface);color:var(--text-muted);border:1px solid var(--border);}
+.status-suspended     {background:var(--amber-light);color:var(--amber);}
+.status-alumni        {background:var(--blue-faint);color:var(--blue-mid);}
+.status-no_interest   {background:var(--surface);color:var(--text-light);border:1px solid var(--border);}
 
 .student-card-body {padding:16px 20px;}
 
@@ -737,43 +740,37 @@ function showScreen(id) {
   if (target) target.style.display = "block";
 }
 
-/* ── STATUS LABEL LOGIC ── */
+/* ── STATUS LABEL LOGIC ──
+   Wave 4.7 (D1/D2). students_season_status_check — the live CHECK on
+   students.season_status, re-confirmed 2026-08-25 — permits exactly six
+   values: active, inactive, suspended, alumni, no_interest, pending.
+   This function used to carry nine branches. Seven of them —
+   approved, alternate, tryout_pending, waitlist, declined, interested,
+   priority — were NOT legal season_status values and could never fire:
+     - approved / waitlisted / declined / pending  -> registration_status
+       (students.registration_status, registrations.registration_status)
+     - interested / priority / tryout_pending / offered / declined / waitlist
+       -> students.pipeline_status
+     - alternate -> legal on no column at all; dead everywhere
+   Master Knowledge Doc §6.1 had conflated all four columns into one badge
+   table, which is what this function was written from. See MKD v15 §6.1
+   for the corrected per-column table, including the waitlist/waitlisted
+   spelling split between pipeline_status and registration_status.
+   approvedAt/program were only ever read inside the removed 'approved'
+   branch and are unused here now; left in the signature so the call site
+   below doesn't need to change its argument list. */
 function statusLabel(dbStatus, approvedAt, program, car) {
-  var now = new Date();
-  if (dbStatus === "approved") {
-    var approvalDate = approvedAt ? new Date(approvedAt) : null;
-    var daysSince = approvalDate ? (now - approvalDate) / (1000 * 60 * 60 * 24) : 999;
-    if (daysSince < 14) {
-      return { label: "You're In!", cls: "status-approved-new" };
-    } else {
-      var prog = program || "Program";
-      // Map program to display name
-      var progMap = {
-        "goblin": "Goblins",
-        "ms_greenpower": "MS Greenpower",
-        "hs_greenpower": "HS Greenpower",
-        "ten80_ms": "Ten80 MS",
-        "ten80_hs": "Ten80 HS"
-      };
-      var progDisplay = progMap[prog] || prog;
-      if (car) progDisplay = "Car " + car;
-      return { label: "Active — " + progDisplay, cls: "status-active" };
-    }
-  }
-  // 'active' and 'pending' are both real values in the wild but are
-  // absent from the Master Knowledge Doc v9 §6.1 badge table:
-  // register.html inserts season_status='pending', and
-  // trg_activate_dues_for_season keys off season_status='active'.
-  // Without these two lines the raw database string is shown to parents.
-  if (dbStatus === "active")         return { label: "Active", cls: "status-active" };
-  if (dbStatus === "pending")        return { label: "Under Review", cls: "status-pending" };
-  if (dbStatus === "alternate")      return { label: "Alternate — On Deck", cls: "status-alternate" };
-  if (dbStatus === "tryout_pending") return { label: "Under Review", cls: "status-pending" };
-  if (dbStatus === "waitlist")       return { label: "On the Waitlist", cls: "status-waitlist" };
-  if (dbStatus === "declined")       return { label: "Not Accepted This Season", cls: "status-declined" };
-  if (dbStatus === "interested")     return { label: "Pipeline — Camp", cls: "status-interested" };
-  if (dbStatus === "priority")       return { label: "Priority Consideration", cls: "status-priority" };
-  return { label: dbStatus, cls: "status-pending" };
+  if (dbStatus === "active")      return { label: "Active", cls: "status-active" };
+  if (dbStatus === "pending")     return { label: "Under Review", cls: "status-pending" };
+  if (dbStatus === "inactive")    return { label: "Not Active This Season", cls: "status-inactive" };
+  if (dbStatus === "suspended")   return { label: "Participation On Hold", cls: "status-suspended" };
+  if (dbStatus === "alumni")      return { label: "Alumni", cls: "status-alumni" };
+  if (dbStatus === "no_interest") return { label: "Not Participating", cls: "status-no_interest" };
+  // Every legal value is handled above. Anything else means the schema
+  // moved or bad data landed in the column — surface it loudly instead of
+  // ever showing a parent a raw database string (no silent no-ops).
+  console.warn('statusLabel(): unexpected season_status value: "' + dbStatus + '"');
+  return { label: "Status Unavailable", cls: "status-pending" };
 }
 
 /* ── RENDER STUDENT CARDS ── */
@@ -785,6 +782,11 @@ function renderStudentCards(students, registrations) {
   }
 
   wrap.innerHTML = students.map(function(s, i) {
+    // s.car_number reads student_coaching_profiles.car_number, which C8
+    // (W4.6, 2026-08-24) marked retired in favour of student_car_assignments
+    // — but that table is still 0 rows, so there is nothing else to read
+    // yet. Left as-is; the rewiring is carried forward under 06_, blocked
+    // on student_car_assignments actually being populated.
     var st = statusLabel(s.season_status, s.approved_at, s.program, s.car_number);
     // Find registrations for this student
     var stuRegs = (registrations || []).filter(function(r){ return r.student_id === s.id; });
