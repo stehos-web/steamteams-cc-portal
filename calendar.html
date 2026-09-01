@@ -1331,7 +1331,25 @@ document.getElementById("filter-row").addEventListener("click", function(e) {
   renderCalendarList(ALL_EVENTS, VIEWER_ROLE, nowCentralParts());
 });
 
-loadCalendar();
+// WAVE 4.8 — LIVE-CAUGHT DEFECT, not in the original brief. This file's
+// shell.js include is a DEFERRED script tag (src="/assets/js/shell.js",
+// defer attribute set), so shell.js (and window.SteamTeamsAuth) does not
+// exist yet while THIS script — a plain, non-deferred inline script block —
+// is executing at parse time. Calling loadCalendar() bare, right here, ran
+// getViewerRole() before
+// window.SteamTeamsAuth was defined, so `sess` was always null and every
+// staff sign-in silently resolved to "public" — proven live 2026-09-01,
+// signed in as stehos@chambersk12.org, zero request to staff_accounts and
+// the coordinator toolbar never appeared even after a full reload. The old
+// sessionStorage-based read never had this problem because sessionStorage
+// doesn't depend on shell.js having run. dashboard.html avoids this
+// correctly (`document.addEventListener('DOMContentLoaded', bootDashboard)`
+// at its own end) — deferred scripts execute in order before
+// DOMContentLoaded fires, so by then shell.js is guaranteed to have run.
+// Matching that pattern here.
+document.addEventListener("DOMContentLoaded", function () {
+  loadCalendar();
+});
 </script>
 </body>
 </html>
