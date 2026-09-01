@@ -160,6 +160,14 @@
     <span class="font-bold">Staff view:</span> draft events are included below (visible to coordinators/coaches only). Everyone else sees published events only.
   </div>
 
+  <!-- WAVE 4.8, 2026-09-01 — staff identity could not be verified. Shown
+       whenever the shell believes this browser is signed in as staff but
+       this page could not confirm it (session unrenewable, staff_accounts
+       unreachable, or the roster rejected the token) — so the coordinator
+       toolbar's absence is never the only signal. Project Instructions:
+       "no empty catch blocks, no silent no-ops." -->
+  <div id="staff-identity-error" role="alert" class="hidden bg-race-red text-white border-l-4 border-asphalt-black px-5 py-3 text-body-md font-bold"></div>
+
   <!-- ── Coordinator toolbar (workstream 11_) ──────────────────────────────
        Shown only when canManageEvents() is true — i.e. an active staff_accounts
        row whose role is in the coordinator tier. Calendar System Design v2.2 §4:
@@ -518,18 +526,28 @@ async function sbGet(p, token) {
 }
 
 // ── Viewer role ────────────────────────────────────
-// NOTE (confirmed against dashboard.html Jul 2026): dashboard.html does NOT
-// read sessionStorage.st_staff_token — it keeps its own in-memory SESSION
-// and re-authenticates independently on every load. So a staff member who
-// logs in via the index.html modal gets st_staff_token set, but dashboard.html
-// itself ignores it and re-prompts. That token is still the only signal this
-// browser has "done the staff login step," so we use it here too, but we
-// verify it against staff_accounts (same check dashboard.html does at
-// login) rather than trusting the token's mere presence — since the index.html
-// modal only confirms valid Supabase Auth credentials, not staff_accounts
-// membership. Note this is a client-side UI filter, not an RLS boundary —
-// the anon key already has public read on the full events table including
-// drafts, consistent with the rest of the portal's current v1 security model.
+// WAVE 4.8, 2026-09-01 — REPAIR. W4.5 (commit 3a305a2, 2026-08-24) moved the
+// staff access token out of the per-tab sessionStorage key `st_staff_token`
+// and into the shared `localStorage.steamteams_session` record shell.js
+// owns, updating shell.js, dashboard.html and family-dashboard.html to
+// match. It did not update this file. Nothing in the repo has written
+// `st_staff_token` since, so every read of it here returned null
+// permanently: getViewerRole() could never return "staff",
+// canManageEvents() was always false, and the coordinator toolbar was
+// hidden with no explanation from 2026-08-24 to 2026-09-01. See
+// WAVE-4.8-CARD.md for the live evidence and the fix.
+//
+// The paragraph below (kept, corrected) predates W4.5: dashboard.html did
+// once keep its own independent session, but as of W4.5 it — and now this
+// file — both go through `window.SteamTeamsAuth`, shell.js's one exposed
+// session API (getSession / getValidAccessToken / endSessionVisibly /
+// signOut). This file still verifies the token against staff_accounts
+// itself (same check dashboard.html does at login) rather than trusting
+// session.identity's mere presence, since the index.html modal only
+// confirms valid Supabase Auth credentials, not staff_accounts membership.
+// This is a client-side UI filter, not an RLS boundary — the anon key
+// already has public read on the full events table including drafts,
+// consistent with the rest of the portal's current v1 security model.
 // Program-scoped "their program only" filtering for family/student
 // (Section 4 note) is deferred — needs an enrolled-programs lookup that
 // doesn't exist yet as a simple session value; hook point noted below.
@@ -549,19 +567,48 @@ var STAFF_ROLE = null;
 // be renamed. 11-cal-02 uses this same list on the events write policies.
 var COORDINATOR_ROLES = ["admin", "coordinator", "asst_coordinator"];
 
+// WAVE 4.8 — visible failure per Project Instructions ("no empty catch
+// blocks, no silent no-ops"). The coordinator toolbar's silent absence was
+// half of why the W4.5 regression went eight days unnoticed; this makes an
+// unresolved staff identity say so.
+function showStaffIdentityProblem(msg) {
+  var el = document.getElementById("staff-identity-error");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+function clearStaffIdentityProblem() {
+  var el = document.getElementById("staff-identity-error");
+  if (!el) return;
+  el.classList.add("hidden");
+  el.textContent = "";
+}
+
 async function getViewerRole() {
-  var staffToken = sessionStorage.getItem("st_staff_token");
-  if (staffToken) {
+  clearStaffIdentityProblem();
+  var sess = window.SteamTeamsAuth ? window.SteamTeamsAuth.getSession() : null;
+  if (sess && sess.identity === "staff") {
+    var token = null;
+    try { token = await window.SteamTeamsAuth.getValidAccessToken(); } catch (e) { token = null; }
+    if (!token) {
+      showStaffIdentityProblem("Your staff session could not be renewed. Sign in again from the header.");
+      return "public";
+    }
     try {
       var r = await fetch(SB_URL + "/rest/v1/staff_accounts?select=id,role,is_active&limit=1", {
-        headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken }
+        headers: { apikey: SB_KEY, Authorization: "Bearer " + token }
       });
       var rows = await r.json();
       if (r.ok && rows && rows.length) {
-        STAFF_ROLE = rows[0].is_active === false ? null : (rows[0].role || null);
+        STAFF_ROLE = rows[0].is_active === false ? null : (rows[0].role || sess.staffRole || null);
         return "staff";
       }
-    } catch (e) { /* fall through to lower tiers */ }
+      showStaffIdentityProblem("We couldn't verify your staff account against the roster. Sign in again, or tell your coordinator if this continues.");
+      return "public";
+    } catch (e) {
+      showStaffIdentityProblem("We couldn't reach the portal to verify your staff account. Try again in a moment.");
+      return "public";
+    }
   }
   if (sessionStorage.getItem("st_student_id")) return "student";
   if (sessionStorage.getItem("st_family_id")) return "family";
@@ -580,8 +627,18 @@ function canManageEvents() {
 
 // The staff auth token, used for every write. Reads by non-staff continue to
 // use the publishable key.
-function staffToken() {
-  return sessionStorage.getItem("st_staff_token");
+// WAVE 4.8 — was sessionStorage.getItem("st_staff_token"), dead since W4.5
+// (2026-08-24) moved the token into the shared session; nothing has written
+// that key since. Now asks shell.js for a token guaranteed valid right now
+// (refreshed first if expired or close to it) via the one exposed session
+// API — same source dashboard.html uses. Callers must await it.
+async function staffToken() {
+  if (!window.SteamTeamsAuth) return null;
+  try {
+    return await window.SteamTeamsAuth.getValidAccessToken();
+  } catch (e) {
+    return null;
+  }
 }
 
 // ── Calendar type metadata — icon + color per base type name.
@@ -1050,7 +1107,7 @@ async function saveEvent(e) {
       headers: {
         "Content-Type": "application/json",
         apikey: SB_KEY,
-        Authorization: "Bearer " + staffToken(),
+        Authorization: "Bearer " + (await staffToken()),
         Prefer: "return=representation"
       },
       body: JSON.stringify(payload)
@@ -1108,7 +1165,7 @@ async function callTaskRpc(fn, body) {
       headers: {
         "Content-Type": "application/json",
         apikey: SB_KEY,
-        Authorization: "Bearer " + staffToken()
+        Authorization: "Bearer " + (await staffToken())
       },
       body: JSON.stringify(body || {})
     });
@@ -1130,7 +1187,7 @@ async function patchEvent(id, patch) {
       headers: {
         "Content-Type": "application/json",
         apikey: SB_KEY,
-        Authorization: "Bearer " + staffToken(),
+        Authorization: "Bearer " + (await staffToken()),
         Prefer: "return=representation"
       },
       body: JSON.stringify(patch)
@@ -1206,7 +1263,7 @@ async function openDeleteConfirm(id) {
   warn.classList.add("hidden");
   try {
     var r = await fetch(SB_URL + "/rest/v1/tasks?event_id=eq." + encodeURIComponent(id) + "&select=id&limit=1", {
-      headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken(), Prefer: "count=exact" }
+      headers: { apikey: SB_KEY, Authorization: "Bearer " + (await staffToken()), Prefer: "count=exact" }
     });
     var count = r.headers.get("content-range");
     if (r.ok && count && !count.endsWith("/0")) warn.classList.remove("hidden");
@@ -1227,7 +1284,7 @@ async function confirmDeleteEvent() {
   try {
     var res = await fetch(SB_URL + "/rest/v1/events?id=eq." + encodeURIComponent(id), {
       method: "DELETE",
-      headers: { apikey: SB_KEY, Authorization: "Bearer " + staffToken() }
+      headers: { apikey: SB_KEY, Authorization: "Bearer " + (await staffToken()) }
     });
     if (!res.ok) throw new Error("Delete failed (" + res.status + ")");
     if (EDITING_ID === id) closeEventEditor();
@@ -1248,7 +1305,7 @@ async function loadCalendar() {
     // Staff: use their own verified auth token so the RESTRICTIVE RLS
     // policy's 'authenticated' carve-out applies and drafts come through.
     // Everyone else: public key, which can never receive draft rows.
-    var authToken = VIEWER_ROLE === "staff" ? sessionStorage.getItem("st_staff_token") : null;
+    var authToken = VIEWER_ROLE === "staff" ? (await staffToken()) : null;
     var rows = await sbGet("events?select=*&order=start_date.asc.nullslast", authToken);
     ALL_EVENTS = rows || [];
     if (VIEWER_ROLE === "staff") {
