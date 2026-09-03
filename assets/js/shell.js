@@ -400,8 +400,8 @@
       '<div id="shell-panel-family" class="shell-login-panel space-y-4">' +
         "<div>" +
           '<label class="block text-[13px] font-bold uppercase text-[#44474e] mb-2">Family Code</label>' +
-          '<input id="shell-fam-code" type="text" autocomplete="off" inputmode="text" maxlength="7" ' +
-          'placeholder="CC-XXXX" pattern="CC-[A-Z0-9]{4}" class="' + INPUT_CLS + '">' +
+          '<input id="shell-fam-code" type="text" autocomplete="off" inputmode="text" maxlength="9" ' +
+          'placeholder="CC-XXXXXX" pattern="CC-[A-Z0-9]{4,6}" class="' + INPUT_CLS + '">' +
           '<p class="mt-1 text-xs text-[#44474e]">From your registration confirmation</p>' +
         "</div>" +
         '<div id="shell-fam-err" class="hidden text-sm text-[#B2292E] bg-[#ffdad6] px-3 py-2"></div>' +
@@ -636,8 +636,8 @@
     var famCode = document.getElementById("shell-fam-code");
     if (famCode) famCode.addEventListener("input", function () {
       var v = famCode.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 6);
-      famCode.value = v.slice(0, 7);
+      if (v.length > 2) v = v.slice(0, 2) + "-" + v.slice(2, 8);
+      famCode.value = v.slice(0, 9);
     });
 
     document.addEventListener("keydown", onKeydown);
@@ -711,7 +711,7 @@
   function loginFamily() {
     var code = document.getElementById("shell-fam-code").value.trim().toUpperCase();
     hideErr("shell-fam-err");
-    if (!code.match(/^CC-[A-Z0-9]{4}$/)) {
+    if (!code.match(/^CC-[A-Z0-9]{4,6}$/)) {
       showErr("shell-fam-err", "We don’t recognise that family code. Check the letter case and try again, or email stehos@chambersk12.org.");
       return;
     }
