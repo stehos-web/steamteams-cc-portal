@@ -676,12 +676,40 @@ async function sbPatch(path, body, tok) {
   return rows;
 }
 
-function toast(msg, type = 'info') {
+/* W11.0 — sbRpc. Approving a student is a POST to a database function, not a
+   PATCH of a column, so this page needs an RPC caller. It mirrors sbPatch's
+   discipline: a 401 ends the session visibly, and a non-2xx surfaces the
+   database's own message rather than a generic failure — approve_student()
+   raises named, readable reasons (APPROVE/NOT_AUTHORISED, NO_REGISTRATION,
+   ALREADY_APPROVED, NO_FEE_BAND) and the coordinator should see them.
+   No empty catch, no silent no-op. */
+async function sbRpc(fn, body, tok) {
+  const useTok = await freshToken(tok);
+  const r = await fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: headers(useTok),
+    body: JSON.stringify(body || {})
+  });
+  if (r.status === 401) { handleSlippedThrough401(); throw new Error('Your session ended. Please sign in again.'); }
+  const text = await r.text();
+  if (!r.ok) {
+    let msg = text;
+    try { const j = JSON.parse(text); msg = j.message || j.hint || j.details || text; } catch (e) {}
+    throw new Error(msg);
+  }
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch (e) {
+    throw new Error('The portal could not read the result of that action. Check the registration before retrying it.');
+  }
+}
+
+function toast(msg, type = 'info', ms = 3500) {
   const t = document.createElement('div');
   t.className = 'toast ' + type;
   t.textContent = msg;
   document.getElementById('toast-container').appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(() => t.remove(), ms);
 }
 
 function setPage(name) {
@@ -1113,17 +1141,77 @@ function openRegModal(regId) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
+/* W11.0 — APPROVING IS A MONEY ACTION, NOT A STATUS CHANGE.
+
+   What this function used to do: PATCH registrations.registration_status and
+   stop. That set the approval flag and nothing else — no approved_by, no
+   approved_at, no season_status — so no dues row was ever created. The
+   coordinator got a green toast and a badge that flipped, and downstream
+   nothing happened at all. Approved-and-unbilled, indefinitely, with every
+   visible signal saying it had worked.
+
+   'approved' now goes through approve_student(), which is one transaction:
+   it stamps the approval on `registrations` (authoritative, ruling 3), sets
+   season_status = 'active' (approve and activate are ONE action, ruling 2),
+   and trg_activate_dues_for_season creates the dues row and applies the
+   MKD §7.2a sibling discount to the whole family. It refuses, by name, when
+   there is no registration, when it is already approved, when no fee band
+   covers the grade, or when the caller is not coordinator tier.
+
+   Every other status stays a plain PATCH — waitlisting and declining do not
+   bill anyone, so they do not need the gate.                                */
 async function updateRegStatus(regId, newStatus) {
+  const reg = REG_DATA.find(r => r.id === regId);
+  if (!reg) { toast('That registration is no longer loaded. Reload the page and try again.', 'error'); return; }
+  const wasApproved = reg.registration_status === 'approved';
+
   try {
+    if (newStatus === 'approved') {
+      if (!reg.student_id) throw new Error('This registration has no student attached, so it cannot be approved.');
+
+      const res = await sbRpc('approve_student', { p_student_id: reg.student_id }, SESSION.access_token);
+      reg.registration_status = 'approved';
+      closeModal();
+      renderRegTable();
+      loadHomeStats();
+
+      const fee = res && res.base_fee;
+      toast('Approved and activated for the season' +
+            (fee ? ' — dues start at $' + fee + ' before any sibling discount' : ''),
+            'success', 6000);
+
+      /* MKD §7.2a recomputes the WHOLE family on every activation, so approving
+         a third child can demote a sibling from rank 2 (50% off) to rank 3
+         (25% off) and their balance GOES UP. That is the rule working
+         correctly, and it is still a number a parent watches move, so it is
+         never left silent. Proven live on CC-ZZ01, W11.0: $150 -> $225. */
+      const raised = (res && res.siblings_bill_increased) || {};
+      const nRaised = Object.keys(raised).length;
+      if (nRaised > 0) {
+        toast(nRaised + (nRaised === 1 ? ' sibling now owes MORE' : ' siblings now owe MORE') +
+              ' — §7.2a re-ranked this family. Contact them before they notice it themselves.',
+              'error', 12000);
+      }
+      return;
+    }
+
     await sbPatch('/rest/v1/registrations?id=eq.' + regId, { registration_status: newStatus }, SESSION.access_token);
-    const idx = REG_DATA.findIndex(r => r.id === regId);
-    if (idx !== -1) REG_DATA[idx].registration_status = newStatus;
+    reg.registration_status = newStatus;
     closeModal();
     renderRegTable();
     loadHomeStats();
     toast('Status updated to ' + newStatus, 'success');
+
+    /* Approval is not symmetric: the dues row is created when a student
+       BECOMES active and is not removed by anything here. Say so rather than
+       let the badge imply the billing was undone too. */
+    if (wasApproved) {
+      toast('Heads up — this student keeps their dues row and the family still sees the balance. ' +
+            'Undoing the billing is a separate step (handoffs/W11.0-APPROVAL-ROLLBACK.sql).',
+            'error', 12000);
+    }
   } catch(e) {
-    toast('Error: ' + e.message, 'error');
+    toast('Error: ' + e.message, 'error', 9000);
   }
 }
 
