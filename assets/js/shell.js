@@ -13,8 +13,6 @@
   "use strict";
 
   // ── Supabase ─────────────────────────────────────────────────────
-  var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
-  var SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
   function sbAuth(body) {
     return fetch(SB_URL + "/auth/v1/token?grant_type=password", {

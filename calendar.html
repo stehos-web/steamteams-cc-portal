@@ -2,6 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/assets/js/config.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Season Calendar — STEAM Teams CC</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -509,8 +510,6 @@
 
 <script>
 // ── Supabase credentials (page-content reads only) ──
-const SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
-const SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
 async function sbGet(p, token) {
   // token param: pass a real staff auth token (not the public key) to read

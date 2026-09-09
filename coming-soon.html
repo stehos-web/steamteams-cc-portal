@@ -2,6 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/assets/js/config.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Coming Soon — STEAM Teams CC Portal</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -165,8 +166,6 @@ var path = currentPathname();
 renderContent(path === "/coming-soon.html" ? GENERIC : (FALLBACK[path] || GENERIC));
 
 // ── Config overwrite (§10.7.1) ────────────────────────────────────
-var SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
-var SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
 
 fetch(SB_URL + "/rest/v1/portal_config?key=eq.coming_soon_routes&select=value", {
   headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }
