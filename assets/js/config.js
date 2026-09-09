@@ -9,4 +9,4 @@
    Wave 9f, workstream 09_Security.
 =================================================================== */
 window.SB_URL = "https://avbogkupsoeraivbyypu.supabase.co";
-window.SB_KEY = "sb_publishable_jhWuvHQjixbfRPNb9Eyhgg_ogpKCm9f";
+window.SB_KEY = "sb_publishable_jEM5KXNbWcPp6U1VB0jsBA_kN5dL5gB";
