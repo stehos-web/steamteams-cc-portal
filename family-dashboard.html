@@ -83,28 +83,6 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
   padding:6px 14px;border-radius:2px;
 }
 
-/* ── READINESS BANNER ── */
-.readiness-banner {
-  background:var(--amber-light);border:1.5px solid var(--amber);
-  border-radius:3px;padding:16px 20px;margin-bottom:24px;
-  display:flex;align-items:flex-start;gap:14px;
-}
-.readiness-banner.complete {background:var(--green-light);border-color:var(--green);}
-.readiness-banner.hidden {display:none;}
-.readiness-icon {font-size:22px;flex-shrink:0;margin-top:1px;}
-.readiness-content {}
-.readiness-title {font-family:var(--slab);font-weight:700;font-size:14px;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
-.readiness-banner.complete .readiness-title {color:var(--green);}
-.readiness-items {display:flex;flex-wrap:wrap;gap:8px;}
-.readiness-item {
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;font-weight:600;padding:4px 10px;border-radius:2px;
-}
-.readiness-item.done {background:var(--green-light);color:var(--green);}
-.readiness-item.todo {background:var(--amber-light);color:var(--amber);border:1px solid rgba(230,81,0,0.3);}
-.readiness-item.todo {cursor:pointer;}
-.readiness-item.todo:hover {background:#ffe0b2;}
-
 /* ── GRID ── */
 .dashboard-grid {
   display:grid;
@@ -135,7 +113,6 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 .accent-blue   {background:var(--blue);}
 .accent-red    {background:var(--red);}
 .accent-green  {background:var(--green);}
-.accent-amber  {background:var(--amber);}
 .accent-gray   {background:var(--text-light);}
 
 .card-title {font-family:var(--slab);font-weight:700;font-size:14px;text-transform:uppercase;color:var(--blue);letter-spacing:0.3px;}
@@ -301,25 +278,6 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
   display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;
   background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;
   text-transform:uppercase;letter-spacing:.03em;text-decoration:none;
-}
-
-/* ── READINESS CHECKLIST CARD ── */
-.checklist-items {display:flex;flex-direction:column;gap:8px;}
-.checklist-item {
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;border-radius:2px;border:1px solid var(--border);
-  transition:all 0.2s;
-}
-.checklist-item.done {background:var(--green-light);border-color:rgba(46,125,50,0.3);}
-.checklist-item.todo {background:var(--amber-light);border-color:rgba(230,81,0,0.25);cursor:pointer;}
-.checklist-item.todo:hover{background:#ffe0b2;}
-.checklist-item-left {display:flex;align-items:center;gap:10px;}
-.checklist-check {font-size:16px;}
-.checklist-name {font-weight:600;font-size:13px;color:var(--text);}
-.checklist-desc {font-size:11px;color:var(--text-muted);margin-top:1px;}
-.checklist-cta {
-  font-family:var(--cond);font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--amber);background:none;border:none;cursor:pointer;padding:0;
 }
 
 /* ── REGISTRATION STATUS ── */
@@ -488,15 +446,6 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
       <div class="season-badge">2026&ndash;2027 Season</div>
     </div>
 
-    <!-- Readiness banner -->
-    <div class="readiness-banner" id="readiness-banner">
-      <div class="readiness-icon" id="readiness-icon">&#9888;&#65039;</div>
-      <div class="readiness-content">
-        <div class="readiness-title" id="readiness-title">Action Required &mdash; Complete Your Family Profile</div>
-        <div class="readiness-items" id="readiness-items"></div>
-      </div>
-    </div>
-
     <!-- Dashboard grid -->
     <div class="dashboard-grid">
 
@@ -594,21 +543,6 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
         </div>
         <div class="card-body-sm" id="calendar-body">
           <!-- Populated by renderEvents() from the events table -->
-        </div>
-      </div>
-
-      <!-- FAMILY READINESS CHECKLIST CARD -->
-      <div class="card" id="card-readiness">
-        <div class="card-header">
-          <div class="card-header-left">
-            <div class="card-accent accent-amber"></div>
-            <div class="card-title">Family Readiness</div>
-          </div>
-        </div>
-        <div class="card-body-sm">
-          <div class="checklist-items" id="checklist-items">
-            <!-- Populated by JS -->
-          </div>
         </div>
       </div>
 
@@ -845,86 +779,6 @@ function detailRow(label, value) {
     "<span class='student-detail-value'>" + esc(value) + "</span></div>";
 }
 
-/* ── RENDER READINESS BANNER ── */
-function renderReadiness(family) {
-  var banner = document.getElementById("readiness-banner");
-  var itemsEl = document.getElementById("readiness-items");
-  var titleEl = document.getElementById("readiness-title");
-  var iconEl  = document.getElementById("readiness-icon");
-
-  var checks = [
-    { key: "waiver_on_file",     label: "Waiver",           desc: "Sign season waiver" },
-    { key: "medical_on_file",    label: "Medical Info",     desc: "Update medical information" },
-    { key: "profile_complete",   label: "Student Profile",  desc: "Complete student profile" },
-    { key: "volunteer_profile",  label: "Volunteer Profile",desc: "Add volunteer availability" }
-  ];
-
-  // These four may not be columns on `families` at all — Build Status
-  // v10 §2 doesn't list them, and they appear nowhere else in the repo.
-  // Run migrations/01-family-01-schema-probe.sql to settle it. If they're
-  // absent the RPC simply omits the keys, and showing every family four
-  // permanently-incomplete items would be worse than showing nothing.
-  if (!checks.some(function(c){ return c.key in family; })) {
-    banner.classList.add("hidden");
-    return;
-  }
-
-  var allDone = checks.every(function(c){ return family[c.key]; });
-
-  if (allDone) {
-    banner.classList.add("complete");
-    banner.classList.remove("hidden");
-    iconEl.innerHTML = "&#10003;";
-    titleEl.textContent = "Family Profile Complete — You're all set!";
-    itemsEl.innerHTML = "";
-    // Auto-hide after 4s if complete
-    setTimeout(function(){ banner.classList.add("hidden"); }, 4000);
-    return;
-  }
-
-  banner.classList.remove("hidden", "complete");
-  itemsEl.innerHTML = checks.map(function(c) {
-    return family[c.key]
-      ? "<div class='readiness-item done'>&#10003; " + esc(c.label) + "</div>"
-      : "<div class='readiness-item todo' title='" + esc(c.desc) + "'>&#9675; " + esc(c.label) + "</div>";
-  }).join("");
-}
-
-/* ── RENDER CHECKLIST CARD ── */
-function renderChecklistCard(family) {
-  var checks = [
-    { key: "waiver_on_file",    label: "Season Waiver",     desc: "Signed and on file for 2026–2027", icon: "&#128196;" },
-    { key: "medical_on_file",   label: "Medical Information",desc: "Current and verified",                  icon: "&#10084;&#65039;" },
-    { key: "profile_complete",  label: "Student Profile",   desc: "Complete and up to date",               icon: "&#128100;" },
-    { key: "volunteer_profile", label: "Volunteer Profile", desc: "At least one family volunteer on file",  icon: "&#129309;" }
-  ];
-  var el   = document.getElementById("checklist-items");
-  var card = document.getElementById("card-readiness");
-
-  // Same column-existence guard as renderReadiness().
-  if (!checks.some(function(c){ return c.key in family; })) {
-    if (card) card.style.display = "none";
-    return;
-  }
-  if (card) card.style.display = "";
-
-  // The previous version built onclick='alert('Coming in Phase 2')' —
-  // nested single quotes inside a single-quoted attribute, so the
-  // handler was malformed and threw on every click. The completion
-  // flow itself belongs to Registration & Onboarding (workstream 10),
-  // which owns the readiness checklist; this card only reports state.
-  el.innerHTML = checks.map(function(c) {
-    var done = family[c.key];
-    return "<div class='checklist-item " + (done ? "done" : "todo") + "'>" +
-      "<div class='checklist-item-left'>" +
-        "<div class='checklist-check'>" + (done ? "&#9989;" : "&#9675;") + "</div>" +
-        "<div><div class='checklist-name'>" + esc(c.label) + "</div>" +
-          "<div class='checklist-desc'>" + esc(c.desc) + "</div></div>" +
-      "</div>" +
-    "</div>";
-  }).join("");
-}
-
 /* ── RENDER REGISTRATION STATUS ── */
 function renderRegistrations(registrations, students) {
   var el = document.getElementById("reg-items");
@@ -986,16 +840,46 @@ function renderActivityTypes(types) {
 }
 
 /* volunteer_logs.student_id is NOT NULL — every log must name one of
-   this family's own students. Populated once, from the same students
-   array the student cards use. */
+   this family's own students.
+
+   D3 (W4.12): the picker offers only students who have a dues account
+   for the current season. A volunteer log is a claim on a credit, and
+   a credit is applied against a dues account — a student with no dues
+   row has nothing to credit.
+
+   The field is `has_dues_record`, emitted per student by
+   get_family_dashboard() (migration 01-family-07). It is deliberately
+   NOT `season_status !== "pending"`: that is a proxy for the rule, not
+   the rule. A student can be active with no dues row, and filtering on
+   the proxy would hide the wrong people while reading as correct.
+
+   This filter is the courtesy. The control is server-side in
+   submit_family_volunteer_log(), which refuses the same case with
+   reason `no_dues_account` — a hidden <option> is not impossible. */
 function renderVolStudentPicker(students) {
   var sel = document.getElementById("vol-student");
+  var btn = document.getElementById("btn-submit-vol");
   if (!sel) return;
-  if (!students.length) {
-    sel.innerHTML = "<option value=''>No students on file</option>";
+
+  var all      = students || [];
+  var eligible = all.filter(function(s) { return s.has_dues_record === true; });
+
+  if (!eligible.length) {
+    /* Two empty states, because they are two different situations.
+       "No students on file" is wrong and alarming for a family with
+       three registered students — which is every real family today,
+       since no real student has a dues account yet. */
+    sel.innerHTML = all.length
+      ? "<option value=''>Volunteer logging opens once a student is activated for the season</option>"
+      : "<option value=''>No students on file</option>";
+    sel.disabled = true;
+    if (btn) btn.disabled = true;
     return;
   }
-  sel.innerHTML = students.map(function(s) {
+
+  sel.disabled = false;
+  if (btn) btn.disabled = false;
+  sel.innerHTML = eligible.map(function(s) {
     return "<option value='" + esc(s.id) + "'>" + esc(s.first_name) + " " + esc(s.last_name) + "</option>";
   }).join("");
 }
@@ -1044,6 +928,7 @@ async function submitVolLog() {
       var msgs = {
         invalid_activity_type: "That activity is no longer available. Please pick another.",
         invalid_student: "Please choose a valid student.",
+        no_dues_account: "Volunteer hours can be logged once this student is activated for the season.",
         invalid_date:  "Please choose a date in the past 6 months, not in the future.",
         not_found:     "Your session expired. Please sign in with your family code again.",
         rate_limited:  REASON_TEXT.rate_limited
@@ -1283,8 +1168,6 @@ function renderDashboard(res, familyCode) {
       "Season " + res.season + " · Inspire Academy";
   }
 
-  renderReadiness(family);
-  renderChecklistCard(family);
   renderStudentCards(res.students || [], res.registrations || []);
   renderRegistrations(res.registrations || [], res.students || []);
   renderBalance(res.balance || {}, res.ledger || []);
