@@ -244,6 +244,37 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 .vol-form-input::placeholder{color:var(--text-light);}
 .vol-form-note {font-size:11px;color:var(--text-light);margin-top:-4px;}
 
+/* The student picker is the only <select> in this form, and it shared
+   .vol-form-input with four text inputs — same border, same fill, same
+   shape — so it did not read as a control with options at all. Found by
+   Seth in the W4.12 walkthrough, not by any automated check. The native
+   arrow was present but faint grey on a grey surface; replaced with an
+   explicit chevron.
+
+   The :focus selector is repeated deliberately. `.vol-form-input:focus`
+   sets `background:white` — a shorthand, which resets background-image —
+   and outranks a bare `select.vol-form-input`, so the chevron would
+   vanish the moment the control was focused. Two selectors, one rule.
+
+   (Design Spec v5 §10.4.5's "no chevron" amendment governs the shell's
+   account menu, not form controls. Different element, different rule.) */
+select.vol-form-input,
+select.vol-form-input:focus {
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  padding-right:34px;
+  background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px 8px;
+  cursor:pointer;
+}
+/* The empty state disables this control (D3). Match .btn-submit-vol's
+   existing disabled treatment so the pair reads as one unavailable
+   action, and drop the chevron — there is nothing to open. */
+select.vol-form-input:disabled {
+  opacity:0.6;cursor:not-allowed;background-image:none;padding-right:12px;
+}
+
 .btn-submit-vol {
   background:var(--green);color:white;border:none;
   padding:11px;border-radius:2px;width:100%;
