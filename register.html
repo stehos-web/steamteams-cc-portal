@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- W9f/W10.5 — the Supabase key lives in exactly one place, loaded as a
+     blocking script, FIRST, ahead of everything else including Tailwind and
+     shell.js — the same position dashboard.html and calendar.html use.
+     §0(2) of the W10.5 brief: do not copy a key literal here directly. -->
 <script src="/assets/js/config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Register — STEAM Teams CC</title>
@@ -10,8 +14,7 @@
      drawer, and login modal are built from Tailwind utility classes. -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<!-- Public Shell — Design Spec v4 §10.2.1. One shared stylesheet, no per-page shell CSS.
-     W3.9d: this page is the sixth and last surface onto the shared shell. -->
+<!-- Public Shell — Design Spec v5 §10.2.1. One shared stylesheet, no per-page shell CSS. -->
 <link href="/assets/css/shell.css" rel="stylesheet">
 <script src="/assets/js/shell.js" defer></script>
 <style>
@@ -26,32 +29,9 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;}
   body{font-family:'Roboto',sans-serif;background:var(--gray-light);color:var(--text);min-height:100vh;}
-  /* HEADER RULES DELETED W3.9d — §10.2 / §10.2.4.
-     This page carried its own sticky navy bar at z-index:100, with the fourth
-     competing wordmark in the portal ("STEAM TEAMS / CC PORTAL") and a
-     "← Back to Home" link. §10.2.4 retires that wordmark by name; §10.3.3 says
-     every back-link is deleted rather than restyled, because there is now
-     navigation; §10.2.3 sets the shell header at z-40 and makes any page element
-     above it a defect. All three are resolved by the same deletion: the header
-     is rendered by shell.js into #shell-root, identically to every other
-     surface. Do not re-add a header, a wordmark, or a back-link here. */
-  .progress-wrap{background:var(--blue-dark);padding:14px 40px;}
-  .progress-inner{max-width:680px;margin:0 auto;}
-  .progress-steps{display:flex;align-items:center;}
-  .prog-step{display:flex;align-items:center;gap:8px;flex:1;}
-  .prog-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.3s;}
-  .prog-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:color 0.3s;white-space:nowrap;}
-  .prog-line{flex:1;height:2px;margin:0 6px;transition:background 0.3s;}
-  .prog-step.active .prog-num{background:var(--red);color:white;}
-  .prog-step.active .prog-label{color:white;}
-  .prog-step.done .prog-num{background:var(--green);color:white;}
-  .prog-step.done .prog-label{color:rgba(255,255,255,0.6);}
-  .prog-step.off .prog-num{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);}
-  .prog-step.off .prog-label{color:rgba(255,255,255,0.3);}
-  .prog-line.done{background:var(--green);}
-  .prog-line.off{background:rgba(255,255,255,0.12);}
-  .prog-step.hidden{display:none;}
-  .prog-line.hidden{display:none;}
+  /* HEADER RULES DELETED W3.9d, kept deleted W10.5 — §10.2 / §10.2.4. This
+     page renders the shell's header from shell.js into #shell-root. Do not
+     re-add a header, a wordmark, or a back-link here. */
   main{max-width:680px;margin:36px auto;padding:0 20px 80px;}
   .card{background:white;border-radius:6px;box-shadow:0 2px 16px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:16px;}
   .ch{padding:24px 32px;}
@@ -62,26 +42,24 @@
   .ch-dark{background:linear-gradient(135deg,var(--blue),var(--blue-dark));}
   .cb{padding:28px 32px;}
   .fork-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  @media(max-width:500px){.fork-grid{grid-template-columns:1fr;}}
+  @media(max-width:500px){.fork-grid{grid-template-columns:1fr;}.cb{padding:20px;}}
   .fork-opt{border:2px solid var(--border);border-radius:6px;padding:24px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:white;}
-  .fork-opt:hover{border-color:var(--blue);background:var(--blue-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(28,53,94,0.12);}
+  .fork-opt:hover,.fork-opt:focus-visible{border-color:var(--blue);background:var(--blue-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(28,53,94,0.12);}
   .fork-icon{font-size:32px;margin-bottom:10px;}
   .fork-opt h3{font-family:'Roboto Slab',serif;font-weight:700;font-size:15px;color:var(--blue);text-transform:uppercase;margin-bottom:6px;}
   .fork-opt p{font-size:12px;color:var(--text-muted);line-height:1.5;}
-  .fork-loading{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;}
-  .fork-loading-spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
-  .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .fg.one{grid-template-columns:1fr;}
   @media(max-width:500px){.fg{grid-template-columns:1fr;}}
   .fgr{display:flex;flex-direction:column;gap:5px;}
   label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);}
   .req{color:var(--red);margin-left:2px;}
   .opt{color:var(--gray);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;margin-left:4px;}
-  input[type=text],input[type=email],input[type=password],input[type=tel],select,textarea{padding:11px 13px;border:1.5px solid var(--border);border-radius:4px;font-family:'Roboto',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;transition:border-color 0.2s;width:100%;}
+  input[type=text],input[type=email],input[type=tel],select,textarea{padding:11px 13px;border:1.5px solid var(--border);border-radius:4px;font-family:'Roboto',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;transition:border-color 0.2s;width:100%;}
   input:focus,select:focus,textarea:focus{border-color:var(--blue);}
   input.err,select.err,textarea.err{border-color:var(--red);}
   input::placeholder,textarea::placeholder{color:#bbb;}
-  textarea{resize:vertical;min-height:80px;}
+  textarea{resize:vertical;min-height:70px;}
   select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer;}
   .em{font-size:11px;color:var(--red);display:none;margin-top:2px;}
   .em.show{display:block;}
@@ -95,44 +73,14 @@
   .prog-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:4px;background:var(--blue-light);border:1.5px solid var(--blue);margin-top:4px;}
   .prog-badge-text{font-size:14px;font-weight:600;color:var(--blue);}
   .prog-badge-sub{font-size:12px;color:var(--text-muted);}
-  .prog-opts{display:flex;flex-direction:column;gap:8px;}
-  .prog-opt{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
-  .prog-opt:hover{border-color:var(--blue);background:var(--blue-light);}
-  .prog-opt.sel{border-color:var(--blue);background:var(--blue-light);}
-  .prog-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
-  .prog-opt-text strong{font-size:14px;color:var(--blue);font-weight:700;display:block;margin-bottom:3px;}
-  .prog-opt-text span{font-size:12px;color:var(--text-muted);}
-  .info-banner{padding:14px 16px;background:var(--blue-light);border-left:4px solid var(--blue);border-radius:4px;margin-bottom:18px;font-size:13px;color:var(--blue);line-height:1.6;}
-  .info-banner strong{font-weight:700;display:block;margin-bottom:4px;color:var(--blue);}
-  .ev-opts{display:flex;flex-direction:column;gap:10px;}
-  .ev-opt{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
-  .ev-opt:hover{border-color:var(--blue);background:var(--blue-light);}
-  .ev-opt.sel{border-color:var(--blue);background:var(--blue-light);}
-  .ev-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
-  .ev-bar{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:40px;}
-  .ev-text strong{font-size:14px;color:var(--blue);font-weight:700;display:block;margin-bottom:3px;}
-  .ev-text span{font-size:12px;color:var(--text-muted);}
-  .ev-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:100px;margin-left:6px;vertical-align:middle;}
-  .b-red{background:var(--red-light);color:var(--red);}
-  .b-blue{background:var(--blue-light);color:var(--blue);}
-  .b-green{background:var(--green-light);color:#16a34a;}
-  .b-gold{background:#fef9e7;color:var(--gold);}
-  .int-opts{display:flex;flex-direction:column;gap:8px;}
-  .int-opt{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
-  .int-opt:hover{border-color:var(--blue);background:var(--blue-light);}
-  .int-opt.sel{border-color:var(--blue);background:var(--blue-light);}
-  .int-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
-  .int-opt-text strong{font-size:13px;color:var(--blue);font-weight:600;display:block;margin-bottom:2px;}
-  .int-opt-text span{font-size:12px;color:var(--text-muted);}
-  .stu-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-  .stu-card{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
-  .stu-card:hover{border-color:var(--blue);background:var(--blue-light);}
-  .stu-card.sel{border-color:var(--blue);background:var(--blue-light);}
-  .stu-info strong{font-size:14px;color:var(--blue);font-weight:600;display:block;}
-  .stu-info span{font-size:12px;color:var(--text-muted);}
-  .stu-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:12px;}
-  .stu-card.sel .stu-chk{background:var(--blue);border-color:var(--blue);color:white;}
-  .bg{display:flex;gap:12px;margin-top:22px;}
+  .radio-opts{display:flex;flex-direction:column;gap:8px;}
+  .radio-opt{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;transition:all 0.2s;}
+  .radio-opt:hover{border-color:var(--blue);background:var(--blue-light);}
+  .radio-opt.sel{border-color:var(--blue);background:var(--blue-light);}
+  .radio-opt input[type=radio]{margin-top:3px;flex-shrink:0;accent-color:var(--blue);}
+  .radio-opt-text strong{font-size:13px;color:var(--blue);font-weight:600;display:block;margin-bottom:2px;}
+  .radio-opt-text span{font-size:12px;color:var(--text-muted);}
+  .bg{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;}
   .bp{background:var(--red);color:white;border:none;padding:13px 24px;border-radius:4px;font-family:'Roboto Slab',serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;flex:1;box-shadow:0 3px 12px rgba(178,41,46,0.2);}
   .bp:hover{background:var(--red-dark);transform:translateY(-1px);}
   .bp:disabled{background:var(--gray);box-shadow:none;cursor:not-allowed;transform:none;}
@@ -147,175 +95,136 @@
   .cc-copy{background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);padding:7px 18px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.2s;}
   .cc-copy:hover{background:rgba(255,255,255,0.25);}
   .cc-copied{display:none;color:var(--green);font-size:12px;font-weight:600;margin-top:6px;}
-  .tl-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-  .tl-item:last-child{border-bottom:none;}
-  .tl-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px;}
-  .tl-text{font-size:13px;color:var(--text-muted);line-height:1.5;}
-  .tl-text strong{color:var(--text);font-weight:600;display:block;}
   .pend-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:100px;font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
-  .add-more-btn{width:100%;padding:13px;border:2px dashed var(--border);border-radius:4px;background:transparent;color:var(--blue);font-family:'Roboto Slab',serif;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;margin-top:14px;}
-  .add-more-btn:hover{border-color:var(--blue);background:var(--blue-light);}
   .alert-err{padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:14px;line-height:1.5;background:var(--red-light);border-left:4px solid var(--red);color:#7f1d1d;display:none;}
+  .alert-err.show{display:block;}
+  .info-banner{padding:14px 16px;background:var(--blue-light);border-left:4px solid var(--blue);border-radius:4px;margin-bottom:18px;font-size:13px;color:var(--blue);line-height:1.6;}
   .screen{display:none;}
   .screen.active{display:block;}
   .form-foot{text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted);}
   .form-foot a{color:var(--blue);text-decoration:none;font-weight:500;}
-  /* `header{padding:0 20px}` dropped from this query W3.9d — the page no longer
-     has a header of its own to pad, and the shell's own responsive behaviour is
-     shell.css's business at its single 768px breakpoint (§10.2.5). */
-  @media(max-width:500px){.cb{padding:20px;}.progress-wrap{padding:10px 20px;}.prog-label{display:none;}}
+  .student-card{border:1.5px solid var(--border);border-radius:6px;padding:20px;margin-bottom:16px;position:relative;}
+  .student-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .student-card-head h4{font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;}
+  .remove-student{background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;}
+  .add-more-btn{width:100%;padding:13px;border:2px dashed var(--border);border-radius:4px;background:transparent;color:var(--blue);font-family:'Roboto Slab',serif;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;margin-top:4px;margin-bottom:16px;}
+  .add-more-btn:hover{border-color:var(--blue);background:var(--blue-light);}
+  .add-more-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .existing-kid{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:4px;margin-bottom:8px;font-size:13px;}
+  .existing-kid strong{color:var(--blue);}
+  .existing-kid span{color:var(--text-muted);font-size:12px;}
+  /* §17.5a step 5 — honeypot. Never named "honeypot" in the DOM. A field a
+     form-fill tool plausibly fills and a sighted human never sees: off-screen,
+     unreachable by Tab, and not announced to a screen reader either — it is
+     not a real field for anyone using the page as intended. */
+  .hp-field{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;}
+  @media(max-width:500px){header{padding:0 20px}}
 </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     PUBLIC SHELL MOUNT — Design Spec v4 §10.2.1.
+     PUBLIC SHELL MOUNT — Design Spec v5 §10.2.1.
      Rendered by /assets/js/shell.js. Do not hand-write a <header> here and do
-     not fork shell.js/shell.css. This page ships the same four lines as every
-     other surface: shell.css link, shell.js script, #shell-root, #shell-footer.
+     not fork shell.js/shell.css.
 
      /register is NOT routed to this file. vercel.json points /register at
-     coming-soon.html and stays that way until the Google Form is retired
-     (Seth, 2026-08-13). W3.9d put this page on the shell; it did not change
-     the route, the registration flow, or anything in Registration Module v6.
+     coming-soon.html and stays that way until W10.6 (Seth, one commit, per
+     Registration Module v12 §17.12) flips it. This wave rebuilt the page and
+     the two functions it calls; it did not touch vercel.json.
      ══════════════════════════════════════════════════════════════════════ -->
 <div id="shell-root"></div>
 
-<div class="progress-wrap">
-  <div class="progress-inner">
-    <div class="progress-steps">
-      <div class="prog-step active" id="ps1"><div class="prog-num">1</div><div class="prog-label">Account</div></div>
-      <div class="prog-line off" id="pl1"></div>
-      <div class="prog-step off" id="ps2"><div class="prog-num">2</div><div class="prog-label">Student</div></div>
-      <div class="prog-line off" id="pl2"></div>
-      <div class="prog-step off" id="ps3"><div class="prog-num">3</div><div class="prog-label" id="ps3-label">Event</div></div>
-      <div class="prog-line off" id="pl3"></div>
-      <div class="prog-step off" id="ps4"><div class="prog-num">4</div><div class="prog-label">Confirm</div></div>
-    </div>
-  </div>
-</div>
-
 <main>
 
-  <!-- FORK -->
+  <!-- FORK — Registration Module v12 §17.11, decision D2: two distinct doors,
+       no match-on-email branching. -->
   <div class="screen active" id="s-fork">
     <div class="card">
-      <div class="ch ch-blue"><h2 id="fork-title">Registration</h2><p id="fork-sub">STEAM Teams CC &middot; Inspire Academy &middot; Lafayette, AL</p></div>
-      <div class="cb" id="fork-body">
-        <div class="fork-loading"><div class="fork-loading-spin"></div>Loading registration info&hellip;</div>
+      <div class="ch ch-blue"><h2>Registration</h2><p>STEAM Teams CC &middot; Inspire Academy &middot; Lafayette, AL</p></div>
+      <div class="cb">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">Is your family already registered with STEAM Teams CC?</p>
+        <div class="fork-grid">
+          <div class="fork-opt" tabindex="0" role="button" onclick="go('new')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('new');}">
+            <div class="fork-icon">&#128118;&#8205;&#128105;&#8205;&#128103;&#8205;&#128102;</div>
+            <h3>New Family</h3>
+            <p>First time with us &mdash; register your family and student(s)</p>
+          </div>
+          <div class="fork-opt" tabindex="0" role="button" onclick="go('existing')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('existing');}">
+            <div class="fork-icon">&#128273;</div>
+            <h3>Already Registered</h3>
+            <p>Add a student to your family using your family code</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- NEW ACCOUNT -->
-  <div class="screen" id="s-new-account">
+  <!-- NEW FAMILY DOOR — register_family(). Form A questions 1-4 once, plus
+       season code + honeypot, then one or more student cards, one submit. -->
+  <div class="screen" id="s-new">
     <div class="card">
-      <div class="ch ch-blue"><h2>Create Your Family Account</h2><p>One account covers all your children in the program</p></div>
+      <div class="ch ch-blue"><h2>Register Your Family</h2><p>Tell us about your family, then add each student</p></div>
       <div class="cb">
+        <div class="alert-err" id="new-err"></div>
+
         <div class="fg">
-          <div class="fgr"><label>Parent / Guardian 1 <span class="req">*</span></label><input type="text" id="p1" placeholder="Full name"/><span class="em" id="e-p1">Required</span></div>
-          <div class="fgr"><label>Parent / Guardian 2 <span class="opt">(optional)</span></label><input type="text" id="p2" placeholder="Full name"/></div>
+          <div class="fgr"><label>Parent / Guardian 1 Full Name <span class="req">*</span></label><input type="text" id="n-parent1" placeholder="Full name"/><span class="em" id="e-n-parent1">Required</span></div>
+          <div class="fgr"><label>Parent Email Address <span class="req">*</span></label><input type="email" id="n-email" placeholder="your@email.com"/><span class="em" id="e-n-email">Valid email required</span></div>
         </div>
-        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Login Credentials</div><div class="sdiv-line"></div></div>
-        <div class="fg">
-          <div class="fgr"><label>Email Address <span class="req">*</span></label><input type="email" id="reg-email" placeholder="your@email.com"/><span class="em" id="e-email">Valid email required</span></div>
-          <div class="fgr"><label>Password <span class="req">*</span></label><input type="password" id="reg-pw" placeholder="Minimum 8 characters"/><span class="em" id="e-pw">Minimum 8 characters</span></div>
+        <div class="fg" style="margin-top:16px;">
+          <div class="fgr"><label>Emergency Phone 1 <span class="req">*</span></label><input type="tel" id="n-phone1" placeholder="(555) 555-5555"/><span class="em" id="e-n-phone1">10-digit phone required</span></div>
+          <div class="fgr"><label>Registration Code <span class="req">*</span></label><input type="text" id="n-season-code" placeholder="From your invitation"/><span class="em" id="e-n-season-code">Required</span></div>
         </div>
-        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Emergency Contacts</div><div class="sdiv-line"></div></div>
-        <div class="fg">
-          <div class="fgr"><label>Emergency Phone 1 <span class="req">*</span></label><input type="tel" id="ph1" placeholder="(555) 555-5555"/><span class="em" id="e-ph1">Required</span></div>
-          <div class="fgr"><label>Emergency Phone 2 <span class="opt">(optional)</span></label><input type="tel" id="ph2" placeholder="(555) 555-5555"/></div>
+        <div class="cbx" onclick="chk(event,'n-notify')" style="margin-top:16px;"><input type="checkbox" id="n-notify" checked/><div class="cbx-label"><strong>Text message updates</strong>I agree to receive text updates about STEAM Teams events and program news.</div></div>
+
+        <!-- Honeypot — §17.5a step 5. Real families never see or reach this. -->
+        <div class="hp-field" aria-hidden="true">
+          <label for="n-website">Website</label>
+          <input type="text" id="n-website" name="website" tabindex="-1" autocomplete="off">
         </div>
-        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>
-        <div class="cbx" onclick="chk(event,'opt-in')"><input type="checkbox" id="opt-in" checked/><div class="cbx-label"><strong>Program communications</strong>I agree to receive updates about STEAM Teams events and program news.</div></div>
+
+        <div class="sdiv" style="margin-top:22px;"><div class="sdiv-line"></div><div class="sdiv-label">Students</div><div class="sdiv-line"></div></div>
+        <div id="new-students"></div>
+        <button class="add-more-btn" id="new-add-btn" onclick="addStudentCard('new-students')">+ Add Another Student</button>
+
         <div class="bg">
           <button class="bs" onclick="go('fork')">&#8592; Back</button>
-          <button class="bp" onclick="validateAccount()">Continue &#8594;</button>
+          <button class="bp" id="new-submit-btn" onclick="submitNewFamily()">Submit Registration &#8594;</button>
         </div>
-        <div class="form-foot">Already have an account? <a href="#" onclick="go('login');return false;">Log in here</a></div>
+        <div class="form-foot">Already registered? <a href="#" onclick="go('existing');return false;">Add a student to your family</a></div>
       </div>
     </div>
   </div>
 
-  <!-- LOGIN -->
-  <div class="screen" id="s-login">
+  <!-- EXISTING FAMILY DOOR — register_student(). Family code + lost-code
+       line, get_family_dashboard() to show current children, one student
+       card, one submit. No family-level fields — the family is not
+       re-declared here (Registration Module v12 §17.4a item 5). -->
+  <div class="screen" id="s-existing">
     <div class="card">
-      <div class="ch ch-blue"><h2>Welcome Back</h2><p>Log in to your family account</p></div>
-      <div class="cb">
-        <div class="alert-err" id="login-err">Email or password is incorrect. Please try again.</div>
-        <div class="fg one" style="margin-bottom:16px;">
-          <div class="fgr"><label>Email Address <span class="req">*</span></label><input type="email" id="li-email" placeholder="your@email.com"/></div>
-          <div class="fgr" style="margin-top:14px;"><label>Password <span class="req">*</span></label><input type="password" id="li-pw" placeholder="Your password"/></div>
-        </div>
-        <div class="bg">
-          <button class="bs" onclick="go('fork')">&#8592; Back</button>
-          <button class="bp" id="li-btn" onclick="doLogin()">Log In &#8594;</button>
-        </div>
-        <div class="form-foot">New to STEAM Teams? <a href="#" onclick="go('new-account');return false;">Create an account</a></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RETURNING DASHBOARD -->
-  <div class="screen" id="s-dashboard">
-    <div class="card">
-      <div class="ch ch-blue"><h2 id="dash-greeting">Welcome Back!</h2><p>What would you like to do?</p></div>
-      <div class="cb">
-        <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Your Students</div>
-        <div class="stu-cards" id="stu-cards"></div>
-        <div id="no-stu" style="display:none;font-size:13px;color:var(--text-muted);padding:12px;background:var(--surface);border-radius:4px;margin-bottom:12px;">No students on this account yet.</div>
-        <div class="bg" style="flex-direction:column;gap:10px;">
-          <button class="bp" id="reg-sel-btn" onclick="toNextAfterStudent()" disabled>Register Selected Student &#8594;</button>
-          <button class="bs" style="text-align:center;" onclick="toAddStudentReturning()">+ Add a New Student to This Account</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STUDENT FORM -->
-  <div class="screen" id="s-student">
-    <div class="card">
-      <div class="ch ch-red"><h2 id="stu-head">Add Your Student</h2><p id="stu-sub">You can add more students after completing registration</p></div>
-      <div class="cb" id="stu-body"></div>
-    </div>
-  </div>
-
-  <!-- EVENT SELECT (summer window only) -->
-  <div class="screen" id="s-event">
-    <div class="card">
-      <div class="ch ch-blue"><h2>Select an Event</h2><p id="ev-sub">Choose which event to register for</p></div>
-      <div class="cb">
-        <div class="ev-opts" id="ev-opts-list"></div>
-        <span class="em" id="e-ev" style="margin-top:8px;">Please select an event</span>
-        <div id="con-note" style="display:none;margin-top:16px;">
-          <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Tell us about your situation</div><div class="sdiv-line"></div></div>
-          <div class="fgr"><label>Why can't you attend tryouts? <span class="req">*</span></label><textarea id="con-reason" placeholder="Please briefly explain why you're unable to attend in-person tryouts and why you'd like to be considered for the team..."></textarea><span class="em" id="e-con">Please provide a brief explanation</span></div>
-        </div>
-        <div class="bg">
-          <button class="bs" id="ev-back" onclick="evBack()">&#8592; Back</button>
-          <button class="bp" id="ev-btn" onclick="submitEvent()">Continue &#8594;</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TRYOUT REQUEST (off-season) -->
-  <div class="screen" id="s-request">
-    <div class="card">
-      <div class="ch ch-red"><h2>Request to Try Out</h2><p id="req-sub">Tell us about your student's interest</p></div>
-      <div class="cb">
-        <div class="info-banner"><strong>How this works</strong>Submit this request and a coordinator will be in touch within 5 business days to schedule an interview. There's no commitment required at this stage.</div>
-        <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Program Interest</div><div class="sdiv-line"></div></div>
-        <div class="prog-opts" id="prog-opts-list"></div>
-        <span class="em" id="e-prog">Please select a program</span>
-        <div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">Tell Us More</div><div class="sdiv-line"></div></div>
+      <div class="ch ch-blue"><h2>Add a Student</h2><p>Sign in with your family code to add a child</p></div>
+      <div class="cb" id="existing-lookup-body">
+        <div class="alert-err" id="existing-lookup-err"></div>
         <div class="fgr">
-          <label>Why does your student want to join? <span class="opt">(optional)</span></label>
-          <textarea id="req-reason" placeholder="Share anything you'd like us to know — interests, goals, prior experience, or anything else that would help the coordinator prepare for a conversation..."></textarea>
+          <label>Family Code <span class="req">*</span></label>
+          <input type="text" id="existing-code" autocomplete="off" inputmode="text" maxlength="9" placeholder="CC-XXXXXX" style="text-transform:uppercase;"/>
         </div>
+        <p id="existing-lost-code-line" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.5;"></p>
         <div class="bg">
-          <button class="bs" onclick="reqBack()">&#8592; Back</button>
-          <button class="bp" id="req-btn" onclick="submitRequest()">Submit Request &#8594;</button>
+          <button class="bs" onclick="go('fork')">&#8592; Back</button>
+          <button class="bp" id="existing-lookup-btn" onclick="lookupFamily()">Continue &#8594;</button>
+        </div>
+      </div>
+      <div class="cb" id="existing-form-body" style="display:none;">
+        <div class="alert-err" id="existing-err"></div>
+        <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Students already on your account</div>
+        <div id="existing-kids"></div>
+        <div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">New Student</div><div class="sdiv-line"></div></div>
+        <div id="existing-students"></div>
+        <div class="bg">
+          <button class="bs" onclick="go('fork')">&#8592; Back</button>
+          <button class="bp" id="existing-submit-btn" onclick="submitExistingStudent()">Add Student &#8594;</button>
         </div>
       </div>
     </div>
@@ -326,21 +235,19 @@
     <div class="card">
       <div class="ch ch-dark"><h2 id="confirm-title">You're Registered!</h2><p id="confirm-sub">Your registration has been submitted successfully</p></div>
       <div class="cb">
-        <div class="cc-wrap" id="code-wrap">
+        <div class="cc-wrap" id="code-wrap" style="display:none;">
           <div class="cc-label">Your Family Code</div>
-          <div class="cc-val" id="show-code">CC-0000</div>
+          <div class="cc-val" id="show-code"></div>
           <button class="cc-copy" onclick="copyCode()">Copy Code</button>
           <div class="cc-copied" id="cc-copied">&#10003; Copied!</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:10px;line-height:1.5;">Save this code &mdash; use it to quickly check dues, volunteer hours, and status without logging in.</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:10px;line-height:1.5;">Write it down &mdash; it is how your family signs in from now on.</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;" id="confirm-status-label">Registration Status</div>
-          <div class="pend-badge">&#9203; Pending Review</div>
+          <div style="font-family:'Roboto Slab',serif;font-weight:700;font-size:13px;color:var(--blue);text-transform:uppercase;">Registration Status</div>
+          <div class="pend-badge">&#9203; Under Review</div>
         </div>
-        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;" id="confirm-msg"></p>
-        <div id="tl-items"></div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Under review &mdash; a coordinator will be in touch.</p>
         <div style="background:var(--surface);border-radius:4px;padding:14px;margin-top:14px;border-left:4px solid var(--blue);font-size:13px;color:var(--text-muted);line-height:1.6;"><strong style="color:var(--text);">Questions?</strong> Reach out to your coordinator &mdash; we're here to help.</div>
-        <div id="confirm-actions"></div>
         <div class="bg" style="margin-top:12px;"><button class="bp" onclick="window.location.href='/'">Return to Portal Home</button></div>
       </div>
     </div>
@@ -349,387 +256,420 @@
 </main>
 
 <script>
+(function(){
 
-var fid=null,fcode=null,tok=null;
-var selStuId=null,selStuName=null,selGrade=null;
-var selEv=null,selEvData=null,selProgram=null,selIntent=null;
-var isReturn=false,stuFlow='new';
-var cfg={windowOpen:false,windowLabel:'Registration',events:[]};
+var CFG = { schools: [], transport: { options: {}, bus_home: [], pickup_only: [] }, returning: [], lostCodeCopy: '', confirmCopy: '' };
+var MAX_STUDENTS = 6;
+var newIdx = 0;
+var existingFamilyCode = null;
 
-function getProgram(g){return g<=5?'goblin':g<=8?'ms_greenpower':'hs_greenpower';}
+function getProgram(g){ return g<=5?'goblin':g<=8?'ms_greenpower':'hs_greenpower'; }
 function getProgramLabel(p){
-  if(p==='goblin')return{name:'Goblin Program',sub:'Grades 4\u20135 \u00b7 Piedmont Motorsports'};
-  if(p==='ms_greenpower')return{name:'MS Greenpower',sub:'Grades 6\u20138 \u00b7 Renegade Racing'};
-  return{name:'HS Greenpower',sub:'Grades 9\u201312 \u00b7 Renegade Racing'};
+  if(p==='goblin')return{name:'Goblin Program',sub:'Grades 4–5 · Piedmont Motorsports'};
+  if(p==='ms_greenpower')return{name:'MS Greenpower',sub:'Grades 6–8 · Renegade Racing'};
+  return{name:'HS Greenpower',sub:'Grades 9–12 · Renegade Racing'};
 }
 
+// ── Config, all vocabulary from portal_config — nothing hardcoded except
+// the CHECK-constrained codes the database owns (§17.11 closing paragraph).
 function loadConfig(){
-  Promise.all([
-    fetch(SB_URL+'/rest/v1/portal_config?select=key,value',{headers:{'apikey':SB_KEY}}).then(function(r){return r.json();}),
-    fetch(SB_URL+'/rest/v1/events?registration_open=eq.true&order=sort_order.asc',{headers:{'apikey':SB_KEY}}).then(function(r){return r.json();})
-  ])
-  .then(function(res){
-    var rows=res[0];var events=res[1];
-    rows.forEach(function(r){
-      if(r.key==='registration_window_open')cfg.windowOpen=(r.value===true||r.value==='true');
-      if(r.key==='registration_window_label')cfg.windowLabel=(r.value+'').replace(/^"|"$/g,'');
-    });
-    cfg.events=Array.isArray(events)?events:[];
-    renderFork();renderEventOptions();
-  })
-  .catch(function(err){console.error('Config load error:',err);cfg.windowOpen=false;renderFork();});
-}
-
-function renderFork(){
-  document.getElementById('fork-title').textContent=cfg.windowOpen?cfg.windowLabel+' Registration':'Join STEAM Teams';
-  document.getElementById('fork-sub').textContent=cfg.windowOpen?'Greenpower USA Summer Academy \u00b7 Inspire Academy \u00b7 Lafayette, AL':'Submit a tryout request \u00b7 Inspire Academy \u00b7 Lafayette, AL';
-  var body='';
-  if(!cfg.windowOpen)body+='<div class="info-banner"><strong>Tryout requests are open year-round</strong>Fill out this form and a coordinator will be in touch within 5 business days to schedule an interview.</div>';
-  body+='<p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">Does your family already have an account with STEAM Teams CC?</p>';
-  body+='<div class="fork-grid"><div class="fork-opt" onclick="go(\'new-account\')"><div class="fork-icon">\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66</div><h3>New Family</h3><p>First time with us &mdash; create your family account</p></div><div class="fork-opt" onclick="go(\'login\')"><div class="fork-icon">\uD83D\uDD11</div><h3>Returning Family</h3><p>Already have an account &mdash; log in to continue</p></div></div>';
-  document.getElementById('fork-body').innerHTML=body;
-  if(!cfg.windowOpen){document.getElementById('ps3-label').textContent='Confirm';document.getElementById('ps4').classList.add('hidden');document.getElementById('pl3').classList.add('hidden');}
-  else{document.getElementById('ps3-label').textContent='Event';document.getElementById('ps4').classList.remove('hidden');document.getElementById('pl3').classList.remove('hidden');}
-}
-
-function renderEventOptions(){
-  var cm={red:{bar:'var(--red)',badge:'b-red'},blue:{bar:'var(--blue)',badge:'b-blue'},green:{bar:'var(--green)',badge:'b-green'},gold:{bar:'var(--gold)',badge:'b-gold'}};
-  var html='';
-  cfg.events.forEach(function(ev){
-    var c=cm[ev.color]||cm.blue;
-    html+='<label class="ev-opt" id="eo-'+ev.id+'" onclick="pickEvent(\''+ev.id+'\')">';
-    html+='<input type="radio" name="ev" value="'+ev.id+'"/>';
-    html+='<div class="ev-bar" style="background:'+c.bar+';"></div>';
-    html+='<div class="ev-text"><strong>'+ev.name;
-    if(ev.dates_label)html+=' <span class="ev-badge '+c.badge+'">'+ev.dates_label+'</span>';
-    html+='</strong><span>'+(ev.description||'')+'</span></div></label>';
-  });
-  document.getElementById('ev-opts-list').innerHTML=html||'<p style="color:var(--text-muted);font-size:14px;">No events are currently open for registration.</p>';
+  var keys = ['intake_schools','intake_transport','intake_returning_options','intake_lost_code_copy','intake_confirm_copy'];
+  return fetch(SB_URL+'/rest/v1/portal_config?select=key,value&key=in.('+keys.join(',')+')',{headers:{apikey:SB_KEY}})
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      (rows||[]).forEach(function(r){
+        if(r.key==='intake_schools') CFG.schools = r.value || [];
+        if(r.key==='intake_transport') CFG.transport = r.value || CFG.transport;
+        if(r.key==='intake_returning_options') CFG.returning = r.value || [];
+        if(r.key==='intake_lost_code_copy') CFG.lostCodeCopy = r.value || '';
+        if(r.key==='intake_confirm_copy') CFG.confirmCopy = r.value || '';
+      });
+      document.getElementById('existing-lost-code-line').textContent = CFG.lostCodeCopy;
+      addStudentCard('new-students');
+    })
+    .catch(function(err){ console.error('Config load error:', err); });
 }
 
 function go(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  var t=document.getElementById('s-'+id);if(t)t.classList.add('active');
-  updateProg(id);window.scrollTo(0,0);
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  var t = document.getElementById('s-'+id);
+  if(t) t.classList.add('active');
+  window.scrollTo(0,0);
+}
+function chk(e,id){ if(e.target.type==='checkbox') return; var c=document.getElementById(id); c.checked=!c.checked; }
+function se(id,show){ var el=document.getElementById(id); if(el) show?el.classList.add('show'):el.classList.remove('show'); }
+function fe(id,show){ var el=document.getElementById(id); if(el) show?el.classList.add('err'):el.classList.remove('err'); }
+function showAlert(id,msg){ var el=document.getElementById(id); if(!el) return; el.textContent=msg; el.classList.add('show'); }
+function hideAlert(id){ var el=document.getElementById(id); if(el){ el.classList.remove('show'); el.textContent=''; } }
+
+// ── Refusal copy — every reason code register_family()/register_student()
+// can actually return (live signatures, Registration Module v12 §17.18.1 /
+// §17.18.8: the shape is {ok:false, reason:<code>} only). One line of copy
+// per reason, written for a parent to read and act on — never a raw code,
+// never a stack trace (D18's inherited rule). ──
+var REASON_COPY = {
+  closed: "Registration isn't open right now. Please check back later, or contact your coordinator at steam.teams@chambersk12.org or (334) 748-8665.",
+  rate_limited: "There have been a lot of attempts from this connection recently. Please wait a while and try again, or contact your coordinator.",
+  invalid_season_code: "That registration code isn't right. Double-check the code on your invitation and try again.",
+  invalid_format: "That doesn't look like a family code. Family codes look like CC-XXXXXX.",
+  not_found: "We don't recognize that family code. Double-check it, or contact your coordinator at steam.teams@chambersk12.org or (334) 748-8665 to have it looked up.",
+  'INTAKE/EMAIL_ON_FILE': "That email address is already registered with a family. If this is your family, use “Already Registered” and sign in with your family code instead.",
+  'INTAKE/DUPLICATE_STUDENT': "It looks like this student is already registered with your family.",
+  'INTAKE/NO_STUDENTS': "Please add at least one student before submitting.",
+  'INTAKE/TOO_MANY_STUDENTS': "This form can register up to six students at a time. Please contact your coordinator to register additional students.",
+  'INTAKE/V4': "Please choose your student's school from the list provided.",
+  'INTAKE/V5': "Please enter a valid grade (4–12) for your student.",
+  'INTAKE/V10': "That transportation choice isn't available for the school you selected. Please pick another option.",
+  'INTAKE/CONSENT': "Please complete the photo release, agree to the program policies, and type your name as your signature for each student.",
+  'INTAKE/REQUIRED': "Please fill in all required fields and try again.",
+  'INTAKE/EMAIL_FORMAT': "Please enter a valid email address.",
+  'INTAKE/PHONE_FORMAT': "Please enter a valid 10-digit phone number.",
+  'INTAKE/FORBIDDEN_KEY': "Something went wrong with that submission. Please refresh the page and try again, or contact your coordinator.",
+  'INTAKE/V12': "Something went wrong with that submission. Please refresh the page and try again, or contact your coordinator.",
+  'INTAKE/NO_FAMILY': "We couldn't find your family. Please refresh the page and try again, or contact your coordinator.",
+  'INTAKE/CONSENT_PARTIAL_NO_RULING': "Please complete all three agreement questions for each student."
+};
+function reasonCopy(reason){
+  return REASON_COPY[reason] || ("We couldn't complete that submission. Please try again, or contact your coordinator at steam.teams@chambersk12.org or (334) 748-8665.");
 }
 
-function updateProg(id){
-  var map4={fork:0,'new-account':1,login:1,dashboard:1,student:2,event:3,confirm:4};
-  var map3={fork:0,'new-account':1,login:1,dashboard:1,student:2,request:3,confirm:3};
-  var map=cfg.windowOpen?map4:map3;var n=map[id]||0;
-  for(var i=1;i<=4;i++){var s=document.getElementById('ps'+i);if(!s)continue;var h=s.classList.contains('hidden');s.className='prog-step '+(i<n?'done':i===n?'active':'off')+(h?' hidden':'');}
-  for(var j=1;j<=3;j++){var l=document.getElementById('pl'+j);if(!l)continue;var lh=l.classList.contains('hidden');l.className='prog-line '+(j<n?'done':'off')+(lh?' hidden':'');}
+// ── Student card — used by both doors. Every option list is config-driven;
+// the page hardcodes only the codes the database owns (grade band, the three
+// transport codes, the four returning_source codes). ──
+function studentCardHTML(idx, removable){
+  var schoolOpts = '<option value="">Select school...</option>' + CFG.schools.map(function(s){ return '<option value="'+escAttr(s)+'">'+esc(s)+'</option>'; }).join('');
+  var removeBtn = removable ? '<button type="button" class="remove-student" onclick="removeStudentCard(this)">Remove</button>' : '';
+  return (
+    '<div class="student-card" data-idx="'+idx+'">' +
+      '<div class="student-card-head"><h4>Student '+(idx+1)+'</h4>'+removeBtn+'</div>' +
+      '<div class="fg">' +
+        '<div class="fgr"><label>First Name <span class="req">*</span></label><input type="text" class="f-first" placeholder="First name"/><span class="em e-first">Required</span></div>' +
+        '<div class="fgr"><label>Last Name <span class="req">*</span></label><input type="text" class="f-last" placeholder="Last name"/><span class="em e-last">Required</span></div>' +
+      '</div>' +
+      '<div class="fg" style="margin-top:16px;">' +
+        '<div class="fgr"><label>Current Grade <span class="req">*</span></label><select class="f-grade" onchange="onGradeOrSchoolChange(this)"><option value="">Select grade...</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option></select><span class="em e-grade">Required</span></div>' +
+        '<div class="fgr"><label>Home School <span class="req">*</span></label><select class="f-school" onchange="onGradeOrSchoolChange(this)">'+schoolOpts+'</select><span class="em e-school">Required</span></div>' +
+      '</div>' +
+      '<div class="prog-display" style="display:none;margin-top:16px;"><label>Program Assignment</label><div class="prog-badge"><div><div class="prog-badge-text prog-name"></div><div class="prog-badge-sub prog-sub"></div></div></div></div>' +
+      '<div class="transport-wrap" style="margin-top:16px;display:none;"><label>Afternoon Transportation</label><div class="radio-opts transport-opts" style="margin-top:6px;"></div></div>' +
+      '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">Returning Team Member?</div><div class="sdiv-line"></div></div>' +
+      '<div class="radio-opts returning-opts"></div>' +
+      '<span class="em e-returning" style="margin-top:6px;">Please select an option</span>' +
+      '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">Dietary Restriction or Food Allergy</div><div class="sdiv-line"></div></div>' +
+      '<div class="radio-opts">' +
+        '<label class="radio-opt"><input type="radio" name="diet-'+idx+'" class="f-diet-no" checked onclick="toggleDietDetails(this)"><div class="radio-opt-text"><strong>No</strong></div></label>' +
+        '<label class="radio-opt"><input type="radio" name="diet-'+idx+'" class="f-diet-yes" onclick="toggleDietDetails(this)"><div class="radio-opt-text"><strong>Yes</strong></div></label>' +
+      '</div>' +
+      '<div class="fgr diet-details" style="display:none;margin-top:10px;"><label>Details <span class="opt">(optional)</span></label><textarea class="f-diet-details" placeholder="e.g. Peanut allergy — carries an EpiPen"></textarea></div>' +
+      '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-label">Photo Release Agreement</div><div class="sdiv-line"></div></div>' +
+      '<div class="radio-opts">' +
+        '<label class="radio-opt"><input type="radio" name="photo-'+idx+'" class="f-photo-yes" checked><div class="radio-opt-text"><strong>I agree</strong><span>Photos and video may be used for program and promotional purposes</span></div></label>' +
+        '<label class="radio-opt"><input type="radio" name="photo-'+idx+'" class="f-photo-no"><div class="radio-opt-text"><strong>I do not agree</strong></div></label>' +
+      '</div>' +
+      '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>' +
+      '<div class="cbx" onclick="chkCard(event,this)"><input type="checkbox" class="f-policy"/><div class="cbx-label"><strong>Program Policy Agreement</strong>I confirm I have permission to enroll this student and agree to the STEAM Teams program policies.</div></div>' +
+      '<span class="em e-policy">You must agree to continue</span>' +
+      '<div class="fgr" style="margin-top:14px;"><label>Parent Signature (type your full name) <span class="req">*</span></label><input type="text" class="f-signed" placeholder="Full name"/><span class="em e-signed">Required</span></div>' +
+    '</div>'
+  );
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function escAttr(s){ return esc(s); }
+
+function chkCard(e,cardWrap){ if(e.target.type==='checkbox') return; var c=cardWrap.querySelector('.f-policy'); c.checked=!c.checked; }
+function toggleDietDetails(radio){
+  var card = radio.closest('.student-card');
+  var details = card.querySelector('.diet-details');
+  details.style.display = radio.classList.contains('f-diet-yes') ? 'block' : 'none';
 }
 
-function chk(e,id){if(e.target.type==='checkbox')return;var c=document.getElementById(id);c.checked=!c.checked;}
-function se(id,show){var el=document.getElementById(id);if(el){show?el.classList.add('show'):el.classList.remove('show');}}
-function fe(id,show){var el=document.getElementById(id);if(el){show?el.classList.add('err'):el.classList.remove('err');}}
-
-function updateProgramBadge(){
-  var g=parseInt(document.getElementById('s-grade').value);
-  var d=document.getElementById('prog-display');if(!g){if(d)d.style.display='none';return;}
-  if(d)d.style.display='block';
-  var lbl=getProgramLabel(getProgram(g));
-  document.getElementById('prog-name').textContent=lbl.name;
-  document.getElementById('prog-sub').textContent=lbl.sub;
+function renderReturningOptions(card){
+  var wrap = card.querySelector('.returning-opts');
+  var idx = card.getAttribute('data-idx');
+  wrap.innerHTML = (CFG.returning||[]).map(function(opt,i){
+    return '<label class="radio-opt" onclick="selectReturning(this)"><input type="radio" name="returning-'+idx+'" value="'+escAttr(opt.returning_source)+'"><div class="radio-opt-text"><strong>'+esc(opt.label)+'</strong></div></label>';
+  }).join('');
+}
+function selectReturning(label){
+  var wrap = label.closest('.returning-opts');
+  wrap.querySelectorAll('.radio-opt').forEach(function(el){ el.classList.remove('sel'); });
+  label.classList.add('sel');
+  label.querySelector('input').checked = true;
+  var card = label.closest('.student-card');
+  card.querySelector('.e-returning').classList.remove('show');
 }
 
-function pickIntent(v){
-  selIntent=v;
-  document.querySelectorAll('.int-opt').forEach(function(el){el.classList.remove('sel');});
-  var map={camp_only:'io-camp',camp_and_potential:'io-pot',full_participation:'io-full'};
-  var el=document.getElementById(map[v]);if(el)el.classList.add('sel');
-  se('e-intent',false);
-}
-
-function pickEvent(id){
-  selEv=id;selEvData=cfg.events.find(function(e){return e.id===id;})||null;
-  document.querySelectorAll('.ev-opt').forEach(function(el){el.classList.remove('sel');});
-  var el=document.getElementById('eo-'+id);if(el)el.classList.add('sel');
-  se('e-ev',false);
-  document.getElementById('con-note').style.display=(selEvData&&selEvData.requires_reason)?'block':'none';
-  if(selEvData&&selEvData.requires_reason&&selEvData.reason_prompt){var ta=document.getElementById('con-reason');if(ta)ta.placeholder=selEvData.reason_prompt;}
-}
-
-function filterEventsByGrade(grade){
-  cfg.events.forEach(function(ev){
-    var el=document.getElementById('eo-'+ev.id);if(!el)return;
-    var allowed=grade>=ev.grade_min&&grade<=ev.grade_max;
-    var radio=el.querySelector('input[type=radio]');
-    if(allowed){
-      el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';
-      if(radio)radio.disabled=false;
-      var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();
-    }else{
-      el.style.opacity='0.4';el.style.pointerEvents='none';el.style.cursor='not-allowed';
-      if(radio){radio.disabled=true;radio.checked=false;}
-      el.classList.remove('sel');
-      if(!el.querySelector('.ev-grade-lock')){
-        var note=document.createElement('span');note.className='ev-grade-lock';
-        note.style.cssText='font-size:11px;color:#888;font-style:italic;margin-top:4px;display:block;';
-        note.textContent='Open to Grades '+ev.grade_min+'\u2013'+ev.grade_max+' only';
-        var txt=el.querySelector('.ev-text');if(txt)txt.appendChild(note);
-      }
-      if(selEv===ev.id){selEv=null;selEvData=null;}
-    }
-  });
-}
-
-function renderProgramOptions(grade){
-  var opts=[];
-  if(grade>=4&&grade<=5)opts.push({val:'goblin',name:'Goblin Program',sub:'Grades 4\u20135 \u00b7 Piedmont Motorsports electric car racing'});
-  if(grade>=6&&grade<=8)opts.push({val:'ms_greenpower',name:'MS Greenpower',sub:'Grades 6\u20138 \u00b7 Renegade Racing electric car program'});
-  if(grade>=9&&grade<=12)opts.push({val:'hs_greenpower',name:'HS Greenpower',sub:'Grades 9\u201312 \u00b7 Renegade Racing electric car program'});
-  var html='';
-  opts.forEach(function(o){
-    html+='<label class="prog-opt" id="po-'+o.val+'" onclick="pickProgram(\''+o.val+'\')">';
-    html+='<input type="radio" name="prog" value="'+o.val+'"/>';
-    html+='<div class="prog-opt-text"><strong>'+o.name+'</strong><span>'+o.sub+'</span></div></label>';
-  });
-  document.getElementById('prog-opts-list').innerHTML=html;
-  if(opts.length===1)pickProgram(opts[0].val);
-}
-
-function pickProgram(v){
-  selProgram=v;
-  document.querySelectorAll('.prog-opt').forEach(function(el){el.classList.remove('sel');});
-  var el=document.getElementById('po-'+v);if(el)el.classList.add('sel');
-  se('e-prog',false);
-}
-
-function toNextAfterStudent(){
-  if(cfg.windowOpen){document.getElementById('ev-sub').textContent='Registering: '+selStuName;filterEventsByGrade(selGrade);go('event');}
-  else{document.getElementById('req-sub').textContent='Student: '+selStuName;renderProgramOptions(selGrade);go('request');}
-}
-
-function evBack(){go(isReturn?'dashboard':'student');}
-function reqBack(){go(isReturn?'dashboard':'student');}
-
-function buildStudentForm(backScreen){
-  var intentSection='';
-  if(cfg.windowOpen){
-    intentSection='<div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Participation Intent</div><div class="sdiv-line"></div></div>'+
-    '<div class="int-opts">'+
-    '<label class="int-opt" id="io-camp" onclick="pickIntent(\'camp_only\')"><input type="radio" name="intent" value="camp_only"/><div class="int-opt-text"><strong>Camp Only</strong><span>Interested in summer camp &mdash; not necessarily joining the team</span></div></label>'+
-    '<label class="int-opt" id="io-pot" onclick="pickIntent(\'camp_and_potential\')"><input type="radio" name="intent" value="camp_and_potential"/><div class="int-opt-text"><strong>Camp + Potential Team Member</strong><span>Attend camp and try out for the team</span></div></label>'+
-    '<label class="int-opt" id="io-full" onclick="pickIntent(\'full_participation\')"><input type="radio" name="intent" value="full_participation"/><div class="int-opt-text"><strong>Full Participation</strong><span>Committed to joining the team and the full season</span></div></label>'+
-    '</div><span class="em" id="e-intent" style="margin-top:6px;">Please select a participation level</span>';
+function onGradeOrSchoolChange(el){
+  var card = el.closest('.student-card');
+  var gradeSel = card.querySelector('.f-grade');
+  var schoolSel = card.querySelector('.f-school');
+  var grade = parseInt(gradeSel.value);
+  var display = card.querySelector('.prog-display');
+  if(grade){
+    display.style.display = 'flex';
+    var lbl = getProgramLabel(getProgram(grade));
+    display.querySelector('.prog-name').textContent = lbl.name;
+    display.querySelector('.prog-sub').textContent = lbl.sub;
+  } else {
+    display.style.display = 'none';
   }
-  return '<div class="fg" style="margin-bottom:16px;">'+
-    '<div class="fgr"><label>First Name <span class="req">*</span></label><input type="text" id="s-first" placeholder="First name"/><span class="em" id="e-sf">Required</span></div>'+
-    '<div class="fgr"><label>Last Name <span class="req">*</span></label><input type="text" id="s-last" placeholder="Last name"/><span class="em" id="e-sl">Required</span></div>'+
-    '</div><div class="fg" style="margin-bottom:16px;">'+
-    '<div class="fgr"><label>Current Grade <span class="req">*</span></label><select id="s-grade" onchange="updateProgramBadge()"><option value="">Select grade...</option><option value="4">Grade 4</option><option value="5">Grade 5</option><option value="6">Grade 6</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option></select><span class="em" id="e-sg">Required</span></div>'+
-    '<div class="fgr"><label>School <span class="req">*</span></label><select id="s-school"><option value="">Select school...</option><option>Fairfax Elementary</option><option>Eastside Elementary</option><option>JP Powell Middle School</option><option>WF Burns Middle School</option><option>Lafayette High School</option><option>Valley High School</option><option>Other</option></select><span class="em" id="e-sc">Required</span></div>'+
-    '</div><div id="prog-display" style="display:none;margin-bottom:16px;"><label>Program Assignment</label><div class="prog-badge"><div><div class="prog-badge-text" id="prog-name"></div><div class="prog-badge-sub" id="prog-sub"></div></div></div></div>'+
-    '<div class="fg" style="margin-bottom:16px;">'+
-    '<div class="fgr"><label>Gender <span class="req">*</span></label><select id="s-gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select><span class="em" id="e-sgen">Required</span></div>'+
-    '<div class="fgr"><label>Shirt Size <span class="req">*</span></label><select id="s-shirt"><option value="">Select size...</option><optgroup label="Youth"><option value="YS">Youth Small</option><option value="YM">Youth Medium</option><option value="YL">Youth Large</option><option value="YXL">Youth XL</option></optgroup><optgroup label="Adult"><option value="AS">Adult Small</option><option value="AM">Adult Medium</option><option value="AL">Adult Large</option><option value="AXL">Adult XL</option><option value="A2XL">Adult 2XL</option><option value="A3XL">Adult 3XL</option></optgroup></select><span class="em" id="e-sshi">Required</span></div>'+
-    '</div>'+intentSection+
-    '<div class="sdiv" style="margin-top:18px;"><div class="sdiv-line"></div><div class="sdiv-line"></div></div>'+
-    '<div class="cbx" onclick="chk(event,\'s-policy\')"><input type="checkbox" id="s-policy"/><div class="cbx-label"><strong>Program Policy Agreement</strong>I confirm I have permission to enroll this student and agree to the STEAM Teams program policies.</div></div>'+
-    '<span class="em" id="e-pol" style="margin-top:4px;">You must agree to continue</span>'+
-    '<div class="bg"><button class="bs" onclick="go(\''+backScreen+'\')">&#8592; Back</button><button class="bp" id="stu-btn" onclick="submitStudent()">Continue &#8594;</button></div>';
+  renderTransportOptions(card, schoolSel.value);
 }
 
-function validateAccount(){
-  var ok=true;
-  var p1=document.getElementById('p1').value.trim();
-  var em=document.getElementById('reg-email').value.trim();
-  var pw=document.getElementById('reg-pw').value;
-  var ph=document.getElementById('ph1').value.trim();
-  if(!p1){se('e-p1',true);fe('p1',true);ok=false;}else{se('e-p1',false);fe('p1',false);}
-  if(!em||em.indexOf('@')===-1){se('e-email',true);fe('reg-email',true);ok=false;}else{se('e-email',false);fe('reg-email',false);}
-  if(!pw||pw.length<8){se('e-pw',true);fe('reg-pw',true);ok=false;}else{se('e-pw',false);fe('reg-pw',false);}
-  if(!ph){se('e-ph1',true);fe('ph1',true);ok=false;}else{se('e-ph1',false);fe('ph1',false);}
-  if(!ok)return;
-  stuFlow='new';selIntent=null;
-  document.getElementById('stu-head').textContent='Add Your Student';
-  document.getElementById('stu-sub').textContent='You can add more students after completing registration';
-  document.getElementById('stu-body').innerHTML=buildStudentForm('new-account');
-  go('student');
+// Rule T1 (CSV contract §5.4 / register_family() §17.18.6): bus_to_wfb is
+// only legal when the chosen school is in portal_config.intake_transport's
+// bus_home list. The option simply is not offered otherwise — never shown
+// and disallowed, per the same rule the database enforces.
+function renderTransportOptions(card, school){
+  var wrap = card.querySelector('.transport-opts');
+  var transportWrap = card.querySelector('.transport-wrap');
+  var idx = card.getAttribute('data-idx');
+  if(!school){ transportWrap.style.display = 'none'; wrap.innerHTML=''; return; }
+  var busHome = CFG.transport.bus_home || [];
+  var options = CFG.transport.options || {};
+  var isBusHome = busHome.indexOf(school) !== -1;
+  var html = '';
+  Object.keys(options).forEach(function(label){
+    var code = options[label];
+    if(code === 'bus_to_wfb' && !isBusHome) return;
+    html += '<label class="radio-opt" onclick="selectTransport(this)"><input type="radio" name="transport-'+idx+'" value="'+escAttr(code)+'"><div class="radio-opt-text"><strong>'+esc(label)+'</strong></div></label>';
+  });
+  wrap.innerHTML = html;
+  transportWrap.style.display = html ? 'block' : 'none';
+}
+function selectTransport(label){
+  var wrap = label.closest('.transport-opts');
+  wrap.querySelectorAll('.radio-opt').forEach(function(el){ el.classList.remove('sel'); });
+  label.classList.add('sel');
+  label.querySelector('input').checked = true;
 }
 
-function doLogin(){
-  var em=document.getElementById('li-email').value.trim();
-  var pw=document.getElementById('li-pw').value;
-  if(!em||!pw)return;
-  var btn=document.getElementById('li-btn');btn.classList.add('btn-spin');btn.disabled=true;
-  document.getElementById('login-err').style.display='none';
-  fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:em,password:pw})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(!d.access_token)throw new Error('bad creds');
-    tok=d.access_token;isReturn=true;
-    return fetch(SB_URL+'/rest/v1/families?email=eq.'+encodeURIComponent(em)+'&select=*',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}});
-  })
-  .then(function(r){return r.json();})
-  .then(function(fams){
-    if(!fams||!fams.length)throw new Error('no family');
-    var f=fams[0];fid=f.id;fcode=f.family_code||null;
-    document.getElementById('dash-greeting').textContent='Welcome back, '+f.parent_1_name.split(' ')[0]+'!';
-    return fetch(SB_URL+'/rest/v1/students?family_id=eq.'+fid+'&select=*',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok}});
-  })
-  .then(function(r){return r.json();})
-  .then(function(stus){
-    var c=document.getElementById('stu-cards');c.innerHTML='';
-    if(!stus||!stus.length){document.getElementById('no-stu').style.display='block';}
-    else{stus.forEach(function(s){var d=document.createElement('div');d.className='stu-card';d.setAttribute('data-id',s.id);d.innerHTML='<div class="stu-info"><strong>'+s.first_name+' '+s.last_name+'</strong><span>Grade '+s.grade+' \u00b7 '+s.program.replace(/_/g,' ')+' \u00b7 '+s.home_school+'</span></div><div class="stu-chk" id="chk-'+s.id+'"></div>';d.onclick=function(){pickStu(s.id,s.first_name+' '+s.last_name,s.grade);};c.appendChild(d);});}
-    btn.classList.remove('btn-spin');btn.disabled=false;go('dashboard');
-  })
-  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;document.getElementById('login-err').style.display='block';console.error(err);});
+function addStudentCard(containerId){
+  var container = document.getElementById(containerId);
+  var existing = container.querySelectorAll('.student-card').length;
+  if(existing >= MAX_STUDENTS) return;
+  var idx = existing;
+  var div = document.createElement('div');
+  div.innerHTML = studentCardHTML(idx, containerId==='new-students' && existing>0);
+  var card = div.firstElementChild;
+  container.appendChild(card);
+  renderReturningOptions(card);
+  if(containerId === 'new-students'){
+    newIdx = container.querySelectorAll('.student-card').length;
+    document.getElementById('new-add-btn').disabled = newIdx >= MAX_STUDENTS;
+  }
+}
+function removeStudentCard(btn){
+  var card = btn.closest('.student-card');
+  var container = card.parentElement;
+  card.remove();
+  container.querySelectorAll('.student-card').forEach(function(c,i){
+    c.setAttribute('data-idx', i);
+    c.querySelector('.student-card-head h4').textContent = 'Student ' + (i+1);
+  });
+  if(container.id === 'new-students') document.getElementById('new-add-btn').disabled = false;
 }
 
-function pickStu(id,name,grade){
-  selStuId=id;selStuName=name;selGrade=grade||null;
-  document.querySelectorAll('.stu-card').forEach(function(c){c.classList.remove('sel');var chk=c.querySelector('.stu-chk');if(chk)chk.textContent='';});
-  var card=document.querySelector('[data-id="'+id+'"]');
-  if(card){card.classList.add('sel');var chk=document.getElementById('chk-'+id);if(chk)chk.textContent='\u2713';}
-  document.getElementById('reg-sel-btn').disabled=false;
+// ── Read one student card into the payload shape intake_write() expects
+// (Registration Module v12 §17.18.4/§17.18.5, read from the live function
+// body — not §17.4a's shorthand). Returns {ok:false} with field-level
+// highlighting if required fields are missing; the server is still
+// authoritative (§17.9), this is only a faster loop for the parent. ──
+function readStudentCard(card){
+  var ok = true;
+  var first = card.querySelector('.f-first').value.trim();
+  var last = card.querySelector('.f-last').value.trim();
+  var grade = card.querySelector('.f-grade').value;
+  var school = card.querySelector('.f-school').value;
+  var transportInput = card.querySelector('.transport-opts input[type=radio]:checked');
+  var returningInput = card.querySelector('.returning-opts input[type=radio]:checked');
+  var dietYes = card.querySelector('.f-diet-yes').checked;
+  var dietDetails = card.querySelector('.f-diet-details').value.trim();
+  var photoAgreed = card.querySelector('.f-photo-yes').checked;
+  var policy = card.querySelector('.f-policy').checked;
+  var signed = card.querySelector('.f-signed').value.trim();
+
+  card.querySelectorAll('.em').forEach(function(el){ el.classList.remove('show'); });
+  card.querySelectorAll('.err').forEach(function(el){ el.classList.remove('err'); });
+
+  if(!first){ card.querySelector('.e-first').classList.add('show'); fe2(card,'.f-first',true); ok=false; }
+  if(!last){ card.querySelector('.e-last').classList.add('show'); fe2(card,'.f-last',true); ok=false; }
+  if(!grade){ card.querySelector('.e-grade').classList.add('show'); fe2(card,'.f-grade',true); ok=false; }
+  if(!school){ card.querySelector('.e-school').classList.add('show'); fe2(card,'.f-school',true); ok=false; }
+  if(!returningInput){ card.querySelector('.e-returning').classList.add('show'); ok=false; }
+  if(!policy){ card.querySelector('.e-policy').classList.add('show'); ok=false; }
+  if(!signed){ card.querySelector('.e-signed').classList.add('show'); fe2(card,'.f-signed',true); ok=false; }
+
+  if(!ok) return { ok:false };
+
+  return {
+    ok: true,
+    student: {
+      first_name: first,
+      last_name: last,
+      grade: parseInt(grade),
+      home_school: school,
+      pickup_preference: transportInput ? transportInput.value : 'na',
+      returning_source: returningInput.value,
+      dietary_flag: !!dietYes,
+      dietary_details: dietYes ? dietDetails : '',
+      photo_release_agreed: !!photoAgreed,
+      policy_agreed: !!policy,
+      signed_by: signed
+    }
+  };
 }
+function fe2(card, sel, show){ var el = card.querySelector(sel); if(el) show?el.classList.add('err'):el.classList.remove('err'); }
 
-function toAddStudentReturning(){
-  stuFlow='returning';selIntent=null;
-  document.getElementById('stu-head').textContent='Add a New Student';
-  document.getElementById('stu-sub').textContent='Adding another child to your family account';
-  document.getElementById('stu-body').innerHTML=buildStudentForm('dashboard');
-  go('student');
-}
+// ── NEW FAMILY DOOR ──
+function submitNewFamily(){
+  hideAlert('new-err');
+  var ok = true;
+  var parent1 = document.getElementById('n-parent1').value.trim();
+  var email = document.getElementById('n-email').value.trim();
+  var phone1 = document.getElementById('n-phone1').value.trim();
+  var seasonCode = document.getElementById('n-season-code').value.trim();
+  var notify = document.getElementById('n-notify').checked;
+  var website = document.getElementById('n-website').value.trim();
 
-function submitStudent(){
-  var ok=true;
-  var first=document.getElementById('s-first').value.trim();
-  var last=document.getElementById('s-last').value.trim();
-  var grade=document.getElementById('s-grade').value;
-  var school=document.getElementById('s-school').value;
-  var gender=document.getElementById('s-gender').value;
-  var shirt=document.getElementById('s-shirt').value;
-  var policy=document.getElementById('s-policy').checked;
-  if(!first){se('e-sf',true);fe('s-first',true);ok=false;}else{se('e-sf',false);fe('s-first',false);}
-  if(!last){se('e-sl',true);fe('s-last',true);ok=false;}else{se('e-sl',false);fe('s-last',false);}
-  if(!grade){se('e-sg',true);fe('s-grade',true);ok=false;}else{se('e-sg',false);fe('s-grade',false);}
-  if(!school){se('e-sc',true);fe('s-school',true);ok=false;}else{se('e-sc',false);fe('s-school',false);}
-  if(!gender){se('e-sgen',true);fe('s-gender',true);ok=false;}else{se('e-sgen',false);fe('s-gender',false);}
-  if(!shirt){se('e-sshi',true);fe('s-shirt',true);ok=false;}else{se('e-sshi',false);fe('s-shirt',false);}
-  if(cfg.windowOpen&&!selIntent){se('e-intent',true);ok=false;}else{se('e-intent',false);}
-  if(!policy){se('e-pol',true);ok=false;}else{se('e-pol',false);}
-  if(!ok)return;
-  var btn=document.getElementById('stu-btn');btn.classList.add('btn-spin');btn.disabled=true;
+  var emailOk = email.indexOf('@')!==-1 && /\.[^@\s]+$/.test(email.split('@')[1]||'');
+  var phoneDigits = phone1.replace(/\D/g,'');
+  if(phoneDigits.length===11 && phoneDigits[0]==='1') phoneDigits = phoneDigits.slice(1);
 
-  var createStu=function(famId,token){
-    return fetch(SB_URL+'/rest/v1/students',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(token||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({family_id:famId,first_name:first,last_name:last,grade:parseInt(grade),gender:gender,home_school:school,program:getProgram(parseInt(grade)),shirt_size:shirt,pipeline_status:selIntent==='full_participation'?'priority':'interested',season_status:'pending',registration_status:'pending',is_first_year:true,gc_joined:false,remind_joined:false,season_verified:false,dietary_flag:false,alert_flag:'none'})})
-    .then(function(r){return r.json();})
-    .then(function(d){var s=Array.isArray(d)?d[0]:d;selStuId=s.id;selStuName=first+' '+last;selGrade=parseInt(grade);btn.classList.remove('btn-spin');btn.disabled=false;toNextAfterStudent();});
+  se('e-n-parent1', !parent1); fe('n-parent1', !parent1); if(!parent1) ok=false;
+  se('e-n-email', !emailOk); fe('n-email', !emailOk); if(!emailOk) ok=false;
+  se('e-n-phone1', phoneDigits.length!==10); fe('n-phone1', phoneDigits.length!==10); if(phoneDigits.length!==10) ok=false;
+  se('e-n-season-code', !seasonCode); fe('n-season-code', !seasonCode); if(!seasonCode) ok=false;
+
+  var cards = document.querySelectorAll('#new-students .student-card');
+  var students = [];
+  cards.forEach(function(card){
+    var r = readStudentCard(card);
+    if(!r.ok) ok=false; else students.push(r.student);
+  });
+
+  if(!ok) return;
+
+  var btn = document.getElementById('new-submit-btn');
+  btn.classList.add('btn-spin'); btn.disabled = true;
+
+  var payload = {
+    family: { parent_1_name: parent1, email: email, emergency_phone_1: phone1, notify_opt_in: !!notify },
+    students: students,
+    website: website
   };
 
-  if(isReturn){
-    createStu(fid,tok).catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error: '+err.message);});
-  }else{
-    var regEmail=document.getElementById('reg-email').value.trim();
-    var regPw=document.getElementById('reg-pw').value;
-    fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:regEmail,password:regPw})})
-    .then(function(r){return r.json();})
-    .then(function(a){
-      if(a.error){var msg=a.error.message||a.msg||'';if(msg.toLowerCase().indexOf('already')!==-1||msg.toLowerCase().indexOf('registered')!==-1)throw new Error('DUPLICATE_EMAIL');throw new Error(msg);}
-      return fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:regEmail,password:regPw})});
+  sbRpcPublic('register_family', { p_payload: payload, p_season_code: seasonCode })
+    .then(function(res){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      if(!res || !res.ok){
+        showAlert('new-err', reasonCopy(res && res.reason));
+        return;
+      }
+      showConfirm(res.family_code);
     })
-    .then(function(r){return r.json();})
-    .then(function(session){
-      if(!session.access_token)throw new Error('Could not establish session after signup');
-      tok=session.access_token;
-      return fetch(SB_URL+'/rest/v1/families',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok,'Prefer':'return=representation'},body:JSON.stringify({parent_1_name:document.getElementById('p1').value.trim(),parent_2_name:document.getElementById('p2').value.trim()||null,email:regEmail,emergency_phone_1:document.getElementById('ph1').value.trim(),emergency_phone_2:document.getElementById('ph2').value.trim()||null,notify_opt_in:document.getElementById('opt-in').checked,code_active:true})});
+    .catch(function(err){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      showAlert('new-err', reasonCopy(null));
+      console.error(err);
+    });
+}
+
+// ── EXISTING FAMILY DOOR ──
+function lookupFamily(){
+  hideAlert('existing-lookup-err');
+  var code = document.getElementById('existing-code').value.trim().toUpperCase();
+  if(!code){ showAlert('existing-lookup-err', reasonCopy('invalid_format')); return; }
+  var btn = document.getElementById('existing-lookup-btn');
+  btn.classList.add('btn-spin'); btn.disabled = true;
+  sbRpcPublic('get_family_dashboard', { p_family_code: code })
+    .then(function(res){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      if(!res || !res.ok){
+        showAlert('existing-lookup-err', reasonCopy(res && res.reason));
+        return;
+      }
+      existingFamilyCode = code;
+      var kids = res.students || [];
+      var kidsEl = document.getElementById('existing-kids');
+      kidsEl.innerHTML = kids.length ? kids.map(function(s){
+        var lbl = getProgramLabel(s.program || getProgram(s.grade));
+        return '<div class="existing-kid"><strong>'+esc(s.first_name+' '+s.last_name)+'</strong><span>Grade '+esc(s.grade)+' · '+esc(lbl.name)+'</span></div>';
+      }).join('') : '<p style="font-size:13px;color:var(--text-muted);">No students on this account yet.</p>';
+      var esContainer = document.getElementById('existing-students');
+      esContainer.innerHTML = '';
+      addStudentCard('existing-students');
+      document.getElementById('existing-lookup-body').style.display = 'none';
+      document.getElementById('existing-form-body').style.display = 'block';
     })
-    .then(function(r){return r.json();})
-    .then(function(d){var f=Array.isArray(d)?d[0]:d;if(!f||!f.id)throw new Error('Family creation failed \u2014 please try again or contact your coordinator');fid=f.id;fcode=f.family_code||'CC-0000';return createStu(fid,tok);})
-    .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;if(err.message==='DUPLICATE_EMAIL'){alert('An account with that email already exists. Please use the "Returning Family" option to log in instead.');go('login');}else{alert('Registration error: '+err.message);console.error(err);}});
+    .catch(function(err){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      showAlert('existing-lookup-err', reasonCopy(null));
+      console.error(err);
+    });
+}
+
+function submitExistingStudent(){
+  hideAlert('existing-err');
+  var card = document.querySelector('#existing-students .student-card');
+  var r = readStudentCard(card);
+  if(!r.ok) return;
+  var btn = document.getElementById('existing-submit-btn');
+  btn.classList.add('btn-spin'); btn.disabled = true;
+  sbRpcPublic('register_student', { p_family_code: existingFamilyCode, p_student: r.student })
+    .then(function(res){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      if(!res || !res.ok){
+        showAlert('existing-err', reasonCopy(res && res.reason));
+        return;
+      }
+      showConfirm(null);
+    })
+    .catch(function(err){
+      btn.classList.remove('btn-spin'); btn.disabled = false;
+      showAlert('existing-err', reasonCopy(null));
+      console.error(err);
+    });
+}
+
+function showConfirm(familyCode){
+  var cw = document.getElementById('code-wrap');
+  if(familyCode){
+    document.getElementById('show-code').textContent = familyCode;
+    cw.style.display = 'block';
+  } else {
+    cw.style.display = 'none';
   }
-}
-
-function submitEvent(){
-  if(!selEv||!selEvData){se('e-ev',true);return;}
-  if(selEvData.requires_reason){var r=document.getElementById('con-reason').value.trim();if(!r){se('e-con',true);return;}se('e-con',false);}
-  var reason=selEvData.requires_reason?document.getElementById('con-reason').value.trim():null;
-  var btn=document.getElementById('ev-btn');btn.classList.add('btn-spin');btn.disabled=true;
-  fetch(SB_URL+'/rest/v1/registrations',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({student_id:selStuId,family_id:fid,event_type:selEvData.event_type,event_name:selEvData.name,program_preference:null,is_current_member:isReturn,priority_status:isReturn?'team_member':'new',registration_status:'pending',photo_release_agreed:true,policy_agreed:true,sessions_selected:reason?{consideration_reason:reason}:null})})
-  .then(function(){btn.classList.remove('btn-spin');btn.disabled=false;showConfirm('summer',selEvData.deadline_label);})
-  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error saving registration: '+err.message);console.error(err);});
-}
-
-function submitRequest(){
-  if(!selProgram){se('e-prog',true);return;}
-  var reason=document.getElementById('req-reason').value.trim();
-  var btn=document.getElementById('req-btn');btn.classList.add('btn-spin');btn.disabled=true;
-  fetch(SB_URL+'/rest/v1/registrations',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Prefer':'return=representation'},body:JSON.stringify({student_id:selStuId,family_id:fid,event_type:'tryout_request',event_name:'Tryout Request \u2014 '+getProgramLabel(selProgram).name,program_preference:selProgram,is_current_member:isReturn,priority_status:'interested',registration_status:'pending',photo_release_agreed:true,policy_agreed:true,sessions_selected:reason?{reason:reason}:null})})
-  .then(function(){btn.classList.remove('btn-spin');btn.disabled=false;showConfirm('offseason',null);})
-  .catch(function(err){btn.classList.remove('btn-spin');btn.disabled=false;alert('Error submitting request: '+err.message);console.error(err);});
-}
-
-function showConfirm(mode,deadlineLabel){
-  var cw=document.getElementById('code-wrap');
-  if(isReturn){cw.style.display='none';}else{document.getElementById('show-code').textContent=fcode||'CC-0000';cw.style.display='block';}
-  if(mode==='summer'){
-    document.getElementById('confirm-title').textContent="You're Registered! \uD83C\uDF89";
-    document.getElementById('confirm-sub').textContent='Your registration has been submitted successfully';
-    document.getElementById('confirm-status-label').textContent='Registration Status';
-    document.getElementById('confirm-msg').textContent='Your registration is pending coordinator review. You will receive a status update no later than one week before your event.';
-    document.getElementById('tl-items').innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Registration received</strong>Your information is in our system and pending coordinator review.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Update by '+(deadlineLabel||'one week before your event')+'</strong>You will be notified of your registration status by this date.</div></div>';
-  }else{
-    document.getElementById('confirm-title').textContent='Request Submitted! \u2705';
-    document.getElementById('confirm-sub').textContent='Your tryout request has been received';
-    document.getElementById('confirm-status-label').textContent='Request Status';
-    document.getElementById('confirm-msg').textContent="A coordinator will be in touch within 5 business days to schedule an interview and discuss next steps. There's no commitment required at this stage.";
-    document.getElementById('tl-items').innerHTML='<div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Request received</strong>Your student\'s tryout request is in our system.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Coordinator contact within 5 business days</strong>A coordinator will reach out to schedule an interview.</div></div><div class="tl-item"><div class="tl-dot"></div><div class="tl-text"><strong>Interview &amp; tryout</strong>Your student will have a chance to meet the team and try out in person.</div></div>';
-  }
-  renderConfirmActions(mode);
   go('confirm');
 }
-
 function copyCode(){
-  var c=document.getElementById('show-code').textContent;
-  navigator.clipboard.writeText(c).then(function(){var el=document.getElementById('cc-copied');el.style.display='block';setTimeout(function(){el.style.display='none';},2000);});
-}
-
-function renderConfirmActions(mode){
-  var el=document.getElementById('confirm-actions');
-  // Only show "register same student for another event" in summer window mode
-  // In off-season there's only one thing to submit, so just show add student
-  var eventBtn='';
-  if(mode==='summer'&&selStuName){
-    eventBtn='<button class="add-more-btn" onclick="regAnotherEvent()" style="margin-top:14px;">+ Register '+selStuName+' for Another Event</button>';
-  }
-  var stuLabel=isReturn?'+ Register a Different Student':'+ Add Another Student';
-  el.innerHTML=eventBtn+'<button class="add-more-btn" onclick="regAnother()" style="margin-top:8px;">'+stuLabel+'</button>';
-}
-
-function regAnotherEvent(){
-  // Keep selStuId, selStuName, selGrade — just reset the event selection and go back to event screen
-  selEv=null;selEvData=null;
-  document.querySelectorAll('.ev-opt').forEach(function(el){
-    el.classList.remove('sel');el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';
-    var radio=el.querySelector('input[type=radio]');if(radio){radio.disabled=false;radio.checked=false;}
-    var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();
+  var c = document.getElementById('show-code').textContent;
+  navigator.clipboard.writeText(c).then(function(){
+    var el = document.getElementById('cc-copied');
+    el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 2000);
   });
-  document.getElementById('con-note').style.display='none';
-  document.getElementById('ev-sub').textContent='Registering: '+selStuName;
-  filterEventsByGrade(selGrade);
-  go('event');
 }
 
-function regAnother(){
-  selStuId=null;selStuName=null;selGrade=null;selEv=null;selEvData=null;selProgram=null;selIntent=null;
-  document.querySelectorAll('.ev-opt').forEach(function(el){el.classList.remove('sel');el.style.opacity='1';el.style.pointerEvents='auto';el.style.cursor='pointer';var radio=el.querySelector('input[type=radio]');if(radio){radio.disabled=false;radio.checked=false;}var lock=el.querySelector('.ev-grade-lock');if(lock)lock.remove();});
-  document.getElementById('con-note').style.display='none';
-  if(isReturn){document.querySelectorAll('.stu-card').forEach(function(c){c.classList.remove('sel');});document.getElementById('reg-sel-btn').disabled=true;go('dashboard');}
-  else{stuFlow='new';document.getElementById('stu-head').textContent='Add Your Student';document.getElementById('stu-sub').textContent='You can add more students after completing registration';document.getElementById('stu-body').innerHTML=buildStudentForm('new-account');go('student');}
+// Both register_family() and register_student() are anon-executable
+// SECURITY DEFINER functions (§17.5a/§17.5b) — called with the publishable
+// key only, exactly like the shell's own family-code sign-in and
+// get_family_dashboard(). No JWT, no auth header.
+function sbRpcPublic(fn, body){
+  return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', apikey: SB_KEY },
+    body: JSON.stringify(body || {})
+  }).then(function(r){ return r.json(); });
 }
 
 loadConfig();
+
+})();
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8. Last element in
-     <body>, per the four-line page contract in §10.2.1. This page had no
-     footer at all before W3.9d.
+     PUBLIC SHELL FOOTER — rendered by shell.js, §10.2.8.
      ══════════════════════════════════════════════════════════════════════ -->
 <div id="shell-footer"></div>
 </body>

@@ -712,7 +712,9 @@ function showScreen(id) {
    approved, alternate, tryout_pending, waitlist, declined, interested,
    priority — were NOT legal season_status values and could never fire:
      - approved / waitlisted / declined / pending  -> registration_status
-       (students.registration_status, registrations.registration_status)
+       (registrations.registration_status only — students.registration_status
+       was dropped, W10.4, Registration Module v12 §17.13; registrations is
+       authoritative for approval, ruling 3)
      - interested / priority / tryout_pending / offered / declined / waitlist
        -> students.pipeline_status
      - alternate -> legal on no column at all; dead everywhere

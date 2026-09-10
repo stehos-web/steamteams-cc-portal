@@ -6,9 +6,9 @@
 <meta name="robots" content="noindex">
 </head>
 <body>
-<pre>wave:   9f
+<pre>wave:   10.5
 commit: (set at push)
-date:   2026-09-09
+date:   2026-09-10
 
 STEAM Teams CC Portal — deploy marker
 --------------------------------------
@@ -49,13 +49,17 @@ wrong property for a file that must read as fresh on every fetch. The
 paragraph.
 
 After any push, fetch this file and confirm the wave line matches what was
-just pushed. If it does not, the deploy did not land, whatever the commit
-history says.
+just pushed. If it does not, re-verify against a URL not previously fetched
+this session (or a second independent signal) before calling it a failure —
+a cache-busted re-fetch of this same URL alone is not sufficient (Working
+Standards v10 §2, corrected out of W10.5 after a cache-busted query string
+was observed to return a stale answer on 2026-09-09 for a deploy that had
+in fact landed).
 
   curl -s https://steamteams-cc-portal.vercel.app/version.html
 
-Working Standards v2, section 2: "delivered means committed, pushed, and seen
-live." Update the wave and commit lines with every deploy.
+Working Standards v10, section 2: "delivered means committed, pushed, and
+seen live." Update the wave and commit lines with every deploy.
 </pre>
 </body>
 </html>

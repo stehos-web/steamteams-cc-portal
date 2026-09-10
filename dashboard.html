@@ -135,6 +135,15 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
 /* REGISTRATIONS PAGE */
 .filter-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+/* W10.5, §17.7 — split-family indicator. A report, never a merge: this
+   surfaces check_v9_split_families() rows so a coordinator can look before
+   approving, and does nothing else — there is no action button here on
+   purpose. */
+.split-banner{display:flex;flex-direction:column;gap:8px;padding:12px 14px;margin-bottom:1rem;background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px}
+.split-banner.hidden{display:none}
+.split-banner-head{font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.04em}
+.split-banner-row{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
+.split-banner-row strong{color:var(--gray-900);font-family:inherit;font-weight:600}
 .filter-btn{padding:5px 12px;border:1px solid var(--gray-200);border-radius:20px;background:#fff;font-size:12px;color:var(--gray-600);cursor:pointer;font-family:var(--font);transition:all 0.1s}
 .filter-btn.active,.filter-btn:hover{border-color:var(--gray-800);background:var(--gray-800);color:#fff}
 .reg-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden}
@@ -439,6 +448,12 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
       <!-- REGISTRATIONS PAGE -->
       <div class="page" id="page-registrations">
+        <!-- W10.5, §17.7 — possible-split-family report, fed by
+             check_v9_split_families(). A report, never a merge: no action
+             lives here, only two family codes and what they have in common,
+             so a coordinator sees it before approving rather than at the
+             first invoice. -->
+        <div class="split-banner hidden" id="split-family-banner"></div>
         <div class="filter-bar">
           <button class="filter-btn active" data-status="all">All</button>
           <button class="filter-btn" data-status="pending">Pending</button>
@@ -1045,6 +1060,33 @@ async function loadRegistrations() {
     renderRegTable();
   } catch(e) {
     tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
+  }
+  loadSplitFamilyCheck();
+}
+
+/* W10.5, §17.7 — "The coordinator queue in dashboard.html gains a 'possible
+   split' indicator fed by [check_v9_split_families()] — a report, never a
+   merge." check_v9_split_families() matches families on normalised student
+   surname + a shared emergency phone number; it is SECURITY INVOKER and
+   granted to `authenticated` only (not anon), so RLS decides what a given
+   coordinator sees, same as every other read on this page. A failed or
+   empty check hides the banner — it never claims a split exists on no
+   evidence, and it never blocks approval on its own. */
+async function loadSplitFamilyCheck() {
+  const banner = document.getElementById('split-family-banner');
+  if (!banner) return;
+  try {
+    const rows = await sbRpc('check_v9_split_families', {}, SESSION.access_token);
+    if (!Array.isArray(rows) || rows.length === 0) { banner.classList.add('hidden'); banner.innerHTML = ''; return; }
+    banner.innerHTML = '<div class="split-banner-head">Possible split families (' + rows.length + ')</div>' +
+      rows.map(r => `<div class="split-banner-row"><strong>${r.family_a_code}</strong> (${r.students_a} student${r.students_a === 1 ? '' : 's'}) and <strong>${r.family_b_code}</strong> (${r.students_b} student${r.students_b === 1 ? '' : 's'}) share a surname and a phone number ending ${r.phone_last4} — review before approving either.</div>`).join('');
+    banner.classList.remove('hidden');
+  } catch (e) {
+    // Not authorised, or the read failed — say nothing rather than a false
+    // positive or negative on a check this page does not enforce anything on.
+    banner.classList.add('hidden');
+    banner.innerHTML = '';
+    console.error('check_v9_split_families error:', e);
   }
 }
 

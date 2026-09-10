@@ -404,6 +404,12 @@
         "</div>" +
         '<div id="shell-fam-err" class="hidden text-sm text-[#B2292E] bg-[#ffdad6] px-3 py-2"></div>' +
         '<button id="shell-fam-submit" class="' + SUBMIT_CLS + '">Check My Status</button>' +
+        // §17.10 — lost-code recovery is a coordinator action, not a reset link.
+        // Copy comes from portal_config.intake_lost_code_copy (loadLostCodeCopy(),
+        // called from mount()) so the contact channel is a config edit, not a
+        // redeploy — the same source register.html's existing-family door reads.
+        // Never typed inline here.
+        '<p id="shell-lost-code-line" class="text-center text-[13px] text-[#44474e]"></p>' +
         forgotLine() +
       "</div>"
     );
@@ -542,6 +548,24 @@
     if (PRIVATE_ROUTES.indexOf(path) !== -1) guardPrivateRoute(path);
     var params = new URLSearchParams(window.location.search);
     if (params.get("login") === "1") openModal();
+    loadLostCodeCopy();
+  }
+
+  // W10.5, §17.10 — the family panel's lost-code line is config-driven, read
+  // from the same portal_config key register.html's existing-family door
+  // reads. Fetched once at mount; a failed fetch leaves the line empty rather
+  // than showing stale or invented copy (config-driven over hardcoded, and
+  // never a fabricated fallback for a support contact).
+  function loadLostCodeCopy() {
+    var el = document.getElementById("shell-lost-code-line");
+    if (!el) return;
+    fetch(SB_URL + "/rest/v1/portal_config?select=value&key=eq.intake_lost_code_copy", {
+      headers: { apikey: SB_KEY }
+    }).then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        var copy = rows && rows[0] && rows[0].value;
+        if (typeof copy === "string" && copy) el.textContent = copy;
+      }).catch(function () { /* leave blank — forgotLine() below still offers a contact path */ });
   }
 
   // ── §10.4.8, completion — restore the page after a guard-panel sign-in ──
