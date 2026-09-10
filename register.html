@@ -256,7 +256,18 @@
 </main>
 
 <script>
-(function(){
+// NOTE (W10.5 hotfix): this block declares its functions at top level,
+// deliberately NOT wrapped in an IIFE. Every interactive control on this
+// page (fork buttons, submit, add/remove student, copy code, etc.) is
+// wired with inline onclick="..."/onchange="..." attributes, which resolve
+// names against the global scope — matching the pattern already
+// established in dashboard.html and family-dashboard.html. An IIFE here
+// silently breaks every one of those handlers (ReferenceError: <fn> is not
+// defined), and did exactly that in the first W10.5 build: it passed
+// `node --check` (syntax) and a tag-balance check (markup) but neither
+// check exercises onclick resolution, so the defect was never caught until
+// a real browser click threw the error. See Registration Module v13
+// §17.20 (or the wave card, whichever is current) for the full account.
 
 var CFG = { schools: [], transport: { options: {}, bus_home: [], pickup_only: [] }, returning: [], lostCodeCopy: '', confirmCopy: '' };
 var MAX_STUDENTS = 6;
@@ -664,8 +675,6 @@ function sbRpcPublic(fn, body){
 }
 
 loadConfig();
-
-})();
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════════
