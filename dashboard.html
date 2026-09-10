@@ -1154,11 +1154,18 @@ function openRegModal(regId) {
   /* W11.2 — a household with more than one unapproved student is approved
      together, through approve_family(). See approveHousehold() below. */
   const household = familyUnapproved(reg.family_id);
+  /* Guard (Seth, W11.2): approve_family() approves EVERY unapproved sibling,
+     declined and waitlisted included. So the household action is offered
+     only when every unapproved sibling is still 'pending'. */
+  const householdOk = household.length > 1 && household.every(h => (h.registration_status || 'pending') === 'pending');
+  const householdList = household.map(h => escHtml(((h.students || {}).first_name || '?') + ' ' + ((h.students || {}).last_name || '')) +
+        ' (Gr. ' + escHtml((h.students || {}).grade || '?') + ', ' + escHtml(h.registration_status || 'pending') + ')').join(' · ');
   const householdBox = (status === 'pending' && household.length > 1)
-    ? `<div class="reason-box" style="font-style:normal"><strong>This family has ${household.length} students not yet approved:</strong> ` +
-      household.map(h => escHtml(((h.students || {}).first_name || '?') + ' ' + ((h.students || {}).last_name || '')) +
-        ' (Gr. ' + escHtml((h.students || {}).grade || '?') + ', ' + escHtml(h.registration_status || 'pending') + ')').join(' · ') +
-      `<br>Use <strong>Approve whole family</strong> so the sibling discount is applied once, in one step, and no parent sees a bill move.</div>`
+    ? (householdOk
+      ? `<div class="reason-box" style="font-style:normal"><strong>This family has ${household.length} students not yet approved:</strong> ` + householdList +
+        `<br>Use <strong>Approve whole family</strong> so the sibling discount is applied once, in one step, and no parent sees a bill move.</div>`
+      : `<div class="reason-box" style="font-style:normal"><strong>This family has a declined or waitlisted student:</strong> ` + householdList +
+        `<br>Approving the whole family would approve them too, so that option is not offered. Approve each student on their own.</div>`)
     : '';
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${stuName}</span></div>
@@ -1177,7 +1184,7 @@ function openRegModal(regId) {
   const actions = document.getElementById('modal-actions');
   if (status === 'pending') {
     actions.innerHTML = `
-      ${household.length > 1
+      ${householdOk
         ? `<button class="btn-sm btn-approve" onclick="approveHousehold('${reg.family_id}')">Approve whole family (${household.length})</button>
       <button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve this student only</button>`
         : `<button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve</button>`}
@@ -1282,8 +1289,9 @@ async function updateRegStatus(regId, newStatus) {
 
    What it approves. approve_family() approves every student in the family
    whose registration is not already 'approved' — pending, waitlisted and
-   declined alike. familyUnapproved() uses the same test, so the modal lists
-   exactly the students the database is about to approve, not a guess.
+   declined alike. So this page offers it ONLY when every unapproved sibling
+   is 'pending' (Seth's ruling, W11.2), and re-reads the family from the
+   server immediately before the call and refuses if that has changed.
 
    Failure. One transaction: if any student is refused (NO_FEE_BAND,
    NOT_AUTHORISED, ...), the database rolls the whole family back and
@@ -1304,8 +1312,24 @@ function familyUnapproved(familyId) {
 }
 
 async function approveHousehold(familyId) {
-  const members = familyUnapproved(familyId);
-  if (!members.length) { toast('Nothing left to approve in this family. Reload the page and check the queue.', 'error', 9000); return; }
+  /* Decide on the server's current state, not this page's memory: another
+     coordinator may have declined or approved someone since the queue loaded. */
+  let members;
+  try {
+    const fresh = await sbGet('/rest/v1/registrations?select=id,student_id,registration_status&family_id=eq.' + encodeURIComponent(familyId), SESSION.access_token);
+    const blockers = fresh.filter(r => r.registration_status !== 'approved' && r.registration_status !== 'pending');
+    if (blockers.length) {
+      toast('Not approved — this family has ' + blockers.length + ' declined or waitlisted ' + (blockers.length === 1 ? 'student' : 'students') +
+            ', and approving the whole family would approve them too. Approve each student on their own.', 'error', 12000);
+      await loadRegistrations();
+      return;
+    }
+    members = fresh.filter(r => r.registration_status === 'pending');
+  } catch (e) {
+    toast('Could not re-check this family before approving: ' + e.message + ' — nothing was approved.', 'error', 12000);
+    return;
+  }
+  if (!members.length) { toast('Nothing left to approve in this family. Reload the page and check the queue.', 'error', 9000); await loadRegistrations(); return; }
 
   let res;
   try {
