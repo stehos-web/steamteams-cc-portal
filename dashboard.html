@@ -1151,6 +1151,15 @@ function openRegModal(regId) {
       if (s.reason) reason = `<div class="reason-box"><strong>Reason/notes:</strong> ${s.reason}</div>`;
     } catch(e) {}
   }
+  /* W11.2 — a household with more than one unapproved student is approved
+     together, through approve_family(). See approveHousehold() below. */
+  const household = familyUnapproved(reg.family_id);
+  const householdBox = (status === 'pending' && household.length > 1)
+    ? `<div class="reason-box" style="font-style:normal"><strong>This family has ${household.length} students not yet approved:</strong> ` +
+      household.map(h => escHtml(((h.students || {}).first_name || '?') + ' ' + ((h.students || {}).last_name || '')) +
+        ' (Gr. ' + escHtml((h.students || {}).grade || '?') + ', ' + escHtml(h.registration_status || 'pending') + ')').join(' · ') +
+      `<br>Use <strong>Approve whole family</strong> so the sibling discount is applied once, in one step, and no parent sees a bill move.</div>`
+    : '';
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-row"><span class="modal-key">Student</span><span class="modal-val">${stuName}</span></div>
     <div class="modal-row"><span class="modal-key">Grade</span><span class="modal-val">${stu.grade || '—'}</span></div>
@@ -1163,11 +1172,15 @@ function openRegModal(regId) {
     <div class="modal-row"><span class="modal-key">Status</span><span class="modal-val"><span class="status-badge status-${status}">${status}</span></span></div>
     <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${reg.submitted_at ? new Date(reg.submitted_at).toLocaleString() : '—'}</span></div>
     ${reason}
+    ${householdBox}
   `;
   const actions = document.getElementById('modal-actions');
   if (status === 'pending') {
     actions.innerHTML = `
-      <button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve</button>
+      ${household.length > 1
+        ? `<button class="btn-sm btn-approve" onclick="approveHousehold('${reg.family_id}')">Approve whole family (${household.length})</button>
+      <button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve this student only</button>`
+        : `<button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve</button>`}
       <button class="btn-sm btn-waitlist" onclick="updateRegStatus('${regId}','waitlisted')">Waitlist</button>
       <button class="btn-sm btn-decline" onclick="updateRegStatus('${regId}','declined')">Decline</button>
       <button class="btn-sm btn-secondary" onclick="closeModal()" style="margin-left:auto">Close</button>
@@ -1253,6 +1266,82 @@ async function updateRegStatus(regId, newStatus) {
     }
   } catch(e) {
     toast('Error: ' + e.message, 'error', 9000);
+  }
+}
+
+/* W11.2 — APPROVE A WHOLE HOUSEHOLD IN ONE TRANSACTION.
+
+   Why this exists. MKD §7.2a re-ranks the whole family on every activation.
+   Approving three children one at a time, in the wrong order, raises a
+   sibling's bill between clicks (rank 2 at 50% off becomes rank 3 at 25%
+   off — proven live on CC-ZZ01 in W11.0, $150 -> $225). approve_family()
+   approves every unapproved student in the family inside ONE database
+   transaction, in rank order, so the discount lands once and no parent can
+   load the dashboard mid-way and watch a number move. W11.0 built the
+   function; until W11.2 nothing on this page called it.
+
+   What it approves. approve_family() approves every student in the family
+   whose registration is not already 'approved' — pending, waitlisted and
+   declined alike. familyUnapproved() uses the same test, so the modal lists
+   exactly the students the database is about to approve, not a guess.
+
+   Failure. One transaction: if any student is refused (NO_FEE_BAND,
+   NOT_AUTHORISED, ...), the database rolls the whole family back and
+   nobody is approved. The message says so, and the queue is reloaded from
+   the server rather than trusted from memory.
+
+   Scope: registrations for this family that are already loaded on the page.
+   The database, not this list, decides who is approved; the count it
+   returns is checked against the count shown, and a mismatch is surfaced.   */
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function familyUnapproved(familyId) {
+  if (!familyId) return [];
+  return REG_DATA.filter(r => r.family_id === familyId && r.registration_status !== 'approved');
+}
+
+async function approveHousehold(familyId) {
+  const members = familyUnapproved(familyId);
+  if (!members.length) { toast('Nothing left to approve in this family. Reload the page and check the queue.', 'error', 9000); return; }
+
+  let res;
+  try {
+    res = await sbRpc('approve_family', { p_family_id: familyId }, SESSION.access_token);
+  } catch (e) {
+    toast('Error: ' + e.message + ' — nothing in this family was approved; the database rolls the whole family back together.', 'error', 12000);
+    await loadRegistrations();
+    return;
+  }
+
+  closeModal();
+  await loadRegistrations();
+  loadHomeStats();
+
+  const n = (res && res.students_approved) || 0;
+  const results = (res && Array.isArray(res.results)) ? res.results : [];
+  const first = results[0] || {};
+  const last = results[results.length - 1] || {};
+  const before = first.family_billing_before || {};
+  const after = last.family_billing_after || {};
+  const total = Object.values(after).reduce((sum, v) => sum + (Number(v && v.owed) || 0), 0);
+
+  toast('Approved and activated ' + n + (n === 1 ? ' student' : ' students') +
+        ' — this family now owes $' + total + ' for the season, after any sibling discount.', 'success', 9000);
+
+  if (n !== members.length) {
+    toast('Heads up — the page listed ' + members.length + ' to approve but the database approved ' + n +
+          '. The queue has been reloaded; check this family before moving on.', 'error', 12000);
+  }
+
+  /* Only a student who already had a dues row before this click can see
+     their number move. Compare their owed before and after the whole call. */
+  const raised = Object.keys(before).filter(k => after[k] && Number(after[k].owed) > Number(before[k].owed));
+  if (raised.length) {
+    toast(raised.length + (raised.length === 1 ? ' student already billed now owes MORE' : ' students already billed now owe MORE') +
+          ' — §7.2a re-ranked this family. Contact them before they notice it themselves.', 'error', 12000);
   }
 }
 
