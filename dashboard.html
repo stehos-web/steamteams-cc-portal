@@ -14,6 +14,9 @@
      W3.9d: this page is the fifth of six surfaces onto the shared shell. -->
 <link href="/assets/css/shell.css" rel="stylesheet">
 <script src="/assets/js/shell.js" defer></script>
+<!-- W11.4: Settings renderer. Settings are drawn from portal_config's own
+     metadata; see the SETTINGS PAGE comment below. -->
+<script src="/assets/js/config-ui.js" defer></script>
 <style>
   /* ── Form field legibility fix — added 2026-08-11 ──────────────────
      No input, select, or textarea in this portal set an explicit text
@@ -210,6 +213,26 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 .btn-secondary:hover{border-color:var(--gray-400);background:var(--gray-50)}
 .btn-danger{padding:6px 14px;border:1px solid var(--red-border);border-radius:var(--radius);background:var(--red-light);font-size:12px;color:var(--red);cursor:pointer;font-family:var(--font);font-weight:500;transition:all 0.1s}
 .btn-danger:hover{background:var(--red);color:#fff}
+/* W11.4 — metadata-driven Settings rows (assets/js/config-ui.js). Selectors are
+   scoped under .settings-section so they outrank the Tailwind forms plugin. */
+.settings-section .cfg-row{align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.settings-section .cfg-text{flex:1 1 260px;min-width:0}
+.settings-section .cfg-meta{font-size:10px;font-family:var(--mono);color:var(--gray-400);margin-top:4px}
+.settings-section .cfg-lock{display:inline-block;margin-left:6px;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200);vertical-align:middle}
+.settings-section .cfg-control{display:flex;align-items:center;gap:0.5rem;flex:0 1 400px;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+.settings-section .cfg-input{flex:1 1 220px;min-width:0;padding:6px 8px;border:1px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font);font-size:13px;color:var(--gray-800);background:#fff}
+.settings-section .cfg-input[readonly],.settings-section .cfg-input:disabled{background:var(--gray-50);color:var(--gray-600)}
+.settings-section textarea.cfg-input{min-height:4.5rem;resize:vertical}
+.settings-section .cfg-input.cfg-mono{font-family:var(--mono);font-size:12px}
+.settings-section .cfg-bool{display:inline-flex;align-items:center;gap:0.5rem}
+.settings-section .cfg-state{font-size:12px;font-family:var(--mono);color:var(--gray-600);min-width:2rem}
+.settings-section .btn-secondary:disabled{opacity:0.5;cursor:default}
+.cfg-msg{font-size:12px;margin-top:4px;color:var(--gray-600)}
+.cfg-msg:empty{display:none}
+.cfg-msg.ok{color:var(--green)}
+.cfg-msg.err{color:var(--red)}
+.cfg-empty{font-size:12px;color:var(--gray-400);font-family:var(--mono)}
+.cfg-note{font-size:12px;color:var(--gray-600);margin:0 0 1rem}
 
 /* TOASTS */
 /* z-index 9999 -> 35. §10.2.3 fixes the whole stack numerically — header 40,
@@ -372,7 +395,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
           <button class="nav-tile" data-nav="settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <div class="nav-tile-label">Settings</div>
-            <div class="nav-tile-sub">Window &amp; config</div>
+            <div class="nav-tile-sub">Registration &amp; links</div>
           </button>
           <button class="nav-tile" onclick="window.open('https://app.supabase.com','_blank')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
@@ -388,14 +411,11 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
         <div class="section-label">Open action items</div>
         <div class="todo-list" id="todo-list">
-          <div class="todo-item">
-            <div class="todo-dot urgent"></div>
-            <div style="flex:1">
-              <div class="todo-text">Rotate Supabase anon key — exposed in register.html source</div>
-              <div class="todo-meta">Settings → API → Regenerate in Supabase, then update SB_KEY in register.html</div>
-            </div>
-            <span class="todo-tag tag-urgent">urgent</span>
-          </div>
+          <!-- W11.4: the anon-key rotation action item was deleted, not corrected.
+               W9f rotated the key and closed gate row B5 on 2026-09-09; this
+               item and the key-status line in Settings were the same false
+               claim in two places (walkthrough Section 5: delete both). The rest
+               of this hardcoded list is RULING 7's rebuild, not this wave's. -->
           <div class="todo-item">
             <div class="todo-dot normal"></div>
             <div style="flex:1">
@@ -537,59 +557,24 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <div class="pagination" id="student-pagination"></div>
       </div>
 
-      <!-- SETTINGS PAGE -->
+      <!-- SETTINGS PAGE — W11.4.
+           Drawn by ConfigUI (/assets/js/config-ui.js) from portal_config's own
+           metadata: every row whose scope is 'operating'. No setting is written
+           in this HTML, so adding one is a row, not a deploy.
+           The three hand-written panels that were here were deleted, not moved:
+             · Registration window — its toggle wrote registration_window_open,
+               which nothing had read since W10.5. Both rows retired on Seth's
+               ruling (RULING 12); the real switch, self_registration_open, is
+               now a row here, guarded in the database.
+             · Events — belongs to the Calendar tile (RULING 13).
+             · Portal info — its key-status line was false
+               (W9f, gate row B5, 2026-09-09). The two shareable links became
+               rows; the infrastructure facts go to Developer Config (RULING 13).
+           Definition rows (homepage content, schools, fees) are classified and
+           wait for Program Setup; they are deliberately not shown here. -->
       <div class="page" id="page-settings">
-        <div class="settings-section">
-          <h2>Registration window</h2>
-          <div class="setting-row">
-            <div>
-              <div class="setting-label">Summer window open</div>
-              <div class="setting-desc">Controls whether register.html shows summer event selection or off-season tryout request flow</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-window" onchange="updateWindowConfig(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <div>
-              <div class="setting-label">Window label</div>
-              <div class="setting-desc">Displayed in the registration page header when window is open</div>
-            </div>
-            <span class="config-val" id="window-label-val">—</span>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h2>Events</h2>
-          <div id="events-list">
-            <div style="font-size:12px;color:var(--gray-400);font-family:var(--mono)">Loading events…</div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h2>Portal info</h2>
-          <div class="setting-row">
-            <div class="setting-label">Portal URL</div>
-            <span class="config-val">steamteams-cc-portal.vercel.app</span>
-          </div>
-          <div class="setting-row">
-            <div class="setting-label">Registration URL</div>
-            <span class="config-val">tinyurl.com/STEAMteamsCC26</span>
-          </div>
-          <div class="setting-row">
-            <div class="setting-label">Supabase project</div>
-            <span class="config-val">steamteams-cc-portal</span>
-          </div>
-          <div class="setting-row">
-            <div class="setting-label">Hosting</div>
-            <span class="config-val">Vercel — stehos-web</span>
-          </div>
-          <div class="setting-row">
-            <div class="setting-label">Anon key status</div>
-            <span class="config-val" style="background:var(--red-light);color:var(--red);border:1px solid var(--red-border)">⚠ needs rotation</span>
-          </div>
-        </div>
+        <p class="cfg-note">These are the settings that change during a season. Homepage content, the school list and fees are not edited here; they will move to Program Setup, which is not built yet.</p>
+        <div id="settings-host" aria-live="polite"></div>
       </div>
 
     </div>
@@ -617,6 +602,11 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 <script>
 
 let SESSION = null;
+// W11.4: the viewer's staff role, set once in bootDashboard(). Settings uses it
+// to decide whether to offer Save; the database decides whether a save lands.
+let STAFF_ROLE = null;
+// Coordinator tier, the same three roles staff_is_coordinator_tier() accepts.
+const COORDINATOR_TIER_ROLES = ['admin', 'coordinator', 'asst_coordinator'];
 let REG_PAGE = 1;
 let REG_FILTER = 'all';
 let REG_DATA = [];
@@ -985,6 +975,7 @@ async function bootDashboard() {
     volunteer_coordinator: 'Volunteer Coordinator'
   };
   var role = staff[0].role || sess.staffRole || null;
+  STAFF_ROLE = role;
   var roleEl = document.getElementById('sidebar-role');
   if (roleEl) roleEl.textContent = ROLE_LABELS[role] || '';
 
@@ -1002,7 +993,7 @@ async function bootDashboard() {
      role added to the enum can still reach the panel, which is why the real
      repair is in sbPatch() above. An unknown or missing role falls through
      to hidden — the safe direction.                                       */
-  var COORDINATOR_TIER = ['admin', 'coordinator', 'asst_coordinator'];
+  var COORDINATOR_TIER = COORDINATOR_TIER_ROLES;
   if (COORDINATOR_TIER.indexOf(role) === -1) {
     var settingsNav = document.querySelector('.nav-item[data-page="settings"]');
     if (settingsNav) {
@@ -1458,46 +1449,56 @@ function renderStudentTable() {
   document.getElementById(id).addEventListener('input', () => { STU_PAGE = 1; renderStudentTable(); });
 });
 
-// SETTINGS
+// SETTINGS — W11.4. See the SETTINGS PAGE comment in the markup.
+// The query asks for operating rows. Which settings exist, what each is called,
+// what control it gets and whether it can be changed all come from the rows.
+// Every function here is top-level: this script is wired with inline onclick
+// elsewhere and must never be wrapped in an IIFE (W10.5, register.html).
+const CONFIG_UI_COLUMNS = 'key,value,label,description,value_type,group_name,scope,edit_level,sort_order,updated_at';
+
 async function loadSettings() {
+  const host = document.getElementById('settings-host');
+  host.textContent = '';
+  const loading = document.createElement('div');
+  loading.className = 'cfg-empty';
+  loading.textContent = 'Loading settings…';
+  host.appendChild(loading);
+
+  if (!window.ConfigUI) {
+    host.textContent = '';
+    showSettingsProblem(host, 'Settings could not load: the settings renderer (config-ui.js) did not load. Reload the page. If this keeps happening, the file is missing from the deployed site.');
+    return;
+  }
   try {
-    const config = await sbGet('/rest/v1/portal_config?select=*', SESSION.access_token);
-    const windowOpen = config.find(c => c.key === 'registration_window_open');
-    const windowLabel = config.find(c => c.key === 'registration_window_label');
-    if (windowOpen) {
-      const isOpen = windowOpen.value === 'true' || windowOpen.value === true;
-      document.getElementById('toggle-window').checked = isOpen;
-    }
-    if (windowLabel) {
-      const raw = windowLabel.value;
-      const label = typeof raw === 'string' ? raw.replace(/^"|"$/g,'') : raw;
-      document.getElementById('window-label-val').textContent = label || '—';
-    }
-    const events = await sbGet('/rest/v1/events?select=*&order=created_at.asc', SESSION.access_token);
-    const el = document.getElementById('events-list');
-    if (!events.length) { el.innerHTML = '<div style="font-size:12px;color:var(--gray-400)">No events found</div>'; return; }
-    el.innerHTML = events.map(ev => `
-      <div class="setting-row">
-        <div>
-          <div class="setting-label">${ev.name || ev.id}</div>
-          <div class="setting-desc">Grades ${ev.grade_min || '?'}–${ev.grade_max || '?'} · ${ev.type || ''}</div>
-        </div>
-        <span class="config-val" style="${ev.registration_open ? 'background:var(--green-light);color:var(--green);border:1px solid var(--green-border)' : 'background:var(--red-light);color:var(--red);border:1px solid var(--red-border)'}">${ev.registration_open ? 'open' : 'closed'}</span>
-      </div>
-    `).join('');
-  } catch(e) {
-    toast('Error loading settings: ' + e.message, 'error');
+    const rows = await sbGet('/rest/v1/portal_config?select=' + CONFIG_UI_COLUMNS +
+                             '&scope=eq.operating&order=sort_order.asc,key.asc', SESSION.access_token);
+    ConfigUI.render(host, rows, {
+      canEdit: COORDINATOR_TIER_ROLES.indexOf(STAFF_ROLE) !== -1,
+      save: saveConfigValue,
+      onSaved: function (row) { toast(row.label + ' saved', 'success'); },
+      onError: function (message) { toast(message, 'error', 6000); },
+      emptyText: 'No operating settings were found.'
+    });
+  } catch (e) {
+    host.textContent = '';
+    showSettingsProblem(host, 'Settings could not load: ' + ConfigUI.errorText(e));
+    toast('Error loading settings', 'error');
   }
 }
 
-async function updateWindowConfig(isOpen) {
-  try {
-    await sbPatch('/rest/v1/portal_config?key=eq.registration_window_open', { value: String(isOpen) }, SESSION.access_token);
-    toast('Registration window ' + (isOpen ? 'opened' : 'closed'), 'success');
-  } catch(e) {
-    toast('Error: ' + e.message, 'error');
-    document.getElementById('toggle-window').checked = !isOpen;
-  }
+function showSettingsProblem(host, message) {
+  const d = document.createElement('div');
+  d.className = 'cfg-msg err';
+  d.textContent = message;
+  host.appendChild(d);
+}
+
+// One PATCH per setting, value only. sbPatch() already refuses to report
+// success when zero rows come back (W9c N1(b)); trg_portal_config_guard refuses
+// locked rows and anything but the value by name, and that message is shown.
+async function saveConfigValue(key, value) {
+  return sbPatch('/rest/v1/portal_config?key=eq.' + encodeURIComponent(key) +
+                 '&select=' + CONFIG_UI_COLUMNS, { value: value }, SESSION.access_token);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
