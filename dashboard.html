@@ -236,6 +236,25 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 .modal-actions{display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--gray-200)}
 .reason-box{margin-top:0.75rem;padding:0.75rem;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:12px;color:var(--gray-600);font-style:italic}
 
+/* W11.3 — RECORD MANAGEMENT (correct / remove / withdraw). */
+.rm-form{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:0.25rem}
+.rm-form label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--gray-600);font-family:var(--mono)}
+.rm-form input,.rm-form select,.rm-reason{font-family:var(--font);font-size:13px;padding:5px 8px;border:1px solid var(--gray-200);border-radius:var(--radius);color:var(--gray-800);background:#fff}
+.rm-form .rm-wide{grid-column:1 / -1}
+.rm-section{margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--gray-200)}
+.rm-section h3{font-size:12px;font-weight:600;color:var(--gray-800);margin-bottom:0.4rem}
+.rm-note{font-size:12px;color:var(--gray-600);margin-top:4px}
+.rm-danger{border:1px solid var(--red-border);background:var(--red-light);border-radius:var(--radius);padding:0.75rem;margin-top:0.5rem;font-size:12px;color:var(--gray-800)}
+.rm-reason{width:100%;min-height:52px;margin-top:6px;resize:vertical}
+.rm-msg{margin-top:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius);font-size:12px;line-height:1.45}
+.rm-msg.error{background:var(--red-light);border:1px solid var(--red-border);color:var(--red)}
+.rm-msg.ok{background:var(--green-light);border:1px solid var(--green-border);color:var(--green)}
+.rm-msg.warn{background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber)}
+.rm-hist{font-size:11px;color:var(--gray-600);padding:6px 0;border-bottom:1px solid var(--gray-100);line-height:1.45}
+.rm-hist strong{color:var(--gray-800);font-weight:600}
+.rm-reg{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
+.rm-btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
 /* PAGINATION */
 .pagination{display:flex;align-items:center;gap:8px;margin-top:1rem;justify-content:flex-end}
 .page-btn{padding:5px 10px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--gray-600);transition:all 0.1s}
@@ -496,6 +515,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
             <option value="pending">Pending</option>
             <option value="inactive">Inactive</option>
           </select>
+          <button class="btn-sm btn-secondary" onclick="openChangeLog()">Change log</button>
         </div>
         <table class="student-table" id="student-table">
           <thead>
@@ -507,10 +527,11 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
               <th>Season status</th>
               <th>Alert</th>
               <th>Family code</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="student-tbody">
-            <tr class="loading-row"><td colspan="7">Loading students…</td></tr>
+            <tr class="loading-row"><td colspan="8">Loading students…</td></tr>
           </tbody>
         </table>
         <div class="pagination" id="student-pagination"></div>
@@ -1180,6 +1201,8 @@ function openRegModal(regId) {
     <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${reg.submitted_at ? new Date(reg.submitted_at).toLocaleString() : '—'}</span></div>
     ${reason}
     ${householdBox}
+    <div id="rm-withdraw-panel"></div>
+    <div id="rm-msg" class="rm-msg" hidden></div>
   `;
   const actions = document.getElementById('modal-actions');
   if (status === 'pending') {
@@ -1190,6 +1213,7 @@ function openRegModal(regId) {
         : `<button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Approve</button>`}
       <button class="btn-sm btn-waitlist" onclick="updateRegStatus('${regId}','waitlisted')">Waitlist</button>
       <button class="btn-sm btn-decline" onclick="updateRegStatus('${regId}','declined')">Decline</button>
+      <button class="btn-sm btn-decline" onclick="showWithdrawPanel('${regId}', '')">Withdraw…</button>
       <button class="btn-sm btn-secondary" onclick="closeModal()" style="margin-left:auto">Close</button>
     `;
   } else {
@@ -1197,6 +1221,7 @@ function openRegModal(regId) {
       <button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>
       ${status !== 'approved' ? `<button class="btn-sm btn-approve" onclick="updateRegStatus('${regId}','approved')">Set approved</button>` : ''}
       ${status !== 'pending' ? `<button class="btn-sm btn-waitlist" onclick="updateRegStatus('${regId}','pending')">Reset to pending</button>` : ''}
+      <button class="btn-sm btn-decline" onclick="showWithdrawPanel('${regId}', '')">Withdraw…</button>
     `;
   }
   document.getElementById('modal-overlay').classList.add('open');
@@ -1379,12 +1404,12 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 // STUDENTS
 async function loadStudents() {
   const tbody = document.getElementById('student-tbody');
-  tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Loading…</td></tr>';
   try {
     STU_DATA = await sbGet('/rest/v1/students?select=*,families(family_code)&order=first_name.asc', SESSION.access_token);
     renderStudentTable();
   } catch(e) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="7">Error: ' + e.message + '</td></tr>';
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Error: ' + e.message + '</td></tr>';
   }
 }
 
@@ -1402,7 +1427,7 @@ function renderStudentTable() {
   const slice = filtered.slice(start, start + PAGE_SIZE);
   const tbody = document.getElementById('student-tbody');
   if (!slice.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-400);font-size:13px">No students found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);font-size:13px">No students found</td></tr>';
     document.getElementById('student-pagination').innerHTML = '';
     return;
   }
@@ -1423,6 +1448,7 @@ function renderStudentTable() {
       <td><span class="season-badge ${ssClass}">${ss}</span></td>
       <td title="${alert} flag"><span class="alert-dot ${alertColors[alert] || 'alert-none'}"></span></td>
       <td style="font-family:var(--mono);font-size:12px">${fam.family_code || '—'}</td>
+      <td><button class="btn-sm btn-secondary" onclick="openStudentModal('${s.id}')">Manage</button></td>
     </tr>`;
   }).join('');
   renderPagination('student', filtered.length, STU_PAGE, () => { STU_PAGE++; renderStudentTable(); }, () => { STU_PAGE--; renderStudentTable(); });
@@ -1471,6 +1497,308 @@ async function updateWindowConfig(isOpen) {
   } catch(e) {
     toast('Error: ' + e.message, 'error');
     document.getElementById('toggle-window').checked = !isOpen;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   W11.3 — RECORD MANAGEMENT: correct a student, remove a student, withdraw a
+   registration.
+
+   Why this exists. W11.2 needed all three and there was no interface, so all
+   three were done in the Supabase SQL Editor — around RLS, around the
+   coordinator-tier check, around the approval gate and around the §7.2a
+   sibling-discount recompute. (handoffs/W11.3/FINDING-no-record-management-ui.md)
+
+   The rule this code keeps: NOTHING HERE WRITES TO A TABLE. Every change is a
+   POST to one of three database functions — update_student_record(),
+   remove_student_record(), withdraw_registration() — which check coordinator
+   tier, refuse by name, recompute the family's sibling discount in the same
+   transaction, and write an attribution row to record_changes. The page only
+   reads tables and calls functions.
+
+   Wiring. Every control below is an inline onclick, so every function below
+   is TOP-LEVEL. Do not wrap this script in an IIFE: inline handlers resolve
+   against global scope only, and W10.5 shipped exactly that defect in
+   register.html — the page rendered and every button was dead.
+
+   Failure. Every failure lands in a visible message inside the open modal
+   (#rm-msg), not only a toast that fades. No empty catch, no silent no-op.
+   ═══════════════════════════════════════════════════════════════════════════ */
+let RM_SCHOOLS = null;   // portal_config.intake_schools, read once per page load
+let RM_STUDENT = null;   // the student row exactly as last read from the server
+
+const RM_FIELDS = [
+  ['first_name', 'First name'], ['last_name', 'Last name'], ['grade', 'Grade'],
+  ['home_school', 'School'], ['gender', 'Gender'], ['shirt_size', 'Shirt size'], ['helmet_size', 'Helmet size']
+];
+
+function rmMsg(text, kind) {
+  const el = document.getElementById('rm-msg');
+  if (!el) { toast(text, kind === 'ok' ? 'success' : 'error', 12000); return; }
+  el.className = 'rm-msg ' + (kind || 'error');
+  el.textContent = text;
+  el.hidden = false;
+  el.scrollIntoView({ block: 'nearest' });
+}
+
+function rmOwedTotal(billing) {
+  return Object.values(billing || {}).reduce((sum, v) => sum + (Number(v && v.owed) || 0), 0);
+}
+
+async function rmLoadSchools() {
+  if (RM_SCHOOLS) return RM_SCHOOLS;
+  const rows = await sbGet('/rest/v1/portal_config?select=value&key=eq.intake_schools', SESSION.access_token);
+  let v = rows && rows[0] ? rows[0].value : null;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { v = null; } }
+  if (!Array.isArray(v) || !v.length) throw new Error('The school list (portal_config.intake_schools) could not be read, so the form cannot offer a valid school.');
+  RM_SCHOOLS = v;
+  return v;
+}
+
+function rmOpenShell(title, bodyHtml, actionsHtml) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  document.getElementById('modal-actions').innerHTML = actionsHtml;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function rmActionLabel(a) {
+  return a === 'update_student' ? 'corrected' : a === 'remove_student' ? 'removed student' : a === 'withdraw_registration' ? 'withdrew registration' : a;
+}
+
+function rmHistoryRow(h) {
+  const when = h.changed_at ? new Date(h.changed_at).toLocaleString() : '—';
+  const who = escHtml(h.actor_name || 'unknown staff') + ' (' + escHtml(h.actor_role || '?') + ')';
+  let what = '';
+  if (h.action === 'update_student' && h.after) {
+    what = Object.keys(h.after).map(k => escHtml(k) + ': "' + escHtml(h.before ? h.before[k] : '') + '" → "' + escHtml(h.after[k]) + '"').join('; ');
+  } else if (h.action === 'remove_student' && h.before && h.before.student) {
+    what = escHtml((h.before.student.first_name || '') + ' ' + (h.before.student.last_name || ''));
+  } else if (h.action === 'withdraw_registration' && h.before) {
+    what = escHtml(h.before.event_name || h.before.event_type || 'registration') + ' (was ' + escHtml(h.before.registration_status || '?') + ')';
+  }
+  const moved = (h.billing_before && h.billing_after && rmOwedTotal(h.billing_before) !== rmOwedTotal(h.billing_after))
+    ? ' · family owed $' + rmOwedTotal(h.billing_before) + ' → $' + rmOwedTotal(h.billing_after) : '';
+  return `<div class="rm-hist"><strong>${escHtml(when)}</strong> · ${who} ${escHtml(rmActionLabel(h.action))}${what ? ' — ' + what : ''}${moved}` +
+         (h.reason ? `<br><em>Reason: ${escHtml(h.reason)}</em>` : '') + `</div>`;
+}
+
+/* ── Open the manage panel for one student, always from a fresh server read. ── */
+async function openStudentModal(studentId, carryMsg) {
+  rmOpenShell('Manage student', '<div class="rm-note">Loading…</div>', '<button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>');
+  let stu, regs, dues, hist, schools;
+  try {
+    const rows = await sbGet('/rest/v1/students?select=*,families(family_code)&id=eq.' + encodeURIComponent(studentId), SESSION.access_token);
+    if (!rows.length) throw new Error('That student is no longer in the database. Reload the page.');
+    stu = rows[0];
+    regs = await sbGet('/rest/v1/registrations?select=id,registration_status,event_name,event_type,submitted_at&student_id=eq.' + encodeURIComponent(studentId) + '&order=submitted_at.desc', SESSION.access_token);
+    dues = await sbGet('/rest/v1/dues_accounts?select=season,base_fee,custom_discount_amount,custom_discount_note&student_id=eq.' + encodeURIComponent(studentId), SESSION.access_token);
+    hist = await sbGet('/rest/v1/record_changes?select=*&or=(target_id.eq.' + encodeURIComponent(studentId) + ',before->>student_id.eq.' + encodeURIComponent(studentId) + ')&order=changed_at.desc&limit=20', SESSION.access_token);
+    schools = await rmLoadSchools();
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = '<div class="rm-msg error">Could not load this student: ' + escHtml(e.message) + '</div>';
+    return;
+  }
+  RM_STUDENT = stu;
+
+  const name = (stu.first_name || '') + ' ' + (stu.last_name || '');
+  const fam = stu.families || {};
+  const schoolOpts = schools.slice();
+  if (stu.home_school && !schoolOpts.includes(stu.home_school)) schoolOpts.unshift(stu.home_school);
+  const schoolSelect = schoolOpts.map(s => `<option value="${escHtml(s)}"${s === stu.home_school ? ' selected' : ''}>${escHtml(s)}${schools.includes(s) ? '' : ' (not on the school list — pick a valid one)'}</option>`).join('');
+
+  const billedRow = dues.length
+    ? dues.map(d => {
+        const disc = Number(d.custom_discount_amount) || 0;
+        return `Billed for ${escHtml(d.season)}: $${d.base_fee}` + (disc ? ` − $${disc} (${escHtml(d.custom_discount_note || 'discount')})` : '') + ` = <strong>$${d.base_fee - disc}</strong>`;
+      }).join('<br>')
+    : 'Not billed — no dues account.';
+
+  const regRows = regs.length
+    ? regs.map(r => `<div class="rm-reg"><span>${escHtml(r.event_name || r.event_type || 'Registration')} · <span class="status-badge status-${escHtml(r.registration_status || 'pending')}">${escHtml(r.registration_status || 'pending')}</span></span>
+         <button class="btn-sm btn-decline" onclick="showWithdrawPanel('${r.id}', '${stu.id}')">Withdraw…</button></div>`).join('')
+    : '<div class="rm-note">No registrations.</div>';
+
+  const body = `
+    <div class="modal-row"><span class="modal-key">Family code</span><span class="modal-val" style="font-family:var(--mono)">${escHtml(fam.family_code || '—')}</span></div>
+    <div class="modal-row"><span class="modal-key">Program</span><span class="modal-val">${escHtml(stu.program || '—')}</span></div>
+    <div class="modal-row"><span class="modal-key">Season status</span><span class="modal-val">${escHtml(stu.season_status || '—')}</span></div>
+    <div class="rm-note" style="margin-top:6px">${billedRow}</div>
+
+    <div class="rm-section">
+      <h3>Correct this record</h3>
+      <div class="rm-form">
+        <label>First name<input id="rm-first_name" value="${escHtml(stu.first_name || '')}"></label>
+        <label>Last name<input id="rm-last_name" value="${escHtml(stu.last_name || '')}"></label>
+        <label>Grade<input id="rm-grade" type="number" min="4" max="12" value="${escHtml(stu.grade == null ? '' : stu.grade)}"></label>
+        <label>School<select id="rm-home_school">${schoolSelect}</select></label>
+        <label>Gender<input id="rm-gender" value="${escHtml(stu.gender || '')}"></label>
+        <label>Shirt size<input id="rm-shirt_size" value="${escHtml(stu.shirt_size || '')}"></label>
+        <label>Helmet size<input id="rm-helmet_size" value="${escHtml(stu.helmet_size || '')}"></label>
+        <label class="rm-wide">Why (optional)<input id="rm-update-reason" placeholder="e.g. parent reported spelling"></label>
+      </div>
+      <div class="rm-note">Program, season status, family and fees are not edited here — they change money or rosters and have their own path.</div>
+      <div class="rm-btnrow"><button class="btn-sm btn-approve" onclick="saveStudentCorrection()">Save correction</button></div>
+    </div>
+
+    <div class="rm-section">
+      <h3>Registrations</h3>
+      ${regRows}
+      <div id="rm-withdraw-panel"></div>
+    </div>
+
+    <div class="rm-section">
+      <h3>Remove student</h3>
+      <div class="rm-note">For a duplicate or a student who has left. Removes the student, their registrations, dues account, portal login and car assignment. Refused if any money is recorded against them.</div>
+      <div class="rm-btnrow"><button class="btn-sm btn-decline" onclick="showRemovePanel()">Remove student…</button></div>
+      <div id="rm-remove-panel"></div>
+    </div>
+
+    <div id="rm-msg" class="rm-msg" hidden></div>
+
+    <div class="rm-section">
+      <h3>Change history</h3>
+      ${hist.length ? hist.map(rmHistoryRow).join('') : '<div class="rm-note">No changes recorded through the portal.</div>'}
+    </div>`;
+  document.getElementById('modal-title').textContent = name.trim() || 'Manage student';
+  document.getElementById('modal-body').innerHTML = body;
+  if (carryMsg) rmMsg(carryMsg.text, carryMsg.kind);
+}
+
+/* ── Correct: send only what changed; the database decides what is allowed. ── */
+async function saveStudentCorrection() {
+  const stu = RM_STUDENT;
+  if (!stu) { rmMsg('This student is no longer loaded. Close and reopen it.', 'error'); return; }
+  const changes = {};
+  RM_FIELDS.forEach(([k]) => {
+    const el = document.getElementById('rm-' + k);
+    if (!el) return;
+    const raw = el.value.trim();
+    const cur = stu[k] == null ? '' : String(stu[k]);
+    if (raw !== cur) changes[k] = (k === 'grade') ? (raw === '' ? null : Number(raw)) : raw;
+  });
+  if (!Object.keys(changes).length) { rmMsg('Nothing has changed — every field matches what is saved. Nothing was sent.', 'warn'); return; }
+  const reason = (document.getElementById('rm-update-reason') || {}).value || '';
+
+  let res;
+  try {
+    res = await sbRpc('update_student_record', { p_student_id: stu.id, p_changes: changes, p_reason: reason.trim() || null }, SESSION.access_token);
+  } catch (e) {
+    rmMsg('Not saved — ' + e.message, 'error');
+    return;
+  }
+  if (!res || res.ok !== true) { rmMsg('The portal could not confirm the correction was saved. Reopen the student and check before retrying.', 'error'); return; }
+  const fields = (res.changed_fields || []).join(', ');
+  toast('Saved: ' + fields, 'success', 6000);
+  loadStudents();
+  if (REG_DATA.length) loadRegistrations();
+  await openStudentModal(stu.id, { text: 'Saved — ' + fields + ' corrected and recorded in the change history below.', kind: 'ok' });
+}
+
+/* ── Remove: a reason is required; the database refuses without one. ── */
+function showRemovePanel() {
+  const stu = RM_STUDENT;
+  const panel = document.getElementById('rm-remove-panel');
+  if (!stu || !panel) { rmMsg('This student is no longer loaded. Close and reopen it.', 'error'); return; }
+  panel.innerHTML = `
+    <div class="rm-danger">
+      <strong>Remove ${escHtml((stu.first_name || '') + ' ' + (stu.last_name || ''))} permanently?</strong>
+      If this student is billed and has siblings, the family's sibling discount is recomputed — a sibling's bill can go UP.
+      You will see the before and after.
+      <textarea id="rm-remove-reason" class="rm-reason" placeholder="Why is this student being removed? (required)"></textarea>
+      <div class="rm-btnrow">
+        <button class="btn-sm btn-decline" onclick="confirmRemoveStudent()">Remove permanently</button>
+        <button class="btn-sm btn-secondary" onclick="document.getElementById('rm-remove-panel').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+
+async function confirmRemoveStudent() {
+  const stu = RM_STUDENT;
+  if (!stu) { rmMsg('This student is no longer loaded. Close and reopen it.', 'error'); return; }
+  const reason = (document.getElementById('rm-remove-reason') || {}).value || '';
+  let res;
+  try {
+    res = await sbRpc('remove_student_record', { p_student_id: stu.id, p_reason: reason }, SESSION.access_token);
+  } catch (e) {
+    rmMsg('Not removed — ' + e.message, 'error');
+    return;
+  }
+  if (!res || res.ok !== true) { rmMsg('The portal could not confirm the removal. Reload the page and check this student before retrying.', 'error'); return; }
+  RM_STUDENT = null;
+  rmShowMoneyResult('Student removed', res,
+    (stu.first_name || '') + ' ' + (stu.last_name || '') + ' was removed' + (res.was_billed ? ' (they were billed).' : ' (they were not billed).') +
+    (res.students_left_in_family === 0 ? ' This family now has no students.' : ''));
+  loadStudents();
+  if (REG_DATA.length) loadRegistrations();
+  loadHomeStats();
+}
+
+/* ── Withdraw: from the student panel or the registration modal. ── */
+function showWithdrawPanel(regId, studentId) {
+  const panel = document.getElementById('rm-withdraw-panel');
+  if (!panel) { toast('Could not open the withdraw form. Close and reopen this record.', 'error', 9000); return; }
+  panel.innerHTML = `
+    <div class="rm-danger">
+      <strong>Withdraw this registration?</strong> It is deleted and kept in the change history.
+      An active, billed student's only approved registration cannot be withdrawn — use Remove student for that.
+      <textarea id="rm-withdraw-reason" class="rm-reason" placeholder="Why is this registration being withdrawn? (required)"></textarea>
+      <div class="rm-btnrow">
+        <button class="btn-sm btn-decline" onclick="confirmWithdraw('${regId}', '${studentId || ''}')">Withdraw registration</button>
+        <button class="btn-sm btn-secondary" onclick="document.getElementById('rm-withdraw-panel').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+
+async function confirmWithdraw(regId, studentId) {
+  const reason = (document.getElementById('rm-withdraw-reason') || {}).value || '';
+  let res;
+  try {
+    res = await sbRpc('withdraw_registration', { p_registration_id: regId, p_reason: reason }, SESSION.access_token);
+  } catch (e) {
+    rmMsg('Not withdrawn — ' + e.message, 'error');
+    return;
+  }
+  if (!res || res.ok !== true) { rmMsg('The portal could not confirm the withdrawal. Reload the page and check this registration before retrying.', 'error'); return; }
+  if (REG_DATA.length) loadRegistrations();
+  loadStudents();
+  loadHomeStats();
+  const left = Number(res.student_registrations_left);
+  const note = 'Registration withdrawn (it was ' + (res.was_status || '?') + ').' +
+    (left === 0 ? ' This student now has no registration. If they are leaving the program, use Remove student.' : '');
+  if (studentId) { await openStudentModal(studentId, { text: note, kind: left === 0 ? 'warn' : 'ok' }); return; }
+  rmShowMoneyResult('Registration withdrawn', res, note);
+}
+
+/* The result of a remove or withdraw stays on screen until closed, because a
+   sibling's bill can move and that is never left to a toast that fades. */
+function rmShowMoneyResult(title, res, lead) {
+  const before = res.family_billing_before || {};
+  const after = res.family_billing_after || {};
+  const raised = res.siblings_bill_increased || {};
+  const nRaised = Object.keys(raised).length;
+  const changed = Object.keys(after).filter(k => before[k] && Number(before[k].owed) !== Number(after[k].owed));
+  let money = 'Family owed $' + rmOwedTotal(before) + ' before and owes $' + rmOwedTotal(after) + ' now, after the sibling discount was recomputed.';
+  if (changed.length) money += ' ' + changed.length + (changed.length === 1 ? ' remaining sibling’s' : ' remaining siblings’') + ' bill changed: ' +
+    changed.map(k => '$' + before[k].owed + ' → $' + after[k].owed).join(', ') + '.';
+  rmOpenShell(title,
+    `<div class="rm-msg ok">${escHtml(lead)}</div>
+     <div class="rm-msg ${nRaised ? 'error' : 'ok'}">${escHtml(money)}${nRaised ? '<br><strong>A sibling now owes MORE.</strong> Removing a billed child re-ranks the family under §7.2a. Contact the family before they notice it themselves.' : ''}</div>
+     <div class="rm-note" style="margin-top:8px">Recorded in the change log, with your name and the reason.</div>`,
+    '<button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>');
+}
+
+/* ── The change log: every portal correction, removal and withdrawal. Removed
+   students have no row left to open, so this is where their record lives. ── */
+async function openChangeLog() {
+  rmOpenShell('Record change log', '<div class="rm-note">Loading…</div>', '<button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>');
+  try {
+    const rows = await sbGet('/rest/v1/record_changes?select=*&order=changed_at.desc&limit=50', SESSION.access_token);
+    document.getElementById('modal-body').innerHTML = rows.length
+      ? '<div class="rm-note">Last ' + rows.length + ' changes made through the portal.</div>' + rows.map(rmHistoryRow).join('')
+      : '<div class="rm-note">No changes have been made through the portal yet.</div>';
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = '<div class="rm-msg error">Could not load the change log: ' + escHtml(e.message) + '</div>';
   }
 }
 
