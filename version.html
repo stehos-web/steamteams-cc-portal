@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 </head>
 <body>
-<pre>wave:   11.4
+<pre>wave:   11.6
 commit: (set at push)
 date:   2026-09-11
 
@@ -56,7 +56,12 @@ Standards v10 §2, corrected out of W10.5 after a cache-busted query string
 was observed to return a stale answer on 2026-09-09 for a deploy that had
 in fact landed).
 
-  curl -s https://steamteams-cc-portal.vercel.app/version.html
+  curl -s https://steamteams.cc/version.html
+
+steamteams.cc (the apex) is canonical as of 2026-09-11, Seth's ruling. The
+old steamteams-cc-portal host still serves the same deployment and can
+return a different cached answer; if the two disagree, treat that as the
+second independent signal, not a puzzle (Working Standards section 2).
 
 Working Standards v10, section 2: "delivered means committed, pushed, and
 seen live." Update the wave and commit lines with every deploy.

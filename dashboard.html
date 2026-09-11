@@ -277,6 +277,20 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 .rm-hist strong{color:var(--gray-800);font-weight:600}
 .rm-reg{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
 .rm-btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+/* W11.6 — the identity block every destructive or money confirmation carries
+   (C10 finding: the wrong student was removed from a panel that named her only
+   in a sentence), and the volunteer credit history lines. */
+.vol-id{border:2px solid var(--gray-800);border-radius:var(--radius);padding:8px 12px;margin:8px 0;background:#fff}
+.vol-id-name{font-size:15px;font-weight:600;color:var(--gray-900)}
+.vol-id-sub{font-size:12px;color:var(--gray-600);margin-top:2px}
+.vol-line{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
+.vol-line .amt{font-family:var(--mono);white-space:nowrap}
+.vol-line.cr .amt{color:var(--green)}
+.vol-line.rev .amt{color:var(--gray-600)}
+.vol-reason{font-style:italic;color:var(--gray-600)}
+.vol-net{font-size:12px;font-weight:600;padding-top:6px;color:var(--gray-800)}
+.status-denied{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.btn-sm:disabled{opacity:0.5;cursor:default}
 
 /* PAGINATION */
 .pagination{display:flex;align-items:center;gap:8px;margin-top:1rem;justify-content:flex-end}
@@ -340,6 +354,13 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Students
       </a>
+      <!-- W11.6: coordinator tier only (Seth, decision 1). Hidden until
+           bootDashboard() confirms the role; see the VOLUNTEER LOGS script block. -->
+      <a class="nav-item" data-page="volunteer" href="#" id="nav-volunteer" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Volunteer logs
+        <span class="nav-badge" id="nav-vol-count">—</span>
+      </a>
       <div class="nav-section" style="margin-top:0.75rem">Config</div>
       <a class="nav-item" data-page="settings" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -387,7 +408,13 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
             <div class="nav-tile-label">Students</div>
             <div class="nav-tile-sub">Roster &amp; profiles</div>
           </button>
-          <button class="nav-tile" onclick="window.open('https://steamteams-cc-portal.vercel.app/register','_blank')">
+          <button class="nav-tile" data-nav="volunteer" id="tile-volunteer" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <div class="nav-tile-label">Volunteer logs</div>
+            <div class="nav-tile-sub">Approve credits</div>
+            <span class="tile-badge" id="tile-vol-count">—</span>
+          </button>
+          <button class="nav-tile" onclick="window.open('/register','_blank')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             <div class="nav-tile-label">Reg. Page</div>
             <div class="nav-tile-sub">Public form ↗</div>
@@ -411,6 +438,15 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
         <div class="section-label">Open action items</div>
         <div class="todo-list" id="todo-list">
+          <!-- W11.6: shown only when logs are waiting, only for coordinator tier. -->
+          <div class="todo-item" id="todo-vol" style="display:none">
+            <div class="todo-dot urgent"></div>
+            <div style="flex:1">
+              <div class="todo-text" id="todo-vol-text">Volunteer logs are waiting for review</div>
+              <div class="todo-meta">Approving posts the credit to the family’s balance. <a href="#" onclick="setPage('volunteer'); return false;">Open the queue</a></div>
+            </div>
+            <span class="todo-tag tag-pending">volunteer</span>
+          </div>
           <!-- W11.4: the anon-key rotation action item was deleted, not corrected.
                W9f rotated the key and closed gate row B5 on 2026-09-09; this
                item and the key-status line in Settings were the same false
@@ -435,8 +471,8 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
           <div class="todo-item">
             <div class="todo-dot normal"></div>
             <div style="flex:1">
-              <div class="todo-text">Set up custom domain for portal</div>
-              <div class="todo-meta">Currently live at steamteams-cc-portal.vercel.app</div>
+              <div class="todo-text">Finish the move to steamteams.cc</div>
+              <div class="todo-meta">The portal is live at steamteams.cc (canonical, 2026-09-11). Still open: the www certificate, Supabase sign-in URLs, and the share link in Settings.</div>
             </div>
             <span class="todo-tag tag-info">phase 2</span>
           </div>
@@ -557,6 +593,39 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <div class="pagination" id="student-pagination"></div>
       </div>
 
+      <!-- VOLUNTEER LOGS PAGE — W11.6, gate row C3. Coordinator tier only
+           (Seth, decision 1). Opens on pending, oldest first (decision 3).
+           Every action goes to the database; see the VOLUNTEER LOGS block in
+           the script for what the page does and does not decide. -->
+      <div class="page" id="page-volunteer">
+        <div class="filter-bar" id="vol-filter-bar">
+          <button class="filter-btn active" data-vstatus="pending" onclick="setVolFilter('pending')">Pending <span class="vol-fcount"></span></button>
+          <button class="filter-btn" data-vstatus="approved" onclick="setVolFilter('approved')">Approved <span class="vol-fcount"></span></button>
+          <button class="filter-btn" data-vstatus="denied" onclick="setVolFilter('denied')">Denied <span class="vol-fcount"></span></button>
+          <button class="filter-btn" data-vstatus="all" onclick="setVolFilter('all')">All <span class="vol-fcount"></span></button>
+          <button class="btn-sm btn-secondary" style="margin-left:auto" onclick="loadVolunteerLogs()">Refresh</button>
+        </div>
+        <div class="rm-note" id="vol-stamp" style="margin:0 0 8px"></div>
+        <div id="vol-msg" class="rm-msg" style="margin:0 0 10px" hidden></div>
+        <table class="reg-table" id="vol-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Family (submitted it)</th>
+              <th>Activity</th>
+              <th>Credit</th>
+              <th>Activity date</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="vol-tbody">
+            <tr class="loading-row"><td colspan="8">Loading volunteer logs…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- SETTINGS PAGE — W11.4.
            Drawn by ConfigUI (/assets/js/config-ui.js) from portal_config's own
            metadata: every row whose scope is 'operating'. No setting is written
@@ -612,6 +681,10 @@ let REG_FILTER = 'all';
 let REG_DATA = [];
 let STU_PAGE = 1;
 let STU_DATA = [];
+// W11.6: the signed-in staff account's id, so the volunteer credit history can
+// say "approved by you". staff_accounts RLS lets an account read only its own
+// row, so other approvers' names are not readable from this page.
+let STAFF_ID = null;
 const PAGE_SIZE = 20;
 
 function headers(tok) {
@@ -743,11 +816,12 @@ function setPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.toggle('active', n.dataset.page === name);
   });
-  const titles = { home: 'Dashboard', registrations: 'Registrations', students: 'Students', settings: 'Settings' };
-  const subs = { home: '', registrations: 'Summer 2026', students: 'Active roster', settings: 'Portal configuration' };
+  const titles = { home: 'Dashboard', registrations: 'Registrations', students: 'Students', volunteer: 'Volunteer logs', settings: 'Settings' };
+  const subs = { home: '', registrations: 'Summer 2026', students: 'Active roster', volunteer: 'Approve credits', settings: 'Portal configuration' };
   document.getElementById('topbar-title').innerHTML = titles[name] + (subs[name] ? ' <span>' + subs[name] + '</span>' : '');
   if (name === 'registrations') loadRegistrations();
   if (name === 'students') loadStudents();
+  if (name === 'volunteer') loadVolunteerLogs();
   if (name === 'settings') loadSettings();
 }
 
@@ -976,6 +1050,7 @@ async function bootDashboard() {
   };
   var role = staff[0].role || sess.staffRole || null;
   STAFF_ROLE = role;
+  STAFF_ID = staff[0].id || null;
   var roleEl = document.getElementById('sidebar-role');
   if (roleEl) roleEl.textContent = ROLE_LABELS[role] || '';
 
@@ -1005,6 +1080,17 @@ async function bootDashboard() {
       }
       settingsNav.style.display = 'none';
     }
+  }
+
+  /* W11.6 — the volunteer log screen is coordinator tier only (Seth, decision 1).
+     Shown for coordinator tier, left hidden for everyone else. Hidden is the
+     polish; the approval trigger and reverse_volunteer_credit() are the guard. */
+  if (COORDINATOR_TIER.indexOf(role) !== -1) {
+    ['nav-volunteer', 'tile-volunteer'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+    loadVolunteerCount();
   }
 
   document.getElementById('app').classList.add('ready');
@@ -1138,9 +1224,10 @@ function renderRegTable() {
   renderPagination('reg', filtered.length, REG_PAGE, () => { REG_PAGE++; renderRegTable(); }, () => { REG_PAGE--; renderRegTable(); });
 }
 
-document.querySelectorAll('.filter-btn').forEach(btn => {
+// W11.6: scoped to the Registrations page — the volunteer page has its own filter buttons.
+document.querySelectorAll('#page-registrations .filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#page-registrations .filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     REG_FILTER = btn.dataset.status;
     REG_PAGE = 1;
@@ -1387,6 +1474,11 @@ async function approveHousehold(familyId) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  // W11.6 (C10 finding): read the open list again whenever a modal closes, so a
+  // page left open does not keep showing records the database has moved on from.
+  const active = document.querySelector('.page.active');
+  if (active && active.id === 'page-students') loadStudents();
+  if (active && active.id === 'page-volunteer') loadVolunteerLogs();
 }
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
@@ -1527,6 +1619,7 @@ async function saveConfigValue(key, value) {
    ═══════════════════════════════════════════════════════════════════════════ */
 let RM_SCHOOLS = null;   // portal_config.intake_schools, read once per page load
 let RM_STUDENT = null;   // the student row exactly as last read from the server
+let RM_REGS = [];        // W11.6: that student's registrations, so Withdraw can name the one it acts on
 
 const RM_FIELDS = [
   ['first_name', 'First name'], ['last_name', 'Last name'], ['grade', 'Grade'],
@@ -1564,7 +1657,8 @@ function rmOpenShell(title, bodyHtml, actionsHtml) {
 }
 
 function rmActionLabel(a) {
-  return a === 'update_student' ? 'corrected' : a === 'remove_student' ? 'removed student' : a === 'withdraw_registration' ? 'withdrew registration' : a;
+  return a === 'update_student' ? 'corrected' : a === 'remove_student' ? 'removed student' : a === 'withdraw_registration' ? 'withdrew registration' :
+         a === 'reverse_volunteer_credit' ? 'reversed a volunteer credit' : a;
 }
 
 function rmHistoryRow(h) {
@@ -1575,6 +1669,8 @@ function rmHistoryRow(h) {
     what = Object.keys(h.after).map(k => escHtml(k) + ': "' + escHtml(h.before ? h.before[k] : '') + '" → "' + escHtml(h.after[k]) + '"').join('; ');
   } else if (h.action === 'remove_student' && h.before && h.before.student) {
     what = escHtml((h.before.student.first_name || '') + ' ' + (h.before.student.last_name || ''));
+  } else if (h.action === 'reverse_volunteer_credit' && h.after) {
+    what = volMoney(h.after.amount) + ' credit, season ' + escHtml(h.after.season || '?');
   } else if (h.action === 'withdraw_registration' && h.before) {
     what = escHtml(h.before.event_name || h.before.event_type || 'registration') + ' (was ' + escHtml(h.before.registration_status || '?') + ')';
   }
@@ -1601,6 +1697,7 @@ async function openStudentModal(studentId, carryMsg) {
     return;
   }
   RM_STUDENT = stu;
+  RM_REGS = regs;
 
   const name = (stu.first_name || '') + ' ' + (stu.last_name || '');
   const fam = stu.families || {};
@@ -1686,6 +1783,7 @@ async function saveStudentCorrection() {
     res = await sbRpc('update_student_record', { p_student_id: stu.id, p_changes: changes, p_reason: reason.trim() || null }, SESSION.access_token);
   } catch (e) {
     rmMsg('Not saved — ' + e.message, 'error');
+    loadStudents();                              // W11.6: re-read after a refusal too
     return;
   }
   if (!res || res.ok !== true) { rmMsg('The portal could not confirm the correction was saved. Reopen the student and check before retrying.', 'error'); return; }
@@ -1697,32 +1795,53 @@ async function saveStudentCorrection() {
 }
 
 /* ── Remove: a reason is required; the database refuses without one. ── */
+/* W11.6 (C10 finding): during the C10 walkthrough the wrong student was removed.
+   The panel named her, but only inside a sentence, and the button said only
+   "Remove permanently". The confirmation now shows the record it acts on —
+   name, grade, program, family — in a block of its own, the button says whose
+   record it removes, and the button carries that student's id, so a panel that
+   no longer matches the student on screen refuses instead of acting. */
 function showRemovePanel() {
   const stu = RM_STUDENT;
   const panel = document.getElementById('rm-remove-panel');
   if (!stu || !panel) { rmMsg('This student is no longer loaded. Close and reopen it.', 'error'); return; }
+  const name = ((stu.first_name || '') + ' ' + (stu.last_name || '')).trim() || 'this student';
+  const fam = stu.families || {};
   panel.innerHTML = `
     <div class="rm-danger">
-      <strong>Remove ${escHtml((stu.first_name || '') + ' ' + (stu.last_name || ''))} permanently?</strong>
+      <strong>You are about to remove this student permanently:</strong>
+      <div class="vol-id">
+        <div class="vol-id-name">${escHtml(name)} · grade ${escHtml(stu.grade == null ? '?' : stu.grade)} · ${escHtml(programLabel(stu.program))}</div>
+        <div class="vol-id-sub">Family ${escHtml(fam.family_code || '—')} · season status ${escHtml(stu.season_status || '—')}</div>
+      </div>
+      Check the name, grade and program before you continue.
       If this student is billed and has siblings, the family's sibling discount is recomputed — a sibling's bill can go UP.
       You will see the before and after.
       <textarea id="rm-remove-reason" class="rm-reason" placeholder="Why is this student being removed? (required)"></textarea>
       <div class="rm-btnrow">
-        <button class="btn-sm btn-decline" onclick="confirmRemoveStudent()">Remove permanently</button>
+        <button class="btn-sm btn-decline" onclick="confirmRemoveStudent('${stu.id}')">Remove ${escHtml(name)} permanently</button>
         <button class="btn-sm btn-secondary" onclick="document.getElementById('rm-remove-panel').innerHTML=''">Cancel</button>
       </div>
     </div>`;
+  panel.scrollIntoView({ block: 'nearest' });
 }
 
-async function confirmRemoveStudent() {
+async function confirmRemoveStudent(studentId) {
   const stu = RM_STUDENT;
   if (!stu) { rmMsg('This student is no longer loaded. Close and reopen it.', 'error'); return; }
+  if (studentId && stu.id !== studentId) {
+    rmMsg('This confirmation no longer matches the student on screen. Nothing was removed. Close and reopen the student you mean.', 'error');
+    loadStudents();
+    return;
+  }
   const reason = (document.getElementById('rm-remove-reason') || {}).value || '';
   let res;
   try {
     res = await sbRpc('remove_student_record', { p_student_id: stu.id, p_reason: reason }, SESSION.access_token);
   } catch (e) {
     rmMsg('Not removed — ' + e.message, 'error');
+    loadStudents();                              // W11.6: re-read after a refusal too
+    if (REG_DATA.length) loadRegistrations();
     return;
   }
   if (!res || res.ok !== true) { rmMsg('The portal could not confirm the removal. Reload the page and check this student before retrying.', 'error'); return; }
@@ -1736,16 +1855,32 @@ async function confirmRemoveStudent() {
 }
 
 /* ── Withdraw: from the student panel or the registration modal. ── */
+/* W11.6 (C10 finding): the withdraw confirmation names the student and the
+   registration it acts on. If this page cannot identify either, it does not
+   offer the button at all. */
 function showWithdrawPanel(regId, studentId) {
   const panel = document.getElementById('rm-withdraw-panel');
   if (!panel) { toast('Could not open the withdraw form. Close and reopen this record.', 'error', 9000); return; }
+  const reg = (RM_REGS || []).find(r => r.id === regId) || REG_DATA.find(r => r.id === regId) || null;
+  const stu = (studentId && RM_STUDENT && RM_STUDENT.id === studentId) ? RM_STUDENT : (reg && reg.students) || null;
+  if (!reg || !stu) {
+    panel.innerHTML = '<div class="rm-msg error">This page cannot tell which registration this is, so it will not withdraw it. Close this window, reload the page and try again. Nothing was changed.</div>';
+    return;
+  }
+  const name = ((stu.first_name || '') + ' ' + (stu.last_name || '')).trim() || 'this student';
+  const fam = stu.families || reg.families || {};
   panel.innerHTML = `
     <div class="rm-danger">
-      <strong>Withdraw this registration?</strong> It is deleted and kept in the change history.
+      <strong>Withdraw this registration?</strong>
+      <div class="vol-id">
+        <div class="vol-id-name">${escHtml(name)} · grade ${escHtml(stu.grade == null ? '?' : stu.grade)} · ${escHtml(programLabel(stu.program))}</div>
+        <div class="vol-id-sub">${escHtml(reg.event_name || reg.event_type || 'Registration')} · currently ${escHtml(reg.registration_status || '?')} · family ${escHtml(fam.family_code || '—')}</div>
+      </div>
+      It is deleted and kept in the change history.
       An active, billed student's only approved registration cannot be withdrawn — use Remove student for that.
       <textarea id="rm-withdraw-reason" class="rm-reason" placeholder="Why is this registration being withdrawn? (required)"></textarea>
       <div class="rm-btnrow">
-        <button class="btn-sm btn-decline" onclick="confirmWithdraw('${regId}', '${studentId || ''}')">Withdraw registration</button>
+        <button class="btn-sm btn-decline" onclick="confirmWithdraw('${regId}', '${studentId || ''}')">Withdraw ${escHtml(name)}’s registration</button>
         <button class="btn-sm btn-secondary" onclick="document.getElementById('rm-withdraw-panel').innerHTML=''">Cancel</button>
       </div>
     </div>`;
@@ -1758,6 +1893,8 @@ async function confirmWithdraw(regId, studentId) {
     res = await sbRpc('withdraw_registration', { p_registration_id: regId, p_reason: reason }, SESSION.access_token);
   } catch (e) {
     rmMsg('Not withdrawn — ' + e.message, 'error');
+    loadStudents();                              // W11.6: re-read after a refusal too
+    if (REG_DATA.length) loadRegistrations();
     return;
   }
   if (!res || res.ok !== true) { rmMsg('The portal could not confirm the withdrawal. Reload the page and check this registration before retrying.', 'error'); return; }
@@ -1802,6 +1939,437 @@ async function openChangeLog() {
     document.getElementById('modal-body').innerHTML = '<div class="rm-msg error">Could not load the change log: ' + escHtml(e.message) + '</div>';
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   W11.6 — VOLUNTEER LOGS: approve, deny, reverse (gate row C3).
+
+   Why this exists. Until this wave the only way to credit a family's account
+   for volunteering was the SQL Editor. This screen is coordinator tier only
+   (Seth, W11.6 decision 1). A volunteer coordinator may approve in the
+   database (W11.5 ruling) but cannot read payments, so the credit history
+   here would be empty for them; their view is its own scoped wave.
+
+   The rule this code keeps: THE DATABASE DECIDES. Nothing here checks a
+   reason, a status or a role before sending (W11.6 brief, rule 4).
+     · Approve = PATCH volunteer_logs status='approved'. The trigger
+                 apply_volunteer_credit() writes the payment. This page never
+                 inserts into payments.
+     · Deny    = PATCH status='denied' with the reason as typed. The trigger
+                 refuses a blank or recycled reason (07-fin-16, Seth's
+                 decision 4) and posts no money.
+     · Reverse = POST reverse_volunteer_credit(log_id, reason). The function
+                 refuses a blank reason, a log that is not approved, a double
+                 reversal and a non-coordinator caller, by name, and this page
+                 shows that text as it comes back.
+   The one thing the page adds is a stale-page guard on the two PATCHes: each
+   is filtered on the status the page showed (status=eq.<shown>), so a log
+   someone else already decided is not silently decided again. That is
+   concurrency, not a business rule, and a zero-row answer is reported.
+
+   Every action names the record it acts on (student, grade, program, family),
+   and Reverse sits behind one confirm panel (decision 2) showing the amount
+   and the balance before and after. After every action, successful or
+   refused, the list is read again from the server.
+
+   Wiring. Inline onclick throughout, so every function is TOP-LEVEL. Never
+   wrap this script in an IIFE (W10.5).
+   ═══════════════════════════════════════════════════════════════════════════ */
+const VOL_COLUMNS = 'id,status,activity_date,submitted_at,reviewed_at,reviewed_by,denial_reason,credit_applied,notes,student_id,family_id,' +
+                    'students(first_name,last_name,grade,program),families(family_code,parent_1_name),volunteer_activity_types(name,credit_amount)';
+const PROGRAM_LABELS = { goblin: 'Goblin', ms_greenpower: 'MS Greenpower', hs_greenpower: 'HS Greenpower' };
+let VOL_DATA = [];        // every volunteer log, as last read from the server
+let VOL_PAY = {};         // volunteer_log_id -> its payments rows, oldest first
+let VOL_REV = {};         // reversal payment id -> the record_changes row that explains it
+let VOL_BAL = {};         // student_id|season -> balance_owed; student_id -> latest season's balance
+let VOL_FILTER = 'pending';
+let VOL_BUSY = false;
+let VOL_LOADED_AT = null;
+
+function programLabel(p) { return PROGRAM_LABELS[p] || p || 'no program'; }
+function isCoordinatorTier() { return COORDINATOR_TIER_ROLES.indexOf(STAFF_ROLE) !== -1; }
+function volMoney(n) { return '$' + Math.abs(Number(n) || 0); }
+function volWhen(ts) {
+  return ts ? new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+}
+function volFind(logId) { return VOL_DATA.find(l => l.id === logId) || null; }
+function volName(log) {
+  const s = (log && log.students) || {};
+  return ((s.first_name || '') + ' ' + (s.last_name || '')).trim() || 'this student';
+}
+function volCredit(log) { return Number(((log && log.volunteer_activity_types) || {}).credit_amount) || 0; }
+
+/* The identity block every confirmation carries. */
+function volIdentityHtml(log) {
+  const s = log.students || {}, f = log.families || {}, t = log.volunteer_activity_types || {};
+  return `<div class="vol-id">
+      <div class="vol-id-name">${escHtml(volName(log))} · grade ${escHtml(s.grade == null ? '?' : s.grade)} · ${escHtml(programLabel(s.program))}</div>
+      <div class="vol-id-sub">Family ${escHtml(f.family_code || '—')}${f.parent_1_name ? ' · ' + escHtml(f.parent_1_name) : ''}</div>
+      <div class="vol-id-sub">${escHtml(t.name || 'Unknown activity')} on ${escHtml(log.activity_date || '—')} · ${volMoney(t.credit_amount)} credit</div>
+    </div>`;
+}
+
+/* The credit on a log that has not been reversed yet, if there is one. */
+function volOpenCredit(logId) {
+  const pays = VOL_PAY[logId] || [];
+  const undone = new Set(pays.filter(p => p.reverses_payment_id).map(p => p.reverses_payment_id));
+  return pays.filter(p => p.amount > 0 && !undone.has(p.id)).pop() || null;
+}
+
+function volBalance(studentId, season) {
+  const k = season ? studentId + '|' + season : studentId;
+  return Object.prototype.hasOwnProperty.call(VOL_BAL, k) ? VOL_BAL[k] : null;
+}
+
+function volMsg(text, kind) {
+  const el = document.getElementById('vol-msg');
+  if (!el) { toast(text, kind === 'ok' ? 'success' : 'error', 9000); return; }
+  el.className = 'rm-msg ' + (kind || 'error');
+  el.textContent = text;
+  el.hidden = false;
+}
+
+function volModalMsg(text, kind) {
+  const el = document.getElementById('vol-modal-msg');
+  if (!el) { volMsg(text, kind); return; }
+  el.className = 'rm-msg ' + (kind || 'error');
+  el.textContent = text;
+  el.hidden = false;
+  el.scrollIntoView({ block: 'nearest' });
+}
+
+function volSetBusy(on) {
+  VOL_BUSY = on;
+  document.querySelectorAll('.vol-act, #vol-confirm').forEach(b => { b.disabled = on; });
+}
+
+/* Where Seth will see it without going looking: sidebar, home tile, and an
+   action item at the top of the home list while anything is waiting. */
+function setVolBadges(n) {
+  const nav = document.getElementById('nav-vol-count');
+  if (nav) nav.textContent = n ? String(n) : '—';
+  const tile = document.getElementById('tile-vol-count');
+  if (tile) tile.textContent = String(n || 0);
+  const todo = document.getElementById('todo-vol');
+  if (todo) {
+    todo.style.display = n ? '' : 'none';
+    const t = document.getElementById('todo-vol-text');
+    if (t) t.textContent = n + (n === 1 ? ' volunteer log is' : ' volunteer logs are') + ' waiting for review';
+  }
+}
+
+/* Count only, at boot, so the badge is right before the page is opened. */
+async function loadVolunteerCount() {
+  try {
+    const rows = await sbGet('/rest/v1/volunteer_logs?select=id&status=eq.pending', SESSION.access_token);
+    setVolBadges(rows.length);
+  } catch (e) {
+    const nav = document.getElementById('nav-vol-count');
+    if (nav) nav.textContent = '!';
+    console.error('loadVolunteerCount error:', e);
+  }
+}
+
+async function volFetch() {
+  const tok = SESSION.access_token;
+  const logs = await sbGet('/rest/v1/volunteer_logs?select=' + VOL_COLUMNS + '&order=submitted_at.asc', tok);
+  const pays = await sbGet('/rest/v1/payments?select=id,student_id,season,amount,payment_date,recorded_at,recorded_by,notes,volunteer_log_id,reverses_payment_id' +
+                           '&volunteer_log_id=not.is.null&order=recorded_at.asc', tok);
+  const revs = await sbGet('/rest/v1/record_changes?select=id,changed_at,actor_id,actor_name,actor_role,reason,target_id,after' +
+                           '&action=eq.reverse_volunteer_credit&order=changed_at.asc', tok);
+  const ids = [...new Set(logs.map(l => l.student_id).filter(Boolean))];
+  const bals = ids.length
+    ? await sbGet('/rest/v1/dues_balances?select=student_id,season,balance_owed&student_id=in.(' + ids.join(',') + ')', tok)
+    : [];
+  const pay = {}, rev = {}, bal = {}, latest = {};
+  pays.forEach(p => { (pay[p.volunteer_log_id] = pay[p.volunteer_log_id] || []).push(p); });
+  revs.forEach(r => { const pid = r.after && r.after.reversal_payment_id; if (pid) rev[pid] = r; });
+  bals.forEach(b => {
+    bal[b.student_id + '|' + b.season] = b.balance_owed;
+    if (!latest[b.student_id] || b.season > latest[b.student_id]) { latest[b.student_id] = b.season; bal[b.student_id] = b.balance_owed; }
+  });
+  VOL_DATA = logs; VOL_PAY = pay; VOL_REV = rev; VOL_BAL = bal;
+  VOL_LOADED_AT = new Date();
+}
+
+async function loadVolunteerLogs() {
+  const tbody = document.getElementById('vol-tbody');
+  if (!isCoordinatorTier()) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Volunteer log review is for coordinators.</td></tr>';
+    return;
+  }
+  if (!VOL_DATA.length) tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Loading…</td></tr>';
+  try {
+    await volFetch();
+  } catch (e) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Could not load volunteer logs: ' + escHtml(e.message) + '</td></tr>';
+    return;
+  }
+  renderVolTable();
+}
+
+function setVolFilter(f) { VOL_FILTER = f; renderVolTable(); }
+
+function renderVolTable() {
+  const counts = { pending: 0, approved: 0, denied: 0 };
+  VOL_DATA.forEach(l => { if (counts[l.status] != null) counts[l.status]++; });
+  setVolBadges(counts.pending);
+  document.querySelectorAll('#vol-filter-bar .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.vstatus === VOL_FILTER);
+    const c = b.querySelector('.vol-fcount');
+    if (c) c.textContent = b.dataset.vstatus === 'all' ? VOL_DATA.length : counts[b.dataset.vstatus];
+  });
+  const stamp = document.getElementById('vol-stamp');
+  if (stamp && VOL_LOADED_AT) stamp.textContent = 'Read from the database at ' + VOL_LOADED_AT.toLocaleTimeString() + '.';
+
+  const rows = VOL_FILTER === 'all' ? VOL_DATA.slice() : VOL_DATA.filter(l => l.status === VOL_FILTER);
+  // Pending first, oldest submission first: the log that has waited longest is
+  // at the top. Decided logs follow, most recently decided first.
+  rows.sort((a, b) => {
+    const ap = a.status === 'pending', bp = b.status === 'pending';
+    if (ap !== bp) return ap ? -1 : 1;
+    if (ap) return String(a.submitted_at).localeCompare(String(b.submitted_at));
+    return String(b.reviewed_at || '').localeCompare(String(a.reviewed_at || ''));
+  });
+
+  const tbody = document.getElementById('vol-tbody');
+  if (!rows.length) {
+    const empty = VOL_FILTER === 'pending' ? 'No volunteer logs are waiting for review.'
+                : 'No ' + (VOL_FILTER === 'all' ? '' : VOL_FILTER + ' ') + 'volunteer logs.';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-400);font-size:13px">' + escHtml(empty) + '</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(l => {
+    const s = l.students || {}, f = l.families || {}, t = l.volunteer_activity_types || {};
+    const reversed = (VOL_PAY[l.id] || []).some(p => p.amount < 0);
+    const sub = l.status === 'pending' ? ''
+      : `<span class="event-tag">${escHtml(volWhen(l.reviewed_at))}${l.status === 'denied' && reversed ? ' · credit reversed' : ''}</span>`;
+    let actions;
+    if (l.status === 'pending') {
+      actions = `<div class="action-btns">
+          <button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${l.id}')">Approve ${volMoney(t.credit_amount)}</button>
+          <button class="btn-sm btn-decline vol-act" onclick="openVolDeny('${l.id}')">Deny…</button>
+        </div>`;
+    } else if (l.status === 'approved') {
+      actions = `<div class="action-btns">
+          <button class="btn-sm btn-secondary vol-act" onclick="openVolDetail('${l.id}')">History</button>
+          <button class="btn-sm btn-decline vol-act" onclick="openVolReverse('${l.id}')">Reverse…</button>
+        </div>`;
+    } else {
+      actions = `<button class="btn-sm btn-secondary vol-act" onclick="openVolDetail('${l.id}')">History</button>`;
+    }
+    return `<tr>
+      <td><strong style="font-size:13px">${escHtml(volName(l))}</strong><span class="event-tag">Gr. ${escHtml(s.grade == null ? '?' : s.grade)} · ${escHtml(programLabel(s.program))}</span></td>
+      <td style="font-family:var(--mono);font-size:12px">${escHtml(f.family_code || '—')}<span class="event-tag" style="font-family:var(--font)">${escHtml(f.parent_1_name || '')}</span></td>
+      <td style="font-size:12px">${escHtml(t.name || '—')}</td>
+      <td style="font-family:var(--mono);font-size:12px">${volMoney(t.credit_amount)}</td>
+      <td style="font-size:12px;color:var(--gray-600)">${escHtml(l.activity_date || '—')}</td>
+      <td style="font-size:12px;color:var(--gray-400)">${escHtml(volWhen(l.submitted_at))}</td>
+      <td><span class="status-badge status-${escHtml(l.status)}">${escHtml(l.status)}</span>${sub}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* PATCH one log's status, filtered on the status this page showed. */
+async function volPatchStatus(log, body) {
+  const useTok = await freshToken(SESSION.access_token);
+  const r = await fetch(SB_URL + '/rest/v1/volunteer_logs?id=eq.' + encodeURIComponent(log.id) + '&status=eq.' + encodeURIComponent(log.status), {
+    method: 'PATCH',
+    headers: { ...headers(useTok), 'Prefer': 'return=representation' },
+    body: JSON.stringify(body)
+  });
+  if (r.status === 401) { handleSlippedThrough401(); throw new Error('Your session ended. Please sign in again.'); }
+  const text = await r.text();
+  if (!r.ok) {
+    let msg = text;
+    try { const j = JSON.parse(text); msg = j.message || j.hint || j.details || text; } catch (e) {}
+    throw new Error(msg);
+  }
+  let rows;
+  try { rows = JSON.parse(text); } catch (e) {
+    throw new Error('the portal could not confirm the change was saved. Check this log in the list before trying again.');
+  }
+  if (Array.isArray(rows) && rows.length === 1) return rows[0];
+  // Zero rows is not success. Say which of the two reasons it is.
+  let now = [];
+  try { now = await sbGet('/rest/v1/volunteer_logs?select=id,status&id=eq.' + encodeURIComponent(log.id), SESSION.access_token); } catch (e) { now = []; }
+  if (now.length && now[0].status !== log.status) {
+    throw new Error('this log is now "' + now[0].status + '", not "' + log.status + '" as this page showed. It was changed after the page loaded. Nothing was changed; the list has been read again.');
+  }
+  if (!now.length) throw new Error('this log is no longer in the database, or your account cannot see it. Nothing was changed.');
+  throw new Error('your account does not have permission to change this log. Nothing was changed.');
+}
+
+/* ── Approve: one click from the queue, the money is the trigger's job. ── */
+async function approveVolunteerLog(logId, fromModal) {
+  if (VOL_BUSY) return;
+  const log = volFind(logId);
+  if (!log) { volMsg('That log is no longer on this page. The list has been read again.', 'warn'); await loadVolunteerLogs(); return; }
+  const name = volName(log), code = (log.families || {}).family_code || 'family';
+  const before = volBalance(log.student_id);
+  volSetBusy(true);
+  let row;
+  try {
+    row = await volPatchStatus(log, { status: 'approved' });
+  } catch (e) {
+    volSetBusy(false);
+    await loadVolunteerLogs();
+    const text = 'Not approved: ' + name + ' (' + code + ') — ' + e.message;
+    if (fromModal) openVolDetail(logId, { text: text, kind: 'error' }); else volMsg(text, 'error');
+    return;
+  }
+  volSetBusy(false);
+  await loadVolunteerLogs();
+  const after = volBalance(log.student_id);
+  const text = 'Approved: ' + volMoney(volCredit(log)) + ' credit for ' + name + ' (' + code + ').' +
+    (before != null && after != null ? ' Balance $' + before + ' → $' + after + ', read back from the database.' : '') +
+    (row && Number(row.credit_applied) !== 1 ? ' ⚠ The log came back without its credit flag set; open its history before doing anything else.' : '');
+  if (fromModal) openVolDetail(logId, { text: text, kind: 'ok' }); else volMsg(text, 'ok');
+  toast('Approved — ' + name, 'success');
+}
+
+/* ── Deny a pending log: no money moves; the database requires the reason. ── */
+function openVolDeny(logId) {
+  const log = volFind(logId);
+  if (!log) { volMsg('That log is no longer on this page. The list has been read again.', 'warn'); loadVolunteerLogs(); return; }
+  const name = volName(log), act = (log.volunteer_activity_types || {}).name || 'volunteer';
+  rmOpenShell('Deny a volunteer log',
+    `${volIdentityHtml(log)}
+     <div class="rm-danger"><strong>Deny ${escHtml(name)}’s ${escHtml(act)} log?</strong>
+       No money moves: this log was never credited, so nothing is reversed. The family sees it as denied, with the reason you give.
+       <textarea id="vol-reason" class="rm-reason" placeholder="Why is this log being denied? The family sees this reason."></textarea>
+     </div>
+     ${log.notes ? '<div class="rm-note">Family’s note: ' + escHtml(log.notes) + '</div>' : ''}
+     <div id="vol-modal-msg" class="rm-msg" hidden></div>`,
+    `<button class="btn-sm btn-decline" id="vol-confirm" onclick="confirmVolDeny('${log.id}')">Deny ${escHtml(name)}’s log</button>
+     <button class="btn-sm btn-secondary" onclick="closeModal()">Cancel</button>`);
+}
+
+async function confirmVolDeny(logId) {
+  if (VOL_BUSY) return;
+  const log = volFind(logId);
+  if (!log) { volModalMsg('That log is no longer on this page. Nothing was changed. Close this and check the list.', 'error'); return; }
+  const reason = (document.getElementById('vol-reason') || {}).value || '';
+  volSetBusy(true);
+  let row;
+  try {
+    row = await volPatchStatus(log, { status: 'denied', denial_reason: reason });
+  } catch (e) {
+    volSetBusy(false);
+    volModalMsg('Not denied — ' + e.message, 'error');
+    loadVolunteerLogs();
+    return;
+  }
+  volSetBusy(false);
+  await loadVolunteerLogs();
+  const shown = (row && row.denial_reason) || reason.trim();
+  rmOpenShell('Volunteer log denied',
+    `${volIdentityHtml(log)}
+     <div class="rm-msg ok">Denied. No money moved. The family sees this log as denied, with the reason: “${escHtml(shown)}”.</div>`,
+    '<button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>');
+  volMsg('Denied: ' + volName(log) + '’s log (' + ((log.families || {}).family_code || 'family') + '). No money moved.', 'ok');
+}
+
+/* ── Reverse an approved credit: one confirm panel, named, with the money. ── */
+function openVolReverse(logId) {
+  const log = volFind(logId);
+  if (!log) { volMsg('That log is no longer on this page. The list has been read again.', 'warn'); loadVolunteerLogs(); return; }
+  const credit = volOpenCredit(logId);
+  const amt = credit ? credit.amount : volCredit(log);
+  const bal = credit ? volBalance(log.student_id, credit.season) : volBalance(log.student_id);
+  const name = volName(log);
+  rmOpenShell('Reverse a volunteer credit',
+    `${volIdentityHtml(log)}
+     <div class="rm-danger"><strong>Reverse the ${volMoney(amt)} credit for ${escHtml(name)}?</strong>
+       This puts ${volMoney(amt)} back on ${escHtml(name)}’s balance${bal != null ? ': they owe $' + bal + ' now and will owe $' + (Number(bal) + Number(amt)) + '.' : '.'}
+       The original credit stays on the ledger and a second line undoes it. The family sees “Volunteer credit reversed” with your reason.
+       <textarea id="vol-reason" class="rm-reason" placeholder="Why is this credit being reversed? The family sees this reason."></textarea>
+     </div>
+     ${volLedgerHtml(logId)}
+     <div id="vol-modal-msg" class="rm-msg" hidden></div>`,
+    `<button class="btn-sm btn-decline" id="vol-confirm" onclick="confirmVolReverse('${log.id}')">Reverse ${volMoney(amt)} for ${escHtml(name)}</button>
+     <button class="btn-sm btn-secondary" onclick="closeModal()">Cancel</button>`);
+}
+
+async function confirmVolReverse(logId) {
+  if (VOL_BUSY) return;
+  const log = volFind(logId);
+  const name = log ? volName(log) : 'this student';
+  const reason = (document.getElementById('vol-reason') || {}).value || '';
+  volSetBusy(true);
+  let res;
+  try {
+    res = await sbRpc('reverse_volunteer_credit', { p_log_id: logId, p_reason: reason }, SESSION.access_token);
+  } catch (e) {
+    volSetBusy(false);
+    volModalMsg('Not reversed — ' + e.message, 'error');
+    loadVolunteerLogs();
+    return;
+  }
+  volSetBusy(false);
+  if (!res || res.ok !== true) {
+    volModalMsg('The portal could not confirm the reversal. The list has been read again; check this log before trying again.', 'error');
+    loadVolunteerLogs();
+    return;
+  }
+  await loadVolunteerLogs();
+  const fresh = volFind(logId) || log;
+  rmOpenShell('Volunteer credit reversed',
+    `${fresh ? volIdentityHtml(fresh) : ''}
+     <div class="rm-msg ok">Reversed: ${volMoney(res.amount_reversed)} put back on ${escHtml(name)}’s balance, $${escHtml(res.balance_before)} → $${escHtml(res.balance_after)}.
+       Recorded in the change log with your name and the reason: “${escHtml(res.reason)}”.</div>
+     ${volLedgerHtml(logId)}`,
+    '<button class="btn-sm btn-secondary" onclick="closeModal()">Close</button>');
+  volMsg('Reversed: ' + volMoney(res.amount_reversed) + ' for ' + name + '. Balance $' + res.balance_before + ' → $' + res.balance_after + '.', 'ok');
+}
+
+/* ── History: every ledger line a log has produced, each with its own reason. ── */
+function openVolDetail(logId, carry) {
+  const log = volFind(logId);
+  if (!log) { volMsg('That log is no longer on this page. The list has been read again.', 'warn'); loadVolunteerLogs(); return; }
+  const t = log.volunteer_activity_types || {};
+  const reviewer = log.reviewed_by ? (log.reviewed_by === STAFF_ID ? 'you' : 'another staff account') : '';
+  let actions = '<button class="btn-sm btn-secondary" onclick="closeModal()" style="margin-left:auto">Close</button>';
+  if (log.status === 'pending') {
+    actions = `<button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${log.id}', true)">Approve ${volMoney(t.credit_amount)}</button>
+               <button class="btn-sm btn-decline vol-act" onclick="openVolDeny('${log.id}')">Deny…</button>` + actions;
+  } else if (log.status === 'approved') {
+    actions = `<button class="btn-sm btn-decline vol-act" onclick="openVolReverse('${log.id}')">Reverse…</button>` + actions;
+  } else {
+    actions = `<button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${log.id}', true)">Approve after all (posts a new ${volMoney(t.credit_amount)} credit)</button>` + actions;
+  }
+  rmOpenShell('Volunteer log',
+    `${volIdentityHtml(log)}
+     <div class="modal-row"><span class="modal-key">Status</span><span class="modal-val">${escHtml(log.status)}</span></div>
+     <div class="modal-row"><span class="modal-key">Submitted</span><span class="modal-val">${escHtml(volWhen(log.submitted_at))}</span></div>
+     ${log.reviewed_at ? `<div class="modal-row"><span class="modal-key">Last decision</span><span class="modal-val">${escHtml(volWhen(log.reviewed_at))}${reviewer ? ' · ' + escHtml(reviewer) : ''}</span></div>` : ''}
+     ${log.notes ? `<div class="modal-row"><span class="modal-key">Family’s note</span><span class="modal-val">${escHtml(log.notes)}</span></div>` : ''}
+     ${log.status === 'denied' && log.denial_reason ? `<div class="modal-row"><span class="modal-key">Reason the family sees</span><span class="modal-val">${escHtml(log.denial_reason)}</span></div>` : ''}
+     ${volLedgerHtml(log.id)}
+     <div id="vol-modal-msg" class="rm-msg" hidden></div>`,
+    actions);
+  if (carry) volModalMsg(carry.text, carry.kind);
+}
+
+function volLedgerHtml(logId) {
+  const pays = VOL_PAY[logId] || [];
+  if (!pays.length) return '<div class="rm-section"><h3>Credit history</h3><div class="rm-note">No money has moved for this log.</div></div>';
+  const lines = pays.map(p => {
+    if (p.amount > 0) {
+      const by = p.recorded_by && p.recorded_by === STAFF_ID ? ' · approved by you' : '';
+      return `<div class="vol-line cr"><span>Credit posted · ${escHtml(volWhen(p.recorded_at))}${by} · ${escHtml(p.season || '')}</span><span class="amt">${volMoney(p.amount)} off the balance</span></div>`;
+    }
+    const rc = VOL_REV[p.id];
+    let reason = rc && rc.reason;
+    if (!reason && p.notes) { const m = /Reason:\s*(.*)$/.exec(p.notes); if (m) reason = m[1]; }
+    const who = rc ? ' · ' + escHtml(rc.actor_name || 'staff') + ' (' + escHtml(rc.actor_role || '?') + ')' : '';
+    return `<div class="vol-line rev"><span>Credit reversed · ${escHtml(volWhen(p.recorded_at))}${who}<br><span class="vol-reason">Reason: ${escHtml(reason || 'not recorded')}</span></span><span class="amt">${volMoney(p.amount)} back on the balance</span></div>`;
+  });
+  const net = pays.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  return `<div class="rm-section"><h3>Credit history · ${pays.length} ledger line${pays.length === 1 ? '' : 's'}</h3>${lines.join('')}
+    <div class="vol-net">Net credit from this log: ${volMoney(net)}${net === 0 ? ' (every credit has been reversed)' : ' off the balance'}</div></div>`;
+}
+
 
 // PAGINATION
 function renderPagination(prefix, total, currentPage, onNext, onPrev) {
