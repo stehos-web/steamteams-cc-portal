@@ -212,6 +212,9 @@ body{font-family:var(--sans);background:var(--off-white);color:var(--text);min-h
 .balance-row-val {font-weight:600;color:var(--text);}
 .balance-row-val.credit {color:var(--green);}
 .balance-row-val.charge {color:var(--red);}
+/* W11.5: a reversed volunteer credit is neither a charge (red) nor a credit (green). */
+.balance-row-val.reversal {color:var(--text-muted);}
+.ledger-reason {font-size:11px;color:var(--text-light);margin-top:2px;}
 
 .btn-ledger {
   width:100%;text-align:center;
@@ -1001,15 +1004,20 @@ function renderVolunteerHistory(logs) {
   var statusCls = { approved: "credit", denied: "charge", pending: "" };
   el.innerHTML = logs.slice(0, 6).map(function(l) {
     var who = l.student_first_name ? " · " + esc(l.student_first_name) : "";
+    /* W11.5: a log that was approved and then reversed is not the same as
+       one that was never approved. It says so, in neutral, with its reason. */
+    var reversed = l.credit_reversed === true;
     var reason = (l.status === "denied" && l.denial_reason)
-      ? "<div style='font-size:11px;color:var(--text-light);margin-top:2px;'>" + esc(l.denial_reason) + "</div>"
+      ? "<div class='ledger-reason'>" + (reversed ? "Reason: " : "") + esc(l.denial_reason) + "</div>"
       : "";
+    var statusText = reversed ? "Credit reversed"
+      : (l.status || "").charAt(0).toUpperCase() + (l.status || "").slice(1);
     return "<div class='balance-row' style='flex-direction:column;align-items:flex-start;gap:2px;'>" +
       "<div style='display:flex;justify-content:space-between;width:100%;'>" +
         "<span class='balance-row-label'>" + esc(l.activity_name || "Activity") +
           " · " + esc(l.activity_date) + who + "</span>" +
-        "<span class='balance-row-val " + (statusCls[l.status] || "") + "'>" +
-          esc((l.status || "").charAt(0).toUpperCase() + (l.status || "").slice(1)) +
+        "<span class='balance-row-val " + (reversed ? "reversal" : (statusCls[l.status] || "")) + "'>" +
+          esc(statusText) +
         "</span>" +
       "</div>" + reason +
     "</div>";
@@ -1053,7 +1061,10 @@ function renderBalance(balance, ledger) {
   var charges = 0, credits = 0;
   ledger.forEach(function(l) {
     var a = Number(l.amount) || 0;
-    if (a > 0) charges += a; else credits += -a;
+    /* W11.5: a reversal takes a credit back. It is not a charge, so it
+       reduces "Payments & credits" rather than adding to "Total charges". */
+    if (l.kind === "reversal") credits -= a;
+    else if (a > 0) charges += a; else credits += -a;
   });
 
   body.innerHTML =
@@ -1077,6 +1088,20 @@ function renderBalance(balance, ledger) {
     "<div class='balance-summary' style='margin-bottom:0;'>" +
     ledger.map(function(l) {
       var a = Number(l.amount) || 0;
+      if (l.kind === "reversal") {
+        /* W11.5, Ruling 2: never a bare negative number and never a charge.
+           The line names itself and says why, from the reason recorded when
+           the coordinator reversed the credit. */
+        return "<div class='balance-row' style='flex-direction:column;align-items:stretch;gap:2px;'>" +
+          "<div style='display:flex;justify-content:space-between;width:100%;'>" +
+            "<span class='balance-row-label'>" + esc(l.label) +
+              (l.date ? " <span style='color:var(--text-light);'>· " + esc(l.date) + "</span>" : "") +
+            "</span>" +
+            "<span class='balance-row-val reversal'>" + money(Math.abs(a)) + "</span>" +
+          "</div>" +
+          (l.reason ? "<div class='ledger-reason'>Reason: " + esc(l.reason) + "</div>" : "") +
+        "</div>";
+      }
       return "<div class='balance-row'>" +
         "<span class='balance-row-label'>" + esc(l.label) +
           (l.date ? " <span style='color:var(--text-light);'>· " + esc(l.date) + "</span>" : "") +
