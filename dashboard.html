@@ -354,7 +354,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Students
       </a>
-      <!-- W11.6: coordinator tier only (Seth, decision 1). Hidden until
+      <!-- W11.6: coordinator tier and the volunteer coordinator. Hidden until
            bootDashboard() confirms the role; see the VOLUNTEER LOGS script block. -->
       <a class="nav-item" data-page="volunteer" href="#" id="nav-volunteer" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -438,7 +438,7 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
 
         <div class="section-label">Open action items</div>
         <div class="todo-list" id="todo-list">
-          <!-- W11.6: shown only when logs are waiting, only for coordinator tier. -->
+          <!-- W11.6: shown only when logs are waiting, only to roles that review them. -->
           <div class="todo-item" id="todo-vol" style="display:none">
             <div class="todo-dot urgent"></div>
             <div style="flex:1">
@@ -593,8 +593,9 @@ body{font-family:var(--font);font-size:14px;color:var(--gray-800);background:var
         <div class="pagination" id="student-pagination"></div>
       </div>
 
-      <!-- VOLUNTEER LOGS PAGE — W11.6, gate row C3. Coordinator tier only
-           (Seth, decision 1). Opens on pending, oldest first (decision 3).
+      <!-- VOLUNTEER LOGS PAGE — W11.6, gate row C3. Coordinator tier and the
+           volunteer coordinator (Approve and Deny only for the latter).
+           Opens on pending, oldest first (decision 3).
            Every action goes to the database; see the VOLUNTEER LOGS block in
            the script for what the page does and does not decide. -->
       <div class="page" id="page-volunteer">
@@ -1082,10 +1083,12 @@ async function bootDashboard() {
     }
   }
 
-  /* W11.6 — the volunteer log screen is coordinator tier only (Seth, decision 1).
-     Shown for coordinator tier, left hidden for everyone else. Hidden is the
-     polish; the approval trigger and reverse_volunteer_credit() are the guard. */
-  if (COORDINATOR_TIER.indexOf(role) !== -1) {
+  /* W11.6 — the volunteer log screen is for coordinator tier and the volunteer
+     coordinator (Seth: "the volunteer coordinator does need to be able to
+     approve hours"). Left hidden for everyone else. Hidden is the polish; the
+     approval trigger, reverse_volunteer_credit() and get_volunteer_queue()
+     are the guard. */
+  if (COORDINATOR_TIER.indexOf(role) !== -1 || role === 'volunteer_coordinator') {
     ['nav-volunteer', 'tile-volunteer'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.style.display = '';
@@ -1944,10 +1947,19 @@ async function openChangeLog() {
    W11.6 — VOLUNTEER LOGS: approve, deny, reverse (gate row C3).
 
    Why this exists. Until this wave the only way to credit a family's account
-   for volunteering was the SQL Editor. This screen is coordinator tier only
-   (Seth, W11.6 decision 1). A volunteer coordinator may approve in the
-   database (W11.5 ruling) but cannot read payments, so the credit history
-   here would be empty for them; their view is its own scoped wave.
+   for volunteering was the SQL Editor.
+
+   Who sees it. Coordinator tier AND the volunteer coordinator. Seth first
+   ruled coordinator tier only (decision 1), then, seeing the build: "wait,
+   the volunteer coordinator does need to be able to approve hours." That role
+   can read volunteer_logs but not students or families, so the queue is read
+   through get_volunteer_queue() (02-coord-04), which returns only the name,
+   grade, program, family code and parent name a decision needs. The
+   volunteer coordinator gets Approve and Deny. Reverse, "Approve after all"
+   and the credit history stay coordinator tier: that role cannot reverse
+   (W11.5 ruling) and cannot read payments, so a history panel would be
+   empty and read as "no money moved". Hiding a control is presentation; the
+   database is the guard either way.
 
    The rule this code keeps: THE DATABASE DECIDES. Nothing here checks a
    reason, a status or a role before sending (W11.6 brief, rule 4).
@@ -1974,8 +1986,6 @@ async function openChangeLog() {
    Wiring. Inline onclick throughout, so every function is TOP-LEVEL. Never
    wrap this script in an IIFE (W10.5).
    ═══════════════════════════════════════════════════════════════════════════ */
-const VOL_COLUMNS = 'id,status,activity_date,submitted_at,reviewed_at,reviewed_by,denial_reason,credit_applied,notes,student_id,family_id,' +
-                    'students(first_name,last_name,grade,program),families(family_code,parent_1_name),volunteer_activity_types(name,credit_amount)';
 const PROGRAM_LABELS = { goblin: 'Goblin', ms_greenpower: 'MS Greenpower', hs_greenpower: 'HS Greenpower' };
 let VOL_DATA = [];        // every volunteer log, as last read from the server
 let VOL_PAY = {};         // volunteer_log_id -> its payments rows, oldest first
@@ -1987,6 +1997,7 @@ let VOL_LOADED_AT = null;
 
 function programLabel(p) { return PROGRAM_LABELS[p] || p || 'no program'; }
 function isCoordinatorTier() { return COORDINATOR_TIER_ROLES.indexOf(STAFF_ROLE) !== -1; }
+function canReviewVolunteer() { return isCoordinatorTier() || STAFF_ROLE === 'volunteer_coordinator'; }
 function volMoney(n) { return '$' + Math.abs(Number(n) || 0); }
 function volWhen(ts) {
   return ts ? new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
@@ -2071,7 +2082,16 @@ async function loadVolunteerCount() {
 
 async function volFetch() {
   const tok = SESSION.access_token;
-  const logs = await sbGet('/rest/v1/volunteer_logs?select=' + VOL_COLUMNS + '&order=submitted_at.asc', tok);
+  // One read path for both roles: the volunteer coordinator cannot read
+  // students or families, so the names come from get_volunteer_queue().
+  const logs = await sbRpc('get_volunteer_queue', {}, tok);
+  if (!Array.isArray(logs)) throw new Error('the queue came back in a shape this page does not recognise.');
+  if (!isCoordinatorTier()) {
+    // Payments, the change log and balances are coordinator-tier reads.
+    VOL_DATA = logs; VOL_PAY = {}; VOL_REV = {}; VOL_BAL = {};
+    VOL_LOADED_AT = new Date();
+    return;
+  }
   const pays = await sbGet('/rest/v1/payments?select=id,student_id,season,amount,payment_date,recorded_at,recorded_by,notes,volunteer_log_id,reverses_payment_id' +
                            '&volunteer_log_id=not.is.null&order=recorded_at.asc', tok);
   const revs = await sbGet('/rest/v1/record_changes?select=id,changed_at,actor_id,actor_name,actor_role,reason,target_id,after' +
@@ -2093,8 +2113,8 @@ async function volFetch() {
 
 async function loadVolunteerLogs() {
   const tbody = document.getElementById('vol-tbody');
-  if (!isCoordinatorTier()) {
-    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Volunteer log review is for coordinators.</td></tr>';
+  if (!canReviewVolunteer()) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Volunteer log review is for coordinators and the volunteer coordinator.</td></tr>';
     return;
   }
   if (!VOL_DATA.length) tbody.innerHTML = '<tr class="loading-row"><td colspan="8">Loading…</td></tr>';
@@ -2149,7 +2169,7 @@ function renderVolTable() {
           <button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${l.id}')">Approve ${volMoney(t.credit_amount)}</button>
           <button class="btn-sm btn-decline vol-act" onclick="openVolDeny('${l.id}')">Deny…</button>
         </div>`;
-    } else if (l.status === 'approved') {
+    } else if (l.status === 'approved' && isCoordinatorTier()) {
       actions = `<div class="action-btns">
           <button class="btn-sm btn-secondary vol-act" onclick="openVolDetail('${l.id}')">History</button>
           <button class="btn-sm btn-decline vol-act" onclick="openVolReverse('${l.id}')">Reverse…</button>
@@ -2334,8 +2354,8 @@ function openVolDetail(logId, carry) {
     actions = `<button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${log.id}', true)">Approve ${volMoney(t.credit_amount)}</button>
                <button class="btn-sm btn-decline vol-act" onclick="openVolDeny('${log.id}')">Deny…</button>` + actions;
   } else if (log.status === 'approved') {
-    actions = `<button class="btn-sm btn-decline vol-act" onclick="openVolReverse('${log.id}')">Reverse…</button>` + actions;
-  } else {
+    if (isCoordinatorTier()) actions = `<button class="btn-sm btn-decline vol-act" onclick="openVolReverse('${log.id}')">Reverse…</button>` + actions;
+  } else if (isCoordinatorTier()) {
     actions = `<button class="btn-sm btn-approve vol-act" onclick="approveVolunteerLog('${log.id}', true)">Approve after all (posts a new ${volMoney(t.credit_amount)} credit)</button>` + actions;
   }
   rmOpenShell('Volunteer log',
@@ -2345,7 +2365,8 @@ function openVolDetail(logId, carry) {
      ${log.reviewed_at ? `<div class="modal-row"><span class="modal-key">Last decision</span><span class="modal-val">${escHtml(volWhen(log.reviewed_at))}${reviewer ? ' · ' + escHtml(reviewer) : ''}</span></div>` : ''}
      ${log.notes ? `<div class="modal-row"><span class="modal-key">Family’s note</span><span class="modal-val">${escHtml(log.notes)}</span></div>` : ''}
      ${log.status === 'denied' && log.denial_reason ? `<div class="modal-row"><span class="modal-key">Reason the family sees</span><span class="modal-val">${escHtml(log.denial_reason)}</span></div>` : ''}
-     ${volLedgerHtml(log.id)}
+     ${isCoordinatorTier() ? volLedgerHtml(log.id)
+        : '<div class="rm-section"><h3>Credit history</h3><div class="rm-note">The credit history and reversals are shown to coordinators. Ask a coordinator if a credit needs to be undone.</div></div>'}
      <div id="vol-modal-msg" class="rm-msg" hidden></div>`,
     actions);
   if (carry) volModalMsg(carry.text, carry.kind);
